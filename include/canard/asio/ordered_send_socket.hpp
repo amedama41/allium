@@ -1,5 +1,5 @@
-#ifndef ORDERED_SEND_SOCKET_HPP
-#define ORDERED_SEND_SOCKET_HPP
+#ifndef CANARD_ASIO_ORDERED_SEND_SOCKET_HPP
+#define CANARD_ASIO_ORDERED_SEND_SOCKET_HPP
 
 #include <cstddef>
 #include <type_traits>
@@ -277,4 +277,4 @@ namespace canard {
 
 } // namespace canard
 
-#endif // ORDERED_SEND_SOCKET_HPP
+#endif // CANARD_ASIO_ORDERED_SEND_SOCKET_HPP
