@@ -5,3 +5,5 @@ LDFLAGS=-lboost_system-mt
 
 all: decorator_controller
 
+clean: decorator_controller
+

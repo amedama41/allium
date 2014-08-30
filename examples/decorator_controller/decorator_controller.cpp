@@ -1,10 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
-#include <boost/log/sources/severity_feature.hpp>
-#include <boost/log/sources/severity_logger.hpp>
 #include <canard/network/protocol/openflow/v13.hpp>
-#include <canard/network/utils/thread_pool.hpp>
 #include "table_miss_entry_setting_decorator.hpp"
 #include "logging_decorator.hpp"
 
@@ -40,11 +37,9 @@ int main(int argc, char* argv[])
     }
 
     flooding_handler handler{std::cout};
-    auto options = controller::options{handler};
 
     try {
-        using canard::network::utils::thread_pool;
-        controller cont{options.address(argv[1]).port("6653")};
+        controller cont{controller::options{handler}.address(argv[1]).port("6653")};
         cont.run();
     }
     catch (std::exception& e) {
