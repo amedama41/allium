@@ -54,24 +54,24 @@ namespace v13 {
         }
 
         template <class T>
-        auto is_null_controller(null_controller::type<T> const*)
+        auto is_null_decorator(null_decorator::type<T>*)
             -> std::true_type;
-        auto is_null_controller(...)
+        auto is_null_decorator(...)
             -> std::false_type;
 
         template <class T>
-        struct is_derived_of_null_controller
-            : decltype(is_null_controller(static_cast<T*>(nullptr)))
+        struct is_derived_of_null_decorator
+            : decltype(is_null_decorator(static_cast<T*>(nullptr)))
         {};
 
         template <class T>
-        inline auto get_base_type(null_controller::type<T>& controller)
-            -> null_controller::type<T>&
+        inline auto get_base_type(null_decorator::type<T>& controller)
+            -> null_decorator::type<T>&
         {
             return controller;
         }
 
-        template <class T, typename std::enable_if<!is_derived_of_null_controller<T>::value>::type* = nullptr>
+        template <class T, typename std::enable_if<!is_derived_of_null_decorator<T>::value>::type* = nullptr>
         inline auto get_base_type(T& controller)
             -> T&
         {

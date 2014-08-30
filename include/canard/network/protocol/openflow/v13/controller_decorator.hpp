@@ -8,30 +8,30 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    class null_controller
+    class null_decorator
     {
     public:
         template <class Derived>
         struct type
         {
             template <class... Args>
-            void connected(Args&&... args)
-            {
-                static_cast<Derived*>(this)->connected(std::forward<Args>(args)...);
-            }
-
-            template <class... Args>
-            void disconnected(Args&&... args)
-            {
-                static_cast<Derived*>(this)->disconnected(std::forward<Args>(args)...);
-            }
-
-            template <class... Args>
             void handle(Args&&... args)
             {
                 static_cast<Derived*>(this)->handle(std::forward<Args>(args)...);
             }
         };
+    };
+
+    template <class Derived, class Decorators>
+    class decoration
+        : public Decorators::template type<Derived>
+    {
+    public:
+        template <class... Args>
+        decoration(Args&&... args)
+            : Decorators::template type<Derived>{std::forward<Args>(args)...}
+        {
+        }
     };
 
 } // namespace v13

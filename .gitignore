@@ -1,5 +1,11 @@
 *.o
+examples/decorator_controller/decorator_controller
 examples/learning_switch/learning_switch
+include/canard/network/protocol/openflow/v13/detail/byteorder.hpp
+include/canard/network/protocol/openflow/v13/detail/fusion_adaptor.hpp
+include/canard/network/protocol/openflow/v13/error.hpp
+include/canard/network/protocol/openflow/v13/io/enum_to_string.hpp
+include/canard/network/protocol/openflow/v13/openflow.hpp
 ofparser/ofparser
 test/all_test
 test/utility_test
