@@ -1,6 +1,7 @@
 *.o
 examples/decorator_controller/decorator_controller
 examples/learning_switch/learning_switch
+examples/repeater_hub/repeater_hub
 include/canard/network/protocol/openflow/v13/detail/byteorder.hpp
 include/canard/network/protocol/openflow/v13/detail/fusion_adaptor.hpp
 include/canard/network/protocol/openflow/v13/error.hpp
