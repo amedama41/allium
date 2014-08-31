@@ -13,6 +13,7 @@
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/message/hello_elements.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -56,7 +57,7 @@ namespace v13 {
             -> Container&
         {
             detail::encode(container, hello_);
-            auto visitor = hello_elements::encoding_visitor<Container>{container};
+            auto visitor = detail::encoding_visitor<Container>{container};
             boost::for_each(elements_, boost::apply_visitor(visitor));
             return container;
         }
@@ -87,7 +88,7 @@ namespace v13 {
         static auto calc_length(std::vector<hello_elements::variant> const& elements)
             -> std::uint16_t
         {
-            auto visitor = hello_elements::calculating_exact_length_visitor{};
+            auto visitor = detail::calculating_exact_length_visitor{};
             return boost::accumulate(
                       elements | boost::adaptors::transformed(boost::apply_visitor(visitor))
                     , std::uint16_t{sizeof(hello_)});
