@@ -21,13 +21,13 @@ namespace v13 {
     {
     public:
         action_list()
-            : action_list_{}
+            : actions_{}
         {
         }
 
         template <class... Actions, typename std::enable_if<!is_related<action_list, Actions...>::value>::type* = nullptr>
         action_list(Actions&&... actions)
-            : action_list_{any_action{std::forward<Actions>(actions)}...}
+            : actions_{any_action{std::forward<Actions>(actions)}...}
         {
         }
 
@@ -44,7 +44,7 @@ namespace v13 {
 
         void swap(action_list& other)
         {
-            this->action_list_.swap(other.action_list_);
+            this->actions_.swap(other.actions_);
         }
 
         auto length() const
@@ -52,21 +52,21 @@ namespace v13 {
         {
             using boost::adaptors::transformed;
             return boost::accumulate(
-                      action_list_ | transformed([](any_action const& action){ return action.length(); })
+                      actions_ | transformed([](any_action const& action){ return action.length(); })
                     , std::uint16_t{0});
         }
 
         template <class Action>
         void add(Action&& action)
         {
-            action_list_.push_back(std::forward<Action>(action));
+            actions_.push_back(std::forward<Action>(action));
         }
 
         template <class Container>
         auto encode(Container& container) const
             -> Container&
         {
-            boost::for_each(action_list_, [&](any_action const& action) {
+            boost::for_each(actions_, [&](any_action const& action) {
                 action.encode(container);
             });
             return container;
@@ -84,7 +84,7 @@ namespace v13 {
         }
 
     private:
-        std::vector<any_action> action_list_;
+        std::vector<any_action> actions_;
     };
 
 } // namespace v13
