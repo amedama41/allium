@@ -17,7 +17,7 @@ BOOST_FUSION_ADAPT_STRUCT(
         (std::string, name)
         (bool, is_array)
         (std::size_t, array_length)
-);
+)
 
 struct declaration_info
 {
@@ -28,7 +28,7 @@ BOOST_FUSION_ADAPT_STRUCT(
         struct declaration_info,
         (std::string, type)
         (declarator_info, declarator)
-);
+)
 
 struct struct_info
 {
@@ -39,7 +39,7 @@ BOOST_FUSION_ADAPT_STRUCT(
         struct struct_info,
         (std::string, name)
         (std::vector<declaration_info>, member_info)
-);
+)
 
 struct enum_member_info
 {
@@ -50,7 +50,7 @@ BOOST_FUSION_ADAPT_STRUCT(
         struct enum_member_info,
         (std::string, name)
         (std::string, value)
-);
+)
 
 struct enum_info
 {
@@ -61,6 +61,6 @@ BOOST_FUSION_ADAPT_STRUCT(
         struct enum_info,
         (std::string, name)
         (std::vector<enum_member_info>, member_info)
-);
+)
 
 #endif // OFPARSER_CODE_INFORMATION
