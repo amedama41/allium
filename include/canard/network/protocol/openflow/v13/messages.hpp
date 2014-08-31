@@ -5,6 +5,7 @@
 #include <canard/network/protocol/openflow/v13/message/error_msg.hpp>
 #include <canard/network/protocol/openflow/v13/message/echo.hpp>
 #include <canard/network/protocol/openflow/v13/message/flow_mod.hpp>
+#include <canard/network/protocol/openflow/v13/message/group_mod.hpp>
 #include <canard/network/protocol/openflow/v13/message/switch_features.hpp>
 #include <canard/network/protocol/openflow/v13/message/switch_config.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_messages.hpp>

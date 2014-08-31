@@ -19,6 +19,7 @@ MESSAGE_TEST_SRCS=hello_test.cpp hello_elements_test.cpp \
 				  error_msg_test.cpp \
 				  echo_test.cpp \
 				  flow_mod_test.cpp \
+				  group_mod_test.cpp \
 				  barrier_test.cpp \
 				  packet_in_test.cpp
 MESSAGE_TEST_OBJS=$(MESSAGE_TEST_SRCS:.cpp=.o)
