@@ -40,23 +40,23 @@ namespace v13 {
     class flow_entry
     {
     public:
-        template <class... Instructions>
-        flow_entry(flow_entry_id identifer, Instructions&&... instructions)
-            : flow_entry{
-                  std::move(identifer)
-                , instruction_set{std::forward<Instructions>(instructions)...}
-                , {0, 0}, {OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT}, 0
-              }
+        flow_entry(flow_entry_id identifer, instruction_set instructions)
+            : flow_entry{std::move(identifer), std::move(instructions), {0, 0}, {OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT}, 0}
         {
         }
 
-        template <class... Instructions>
-        flow_entry(flow_entry_id identifer, timeouts const timeouts, Instructions&&... instructions)
-            : flow_entry{
-                  std::move(identifer)
-                , instruction_set{std::forward<Instructions>(instructions)...}
-                , {0, 0}, {timeouts.idle_timeout_, timeouts.hard_timeout_}, 0
-              }
+        flow_entry(flow_entry_id identifer, instruction_set instructions, timeouts const timeouts)
+            : flow_entry{std::move(identifer), std::move(instructions), {0, 0}, timeouts, 0}
+        {
+        }
+
+        flow_entry(flow_entry_id identifer, instruction_set instructions, std::uint64_t const cookie)
+            : flow_entry{std::move(identifer), std::move(instructions), {0, 0}, {OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT}, cookie}
+        {
+        }
+
+        flow_entry(flow_entry_id identifer, instruction_set instructions, timeouts const timeouts, std::uint64_t const cookie)
+            : flow_entry{std::move(identifer), std::move(instructions), {0, 0}, timeouts, cookie}
         {
         }
 

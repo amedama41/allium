@@ -19,12 +19,17 @@ BOOST_AUTO_TEST_SUITE(flow_mod_test)
 struct flow_entry_fixture {
     std::array<std::uint8_t, 6> eth_dst = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}};
     std::array<std::uint8_t, 6> eth_src = {{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}};
-    flow_entry entry = {
-          { oxm_match{oxm_in_port{4}, oxm_eth_dst{eth_dst}, oxm_eth_src{eth_src}}, OFP_DEFAULT_PRIORITY } // 4 + 8 + 10 + 10 = 32
-        , instructions::apply_actions{actions::set_field{oxm_eth_dst{eth_src}}, actions::set_field{oxm_eth_src{eth_dst}}, actions::output{4}} // 8 + 16 + 16 + 16 = 56
+    flow_entry entry = {{
+        oxm_match{oxm_in_port{4}, oxm_eth_dst{eth_dst}, oxm_eth_src{eth_src}}, OFP_DEFAULT_PRIORITY // 4 + 8 + 10 + 10 = 32
+    }, {
+          instructions::apply_actions{
+            actions::set_field{oxm_eth_dst{eth_src}}, actions::set_field{oxm_eth_src{eth_dst}}, actions::output{4} // 8 + 16 + 16 + 16 = 56
+          }
         , instructions::clear_actions{} // 8
-        , instructions::write_actions{actions::set_field{oxm_eth_dst{eth_src}}, actions::set_field{oxm_eth_src{eth_dst}}} // 8 + 16 + 16 = 40
-    };
+        , instructions::write_actions{
+            actions::set_field{oxm_eth_dst{eth_src}}, actions::set_field{oxm_eth_src{eth_dst}} // 8 + 16 + 16 = 40
+        }
+    }};
 };
 
 BOOST_FIXTURE_TEST_SUITE(instantiation_test, flow_entry_fixture)
