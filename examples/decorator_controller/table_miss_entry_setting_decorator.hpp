@@ -11,6 +11,12 @@ struct table_miss_entry_setting_decorator
     template <class Derived>
     struct type : canard::network::openflow::v13::decoration<type<Derived>, Base>
     {
+        template <class... Args>
+        type(Args&&... args)
+            : type::base_type{std::forward<Args>(args)...}
+        {
+        }
+
         template <class Channel>
         void handle(Channel&& channel)
         {

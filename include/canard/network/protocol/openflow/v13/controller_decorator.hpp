@@ -27,6 +27,8 @@ namespace v13 {
         : public Decorators::template type<Derived>
     {
     public:
+        using base_type = decoration;
+
         template <class... Args>
         decoration(Args&&... args)
             : Decorators::template type<Derived>{std::forward<Args>(args)...}

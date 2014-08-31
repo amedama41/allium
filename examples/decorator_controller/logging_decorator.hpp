@@ -11,8 +11,10 @@ struct logging_decorator
     template <class Derived>
     struct type : canard::network::openflow::v13::decoration<type<Derived>, Base>
     {
-        type(Logger const& logger)
-            : logger(logger)
+        template <class... Args>
+        type(Logger const& logger, Args&&... args)
+            : type::base_type{std::forward<Args>(args)...}
+            , logger(logger)
         {
         }
 

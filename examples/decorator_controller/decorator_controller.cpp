@@ -12,7 +12,10 @@ struct flooding_handler;
 using controller = of::controller<flooding_handler>;
 
 struct flooding_handler
-    : of::decoration<flooding_handler, logging_decorator<std::ostream&, table_miss_entry_setting_decorator<>>>
+    : of::decoration<flooding_handler
+        , logging_decorator<std::ostream&
+        , table_miss_entry_setting_decorator<>
+      >>
 {
     template <class... Args>
     flooding_handler(Args&&... args)
