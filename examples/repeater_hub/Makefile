@@ -2,9 +2,10 @@ INCLUDES=-I../../include
 CXX=clang++
 CXXFLAGS=-std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 LDFLAGS=-lboost_system-mt
+TARGET=repeater_hub
 
-all: repeater_hub
+all: $(TARGET)
 
 clean:
-	-rm repeater_hub
+	-rm $(TARGET)
 

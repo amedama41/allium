@@ -2,8 +2,10 @@ INCLUDES=-I../../include
 CXX=clang++
 CXXFLAGS=-std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 LDFLAGS=-lboost_system-mt
+TARGET=decorator_controller
 
-all: decorator_controller
+all: $(TARGET)
 
-clean: decorator_controller
+clean:
+	-rm $(TARGET)
 
