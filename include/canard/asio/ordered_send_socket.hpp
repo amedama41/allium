@@ -90,15 +90,15 @@ namespace canard {
                 stream_.buffers().consume(bytes_transferred);
                 auto total_transferred = bytes_transferred + already_sent_bytes_;
 
-                auto const it = boost::find_if(stream_.handlers(), [&](write_op_ptr<AsyncWriteStream>& handler) -> bool {
-                    auto const buffers_size = handler->buffers_size();
-                    if (total_transferred >= buffers_size) {
-                        handler.release()->complete(total_transferred == buffers_size ? ec : boost::system::error_code{}, buffers_size);
-                        total_transferred -= buffers_size;
-                        return false;
+                auto it = stream_.handlers().begin();
+                for (auto const it_end = stream_.handlers().end(); it != it_end; ++it) {
+                    auto const buffers_size = (*it)->buffers_size();
+                    if (total_transferred < buffers_size) {
+                        break;
                     }
-                    return true;
-                });
+                    (*it).release()->complete(total_transferred == buffers_size ? ec : boost::system::error_code{}, buffers_size);
+                    total_transferred -= buffers_size;
+                }
                 stream_.handlers().erase(stream_.handlers().begin(), it);
 
                 if (ec) {
