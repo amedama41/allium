@@ -10,7 +10,6 @@
 #include <boost/asio/completion_condition.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/system/error_code.hpp>
