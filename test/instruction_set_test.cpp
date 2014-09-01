@@ -1,9 +1,5 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE instruction_set_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/instruction_set.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <utility>
@@ -11,7 +7,6 @@
 #include <canard/unit_test.hpp>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
 #include <canard/network/protocol/openflow/v13/instructions.hpp>
-#include <canard/network/protocol/openflow/v13/instruction_set.hpp>
 
 namespace canard {
 namespace network {

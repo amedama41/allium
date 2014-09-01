@@ -1,15 +1,10 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE oxm_in_port_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 
 namespace canard {
 namespace network {

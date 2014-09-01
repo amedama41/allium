@@ -1,11 +1,6 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE port_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
-#include <boost/test/unit_test.hpp>
 #include <canard/network/protocol/openflow/v13/port.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace canard {
 namespace network {

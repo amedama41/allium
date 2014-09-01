@@ -1,15 +1,10 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE set_field_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/action/set_field.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
 #include <utility>
 #include <boost/type_erasure/any_cast.hpp>
-#include <canard/network/protocol/openflow/v13/action/set_field.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 
 namespace canard {

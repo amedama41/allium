@@ -1,14 +1,9 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE action_list_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/action_list.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <utility>
 #include <vector>
-#include <canard/network/protocol/openflow/v13/action_list.hpp>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
 
 namespace canard {

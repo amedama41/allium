@@ -20,6 +20,7 @@ MESSAGE_TEST_SRCS = hello_test.cpp hello_elements_test.cpp \
 					echo_test.cpp \
 					flow_mod_test.cpp \
 					group_mod_test.cpp \
+					table_features_test.cpp \
 					barrier_test.cpp \
 					packet_in_test.cpp
 MESSAGE_TEST_OBJS = $(MESSAGE_TEST_SRCS:.cpp=.o)
@@ -55,50 +56,44 @@ SRCS = $(UTILITY_TEST_SRCS) \
 	   $(OXM_MATCH_FIELD_TEST_SRCS)
 OBJS = $(SRCS:.cpp=.o)
 
+TARGET = all_test
+
 ALL_TESTS = $(OBJS:.o=)
 
-DEPENDS = .depends
+DEPENDS = $(addprefix .,$(OBJS:.o=.depends))
+
+define build_test
+$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
+$(CXX) $(CXXFLAGS) -o $@ driver.o $^ $(LDFLAGS)
+endef
 
 .PHONY: all clean run run_each
 
-all: $(DEPENDS) all_test
+all: $(DEPENDS) $(TARGET)
 
-$(OBJS): %.o: %.cpp
-	$(CXX) -DBOOST_TEST_MODULE $(CXXFLAGS) -c $<
+.%.depends: %.cpp
+	$(CXX) -MM $(CXXFLAGS) $< > $@
 
-$(ALL_TESTS): %: %.o
-	$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
-	$(CXX) $(CXXFLAGS) -o $@ driver.o $< $(LDFLAGS)
+%: %.o
+	$(build_test)
 
-all_test: $(OBJS)
-	$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
-	$(CXX) $(CXXFLAGS) -o $@ driver.o $^ $(LDFLAGS)
+$(TARGET): $(OBJS)
+	$(build_test)
 
 utility_test: $(UTILITY_TEST_OBJS)
-	$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
-	$(CXX) $(CXXFLAGS) -o $@ driver.o $^ $(LDFLAGS)
-	./$@
+	$(build_test)
 
 message_test: $(MESSAGE_TEST_OBJS)
-	$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
-	$(CXX) $(CXXFLAGS) -o $@ driver.o $^ $(LDFLAGS)
-	./$@
+	$(build_test)
 
 oxm_match_field_test: $(OXM_MATCH_FIELD_TEST_OBJS)
-	$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
-	$(CXX) $(CXXFLAGS) -o $@ driver.o $^ $(LDFLAGS)
-	./$@
+	$(build_test)
 
 action_test: $(ACTION_TEST_OBJS)
-	$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
-	$(CXX) $(CXXFLAGS) -o $@ driver.o $^ $(LDFLAGS)
-	./$@
-
-$(DEPENDS): $(SRCS)
-	$(CXX) -MM $(CXXFLAGS) $(SRCS) > $@
+	$(build_test)
 
 run: all
-	./all_test
+	./$(TARGET)
 
 run_each: $(ALL_TESTS)
 	for test in $(ALL_TESTS); do \
@@ -108,7 +103,7 @@ run_each: $(ALL_TESTS)
 	done
 
 clean:
-	-rm *.o $(ALL_TESTS) all_test utility_test message_test oxm_match_field_test action_test 2> /dev/null
+	-rm *.o $(DEPENDS) $(ALL_TESTS) $(TARGET) utility_test message_test oxm_match_field_test action_test 2> /dev/null
 
 -include $(DEPENDS)
 

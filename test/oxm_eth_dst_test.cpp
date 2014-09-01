@@ -1,9 +1,5 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE oxm_eth_dst_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <type_traits>
@@ -11,7 +7,6 @@
 #include <vector>
 #include <canard/mac_address.hpp>
 #include <canard/unit_test.hpp>
-#include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 
 namespace canard {
 namespace network {

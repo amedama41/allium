@@ -1,11 +1,6 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE byteorder_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
-#include <boost/test/unit_test.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <boost/test/unit_test.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {

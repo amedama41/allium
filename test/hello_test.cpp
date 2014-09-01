@@ -1,14 +1,9 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE hello_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/message/hello.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
 #include <canard/byteorder.hpp>
-#include <canard/network/protocol/openflow/v13/message/hello.hpp>
 
 namespace canard {
 namespace network {

@@ -1,14 +1,9 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE set_queue_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/action/set_queue.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <limits>
 #include <vector>
-#include <canard/network/protocol/openflow/v13/action/set_queue.hpp>
 
 namespace canard {
 namespace network {

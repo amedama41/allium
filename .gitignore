@@ -1,4 +1,5 @@
 *.o
+*.depends
 examples/decorator_controller/decorator_controller
 examples/learning_switch/learning_switch
 examples/repeater_hub/repeater_hub

@@ -1,13 +1,8 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE set_nw_ttl_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/action/set_nw_ttl.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
-#include <canard/network/protocol/openflow/v13/action/set_nw_ttl.hpp>
 
 namespace canard {
 namespace network {

@@ -1,14 +1,9 @@
 #define BOOST_TEST_DYN_LINK
-#ifndef BOOST_TEST_MODULE
-#define BOOST_TEST_MODULE error_msg_test
-#else
-#undef  BOOST_TEST_MODULE
-#endif
+#include <canard/network/protocol/openflow/v13/message/error_msg.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
 #include <canard/unit_test.hpp>
-#include <canard/network/protocol/openflow/v13/message/error_msg.hpp>
 
 namespace canard {
 namespace network {
