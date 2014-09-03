@@ -75,6 +75,47 @@ namespace v13 {
     }
 
     template <class OStream>
+    class ostream_visitor
+    {
+    public:
+        using result_type = OStream&;
+
+        explicit ostream_visitor(OStream& os)
+            : os{os}
+        {
+        }
+
+        template <class T>
+        auto operator()(T const& t) const
+            -> OStream&
+        {
+            return os << "\n\t\t" << t;
+        }
+
+    private:
+        OStream& os;
+    };
+
+    template <class OStream>
+    auto operator<<(OStream& os, table_features const& features)
+        -> OStream&
+    {
+        os << boost::format{"table_features[table_id=%u, name=%s, metadata_match=%#x, metadata_write=%#x, config=%#x, max_entries=%u]"}
+            % std::uint16_t{features.table_id()}
+            % features.name()
+            % features.metadata_match()
+            % features.metadata_write()
+            % features.config()
+            % features.max_entries()
+            ;
+        boost::for_each(features, [&](table_feature_properties::variant const& prop) {
+            // auto const visitor = ostream_visitor<OStream>{os};
+            // boost::apply_visitor(visitor, prop);
+        });
+        return os;
+    }
+
+    template <class OStream>
     auto operator<<(OStream& os, hello const& hello)
         -> OStream&
     {
@@ -207,6 +248,21 @@ namespace v13 {
             ;
         boost::for_each(reply, [&](port_stats const& stats) {
             os << "\n\t" << stats;
+        });
+        return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, table_features_reply const& reply)
+        -> OStream&
+    {
+        os << boost::format("%s: xid=%#x, flags=%#x, ")
+            % v13::to_string(reply.multipart_type())
+            % reply.xid()
+            % reply.flags()
+            ;
+        boost::for_each(reply, [&](table_features const& features) {
+            os << "\n\t" << features;
         });
         return os;
     }

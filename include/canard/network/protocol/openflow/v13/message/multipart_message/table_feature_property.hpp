@@ -15,6 +15,7 @@
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/variant/variant.hpp>
 #include <canard/constant_range.hpp>
+#include <canard/network/protocol/openflow/v13/action_id.hpp>
 #include <canard/network/protocol/openflow/v13/any_action_id.hpp>
 #include <canard/network/protocol/openflow/v13/any_instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_id.hpp>
@@ -23,6 +24,7 @@
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
+#include <canard/network/protocol/openflow/v13/oxm_id.hpp>
 
 namespace canard {
 namespace network {

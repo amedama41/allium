@@ -70,6 +70,12 @@ namespace v13 {
     };
 
     template <>
+    struct request_to_reply<table_features_request>
+    {
+        using type = table_features_reply;
+    };
+
+    template <>
     struct request_to_reply<port_description_request>
     {
         using type = port_description_reply;

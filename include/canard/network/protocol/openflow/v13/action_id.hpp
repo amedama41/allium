@@ -2,6 +2,7 @@
 #define CANARD_NETWORK_OPENFLOW_V13_ACTION_ID_HPP
 
 #include <cstdint>
+#include <boost/format.hpp>
 #include <canard/network/protocol/openflow/v13/any_action_id.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/encode.hpp>
@@ -15,9 +16,8 @@ namespace v13 {
     class action_id
     {
     public:
-        action_id(std::uint16_t const type, std::uint16_t const length)
+        action_id(std::uint16_t const type)
             : type_{type}
-            , length_{length}
         {
         }
 
@@ -27,7 +27,7 @@ namespace v13 {
             return ofp_action_type(type_);
         }
 
-        static constexpr auto length() const
+        static constexpr auto length()
             -> std::uint16_t
         {
             return sizeof(std::uint32_t);
@@ -37,7 +37,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(detail::encode(container, type_), length_);
+            return detail::encode(detail::encode(container, type_), length());
         }
 
         template <class Iterator>
@@ -46,16 +46,20 @@ namespace v13 {
         {
             auto const type = detail::decode<std::uint16_t>(first, last);
             auto const length = detail::decode<std::uint16_t>(first, last);
-            return action_id{type, length};
+            if (length != sizeof(std::uint16_t) + sizeof(std::uint16_t)) {
+                throw std::runtime_error{
+                    (boost::format{"%s: ofp_action_header:length is invalid, expected 4 but %u"} % __func__ % length).str()
+                };
+            }
+            return action_id{type};
         }
 
     private:
         std::uint16_t type_;
-        std::uint16_t length_;
     };
 
     template <class Iterator>
-    inline auto decode(Iterator& first, Iterator last)
+    inline auto decode_action_id(Iterator& first, Iterator last)
         -> any_action_id
     {
         auto copy_first = first;

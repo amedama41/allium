@@ -420,6 +420,7 @@ namespace v13 {
             , aggregate_stats_reply
             , table_stats_reply
             , port_stats_reply
+            , table_features_reply
             , port_description_reply
         >;
         switch (multipart_reply.type) {

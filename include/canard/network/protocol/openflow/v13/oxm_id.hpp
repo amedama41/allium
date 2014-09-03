@@ -20,10 +20,16 @@ namespace v13 {
         {
         }
 
+        oxm_id(ofp_oxm_class const oxm_class, std::uint8_t const field
+                , bool const hasmask, std::uint8_t const length)
+            : oxm_header_{(std::uint32_t(oxm_class) << 16) | (std::uint32_t{field} << 9) | (std::uint32_t{hasmask} << 8) | length}
+        {
+        }
+
         auto oxm_class() const
             -> ofp_oxm_class
         {
-            return oxm_class(oxm_header_ >> 16);
+            return ofp_oxm_class(oxm_header_ >> 16);
         }
 
         auto oxm_field() const
@@ -53,10 +59,10 @@ namespace v13 {
         auto oxm_header() const
             -> std::uint32_t
         {
-            return oxm_header_
+            return oxm_header_;
         }
 
-        static constexpr auto length() const
+        static constexpr auto length()
             -> std::uint16_t
         {
             return sizeof(std::uint32_t);
@@ -66,7 +72,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, header_);
+            return detail::encode(container, oxm_header_);
         }
 
         template <class Iterator>
@@ -74,7 +80,7 @@ namespace v13 {
             -> oxm_id
         {
             auto const oxm_header = detail::decode<std::uint32_t>(first, last);
-            return oxm_id{oxm_header & 0x00000100};
+            return oxm_id{oxm_header};
         }
 
     private:
@@ -84,7 +90,7 @@ namespace v13 {
     class oxm_experimenter_id
     {
     public:
-        experimenter_oxm_id(std::uint32_t const oxm_header, std::uint32_t const experimenter)
+        oxm_experimenter_id(std::uint32_t const oxm_header, std::uint32_t const experimenter)
             : header_{oxm_header, experimenter}
         {
         }
@@ -92,7 +98,7 @@ namespace v13 {
         auto oxm_class() const
             -> ofp_oxm_class
         {
-            return oxm_class(header_.oxm_header >> 16);
+            return ofp_oxm_class(header_.oxm_header >> 16);
         }
 
         auto oxm_field() const
@@ -131,7 +137,7 @@ namespace v13 {
             return header_.experimenter;
         }
 
-        static constexpr auto length() const
+        static constexpr auto length()
             -> std::uint16_t
         {
             return sizeof(detail::ofp_oxm_experimenter_header);
