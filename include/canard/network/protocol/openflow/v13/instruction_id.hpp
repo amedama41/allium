@@ -33,7 +33,7 @@ namespace v13 {
         static constexpr auto length()
             -> std::uint16_t
         {
-            return sizeof(std::uint32_t);
+            return sizeof(detail::ofp_instruction);
         }
 
         template <class Container>
@@ -49,7 +49,7 @@ namespace v13 {
         {
             auto const type = detail::decode<std::uint16_t>(first, last);
             auto const length = detail::decode<std::uint16_t>(first, last);
-            if (length != sizeof(std::uint32_t)) {
+            if (length != sizeof(detail::ofp_instruction)) {
                 throw 2;
             }
             return instruction_id{type};
@@ -84,7 +84,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return sizeof(std::uint32_t) * 2 + data_.size();
+            return sizeof(detail::ofp_instruction_experimenter) + data_.size();
         }
 
         auto experimenter() const
@@ -105,10 +105,10 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> experimenter_instruction_id
         {
-            std::advance(first, sizeof(std::uint16_t));
+            std::advance(first, sizeof(detail::ofp_instruction_experimenter::type));
             auto const length = detail::decode<std::uint16_t>(first, last);
             auto const experimenter = detail::decode<std::uint32_t>(first, last);
-            auto data = std::vector<std::uint8_t>(first, std::next(first, length - sizeof(std::uint32_t) * 2));
+            auto data = std::vector<std::uint8_t>(first, std::next(first, length - sizeof(detail::ofp_instruction_experimenter)));
             std::advance(first, data.size());
             return experimenter_instruction_id{experimenter, std::move(data)};
         }
@@ -126,7 +126,7 @@ namespace v13 {
         auto const type = detail::decode<std::uint16_t>(copy_first, last);
         switch (type) {
         case OFPIT_EXPERIMENTER:
-            std::advance(copy_first, sizeof(std::uint16_t));
+            std::advance(copy_first, sizeof(detail::ofp_instruction_experimenter::len));
             switch (detail::decode<std::uint32_t>(copy_first, last)) {
             default:
                 return experimenter_instruction_id::decode(first, last);

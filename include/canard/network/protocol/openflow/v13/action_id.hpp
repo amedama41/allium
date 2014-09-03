@@ -1,6 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_ACTION_ID_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_ACTION_ID_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <boost/format.hpp>
 #include <canard/network/protocol/openflow/v13/any_action_id.hpp>
@@ -30,7 +31,7 @@ namespace v13 {
         static constexpr auto length()
             -> std::uint16_t
         {
-            return sizeof(std::uint32_t);
+            return offsetof(detail::ofp_action_header, pad);
         }
 
         template <class Container>
@@ -46,9 +47,10 @@ namespace v13 {
         {
             auto const type = detail::decode<std::uint16_t>(first, last);
             auto const length = detail::decode<std::uint16_t>(first, last);
-            if (length != sizeof(std::uint16_t) + sizeof(std::uint16_t)) {
+            if (length != offsetof(detail::ofp_action_header, pad)) {
                 throw std::runtime_error{
-                    (boost::format{"%s: ofp_action_header:length is invalid, expected 4 but %u"} % __func__ % length).str()
+                    (boost::format{"%s: ofp_action_header:length is invalid, expected %u but %u"}
+                     % __func__ % offsetof(detail::ofp_action_header, pad) % length).str()
                 };
             }
             return action_id{type};
