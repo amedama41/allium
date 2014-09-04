@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <iterator>
 #include <limits>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/encode.hpp>
@@ -78,6 +77,19 @@ namespace v13 {
                 return detail::encode(container, request_);
             }
 
+            template <class Iterator>
+            static auto decode(Iterator& first, Iterator last)
+                -> detail::ofp_multipart_request
+            {
+                return detail::decode<detail::ofp_multipart_request>(first, last);
+            }
+
+        protected:
+            explicit basic_multipart_request(detail::ofp_multipart_request const& request)
+                : request_(request)
+            {
+            }
+
         private:
             detail::ofp_multipart_request request_;
         };
@@ -126,8 +138,24 @@ namespace v13 {
                 return reply_.flags;
             }
 
+            using detail::basic_openflow_message<T>::encode;
+
+            template <class Container>
+            auto encode(Container& container) const
+                -> Container&
+            {
+                return detail::encode(container, reply_);
+            }
+
+            template <class Iterator>
+            static auto decode(Iterator& first, Iterator last)
+                -> detail::ofp_multipart_reply
+            {
+                return detail::decode<detail::ofp_multipart_reply>(first, last);
+            }
+
         protected:
-            basic_multipart_reply(detail::ofp_multipart_reply const& reply)
+            explicit basic_multipart_reply(detail::ofp_multipart_reply const& reply)
                 : reply_(reply)
             {
                 if (detail::basic_openflow_message<T>::type() != message_type) {
@@ -137,14 +165,6 @@ namespace v13 {
                 if (multipart_type() != T::multipart_type_value) {
                     throw std::runtime_error{"invalid multipart type"};
                 }
-            }
-
-        public:
-            template <class Iterator>
-            static auto decode(Iterator& first, Iterator last)
-                -> detail::ofp_multipart_reply
-            {
-                return detail::decode<detail::ofp_multipart_reply>(first, last);
             }
 
         private:

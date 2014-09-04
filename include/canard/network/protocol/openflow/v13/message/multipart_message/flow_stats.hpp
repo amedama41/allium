@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include <boost/range/algorithm/for_each.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
@@ -142,6 +143,25 @@ namespace v13 {
             return match_.encode(container);
         }
 
+        template <class Iterator>
+        static auto decode(Iterator& first, Iterator last)
+            -> flow_stats_request
+        {
+            auto const request = basic_multipart_request::decode(first, last);
+            auto const stats_reqeust = detail::decode<detail::ofp_flow_stats_request>(first, last);
+            auto match = oxm_match::decode(first, last);
+            return flow_stats_request{request, stats_reqeust, std::move(match)};
+        }
+
+    private:
+        flow_stats_request(detail::ofp_multipart_request const& request
+                , detail::ofp_flow_stats_request const& stats_request, oxm_match match)
+            : basic_multipart_request{request}
+            , flow_stats_request_(stats_request)
+            , match_(std::move(match))
+        {
+        }
+
     private:
         detail::ofp_flow_stats_request flow_stats_request_;
         oxm_match match_;
@@ -168,6 +188,19 @@ namespace v13 {
             -> const_iterator
         {
             return flow_stats_list_.end();
+        }
+
+        using basic_openflow_message::encode;
+
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            basic_multipart_reply::encode(container);
+            boost::for_each(flow_stats_list_, [&](flow_stats const& stats) {
+                stats.encode(container);
+            });
+            return container;
         }
 
         template <class Iterator>

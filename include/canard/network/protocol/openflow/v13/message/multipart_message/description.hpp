@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iterator>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -20,6 +21,19 @@ namespace v13 {
 
         description_request()
             : basic_multipart_request{0, 0}
+        {
+        }
+
+        template <class Iterator>
+        static auto decode(Iterator& first, Iterator last)
+            -> description_request
+        {
+            return description_request{basic_multipart_request::decode(first, last)};
+        }
+
+    private:
+        explicit description_request(detail::ofp_multipart_request const& request)
+            : basic_multipart_request{request}
         {
         }
     };
@@ -58,6 +72,16 @@ namespace v13 {
             -> char const*
         {
             return desc_.dp_desc;
+        }
+
+        using basic_openflow_message::encode;
+
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            basic_multipart_reply::encode(container);
+            return detail::encode(container, desc_);
         }
 
         template <class Iterator>

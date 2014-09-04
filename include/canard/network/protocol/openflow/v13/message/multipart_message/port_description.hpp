@@ -25,6 +25,19 @@ namespace v13 {
             : basic_multipart_request{0, 0}
         {
         }
+
+        template <class Iterator>
+        static auto decode(Iterator& first, Iterator last)
+            -> port_description_request
+        {
+            return port_description_request{basic_multipart_request::decode(first, last)};
+        }
+
+    private:
+        explicit port_description_request(detail::ofp_multipart_request const& request)
+            : basic_multipart_request{request}
+        {
+        }
     };
 
     class port_description_reply
@@ -55,6 +68,19 @@ namespace v13 {
             -> const_iterator
         {
             return ports_.end();
+        }
+
+        using basic_openflow_message::encode;
+
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            basic_multipart_reply::encode(container);
+            boost::for_each(ports_, [&](port const& p) {
+                p.encode(container);
+            });
+            return container;
         }
 
         template <class Iterator>
