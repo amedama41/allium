@@ -153,7 +153,7 @@ namespace v13 {
         {
             auto buffer_handler = detail::make_shared_buffer_handler(
                     send_handler_type<Handler>(std::forward<Handler>(handler)));
-            return send(message, std::move(buffer_handler), buffer_handler.buffer());
+            return send(message, buffer_handler, buffer_handler.buffer());
         }
 
         template <class T>
@@ -188,7 +188,7 @@ namespace v13 {
         {
             auto buffer_handler = detail::make_shared_buffer_handler(
                     request_handler_type<RequestHandler, T>(std::forward<RequestHandler>(handler)));
-            return send_request(message, std::move(buffer_handler), buffer_handler.buffer());
+            return send_request(message, buffer_handler, buffer_handler.buffer());
         }
 
     private:
