@@ -105,7 +105,6 @@ namespace v13 {
                 return timer_.expires_from_now();
             }
 
-        protected:
             auto expires_at(time_point const& expire_time)
                 -> std::size_t
             {
@@ -130,6 +129,7 @@ namespace v13 {
                 return timer_.expires_from_now(expiry_time, ec);
             }
 
+        protected:
             template <class WaitHandler>
             auto async_wait(WaitHandler&& handler)
                 -> typename wait_result<WaitHandler>::result_type
@@ -223,11 +223,6 @@ namespace v13 {
                     , "RequestType must be same as request type of T");
         }
 
-        ~reply_message()
-        {
-            std::cout << __func__ << std::endl;
-        }
-
         auto message()
             -> boost::optional<T>&
         {
@@ -248,30 +243,14 @@ namespace v13 {
         }
 
         template <class ReplyWaitHandler>
-        auto async_wait_at(time_point const& expire_time, ReplyWaitHandler&& handler)
-            -> typename reply_wait_result<ReplyWaitHandler>::result_type
-        {
-            this->expires_at(expire_time);
-            return async_wait_impl(std::forward<ReplyWaitHandler>(handler));
-        }
-
-        template <class ReplyWaitHandler>
-        auto async_wait_for(duration const& expire_time, ReplyWaitHandler&& handler)
-            -> typename reply_wait_result<ReplyWaitHandler>::result_type
-        {
-            this->expires_from_now(expire_time);
-            return async_wait_impl(std::forward<ReplyWaitHandler>(handler));
-        }
-
-    private:
-        template <class ReplyWaitHandler>
-        auto async_wait_impl(ReplyWaitHandler&& handler)
+        auto async_wait(ReplyWaitHandler&& handler)
             -> typename reply_wait_result<ReplyWaitHandler>::result_type
         {
             using handler_type = typename reply_wait_result<ReplyWaitHandler>::handler_type;
 
             auto result = reply_wait_result<ReplyWaitHandler>{std::forward<ReplyWaitHandler>(handler)};
-            this->async_wait(detail::reply_wait_op<reply_message, handler_type>{this->shared_from_this(), result.handler()});
+            detail::reply_message_base<Timer>::async_wait(
+                    detail::reply_wait_op<reply_message, handler_type>{this->shared_from_this(), result.handler()});
 
             return result.get();
         }

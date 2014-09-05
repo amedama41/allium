@@ -22,6 +22,7 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/system/error_code.hpp>
+#include <canard/asio/async_result_init.hpp>
 #include <canard/asio/ordered_send_socket.hpp>
 #include <canard/network/protocol/openflow/v13/detail/dummy_handler.hpp>
 #include <canard/network/protocol/openflow/v13/detail/request_handler.hpp>
@@ -34,6 +35,7 @@
 #include <canard/network/protocol/openflow/v13/request_to_reply.hpp>
 #include <canard/network/protocol/openflow/v13/to_error_code.hpp>
 #include <canard/network/utils/thread_pool.hpp>
+#include <canard/type_traits.hpp>
 
 #include <iostream>
 
@@ -87,11 +89,12 @@ namespace v13 {
         using endpoint_type = typename Socket::lowest_layer_type::endpoint_type;
         template <class Handler>
         using send_handler_type = typename boost::asio::handler_type<
-                Handler, void(boost::system::error_code, std::size_t)
+                  typename canard::remove_cv_and_reference<Handler>::type
+                , void(boost::system::error_code, std::size_t)
         >::type;
         template <class Handler, class T>
         using request_handler_type = typename boost::asio::handler_type<
-                  Handler
+                  typename canard::remove_cv_and_reference<Handler>::type
                 , void(boost::system::error_code, std::shared_ptr<reply_message<typename request_to_reply<T>::type>>)
         >::type;
 
@@ -134,49 +137,58 @@ namespace v13 {
         }
 
         template <class T, class Handler, class Container>
-        auto send(detail::basic_openflow_message<T> const& message, Handler handler, Container& buffer)
+        auto send(T const& message, Handler&& handler, Container& buffer)
             -> typename boost::asio::async_result<send_handler_type<Handler>>::type
         {
-            auto send_handler = send_handler_type<Handler>(std::move(handler));
-            auto result = boost::asio::async_result<send_handler_type<Handler>>{send_handler};
-            send_impl(message, std::move(send_handler), buffer);
-            return result.get();
+            auto init = canard::async_result_init<
+                typename canard::remove_cv_and_reference<Handler>::type, void(boost::system::error_code, std::size_t)
+            >{std::forward<Handler>(handler)};
+            send_impl(message, std::move(init.handler()), buffer);
+            return init.get();
         }
 
         template <class T, class Handler>
-        auto send(detail::basic_openflow_message<T> const& message, Handler handler)
+        auto send(T const& message, Handler&& handler)
             -> typename boost::asio::async_result<send_handler_type<Handler>>::type
         {
-            auto send_handler = send_handler_type<Handler>(std::move(handler));
-            auto result = boost::asio::async_result<send_handler_type<Handler>>{send_handler};
-            auto buffer_handler = detail::make_shared_buffer_handler(send_handler);
-            send_impl(message, buffer_handler, buffer_handler.buffer());
-            return result.get();
+            auto buffer_handler = detail::make_shared_buffer_handler(
+                    send_handler_type<Handler>(std::forward<Handler>(handler)));
+            return send(message, std::move(buffer_handler), buffer_handler.buffer());
         }
 
         template <class T>
-        auto send(detail::basic_openflow_message<T> const& message)
-            -> decltype(send(message, detail::dummy_handler{}))
+        auto send(T const& message)
+            -> typename boost::asio::async_result<send_handler_type<detail::dummy_handler>>::type
         {
             return send(message, detail::dummy_handler{});
         }
 
         template <class T, class RequestHandler, class Container>
-        auto send_request(detail::basic_openflow_message<T> const& message, RequestHandler handler, Container& buffer)
+        auto send_request(T const& message, RequestHandler&& handler, Container& buffer)
             -> typename boost::asio::async_result<request_handler_type<RequestHandler, T>>::type
         {
-            auto req_handler = request_handler_type<RequestHandler, T>(std::move(handler));
+            auto req_handler = request_handler_type<RequestHandler, T>(std::forward<RequestHandler>(handler));
             auto result = boost::asio::async_result<request_handler_type<RequestHandler, T>>{req_handler};
             buffer.clear();
-            static_cast<T const&>(message).encode(buffer);
+            message.encode(buffer);
             auto this_ = this->shared_from_this();
             auto xid = message.xid();
             strand_.dispatch([&, this_, xid, req_handler]() mutable {
                 auto reply = this_->template register_request<T>(xid);
-                async_send(boost::asio::buffer(buffer)
-                    , thread_pool_.post(detail::make_request_handler(std::move(req_handler), std::move(reply))));
+                async_send(boost::asio::buffer(buffer), [&, req_handler, reply](boost::system::error_code const& ec, std::size_t) {
+                    thread_pool_.post(canard::detail::bind(std::move(req_handler), ec, std::move(reply)));
+                });
             });
             return result.get();
+        }
+
+        template <class T, class RequestHandler>
+        auto send_request(T const& message, RequestHandler&& handler)
+            -> typename boost::asio::async_result<request_handler_type<RequestHandler, T>>::type
+        {
+            auto buffer_handler = detail::make_shared_buffer_handler(
+                    request_handler_type<RequestHandler, T>(std::forward<RequestHandler>(handler)));
+            return send_request(message, std::move(buffer_handler), buffer_handler.buffer());
         }
 
     private:
@@ -201,10 +213,10 @@ namespace v13 {
         }
 
         template <class T, class WriteHandler, class Container>
-        void send_impl(detail::basic_openflow_message<T> const& message, WriteHandler handler, Container& buffer)
+        void send_impl(T const& message, WriteHandler handler, Container& buffer)
         {
             buffer.clear();
-            static_cast<T const&>(message).encode(buffer);
+            message.encode(buffer);
             strand_.dispatch([&, handler]() mutable {
                 async_send(boost::asio::buffer(buffer), [&, handler](boost::system::error_code ec, std::size_t bytes_transferred) {
                     thread_pool_.post(std::bind(std::move(handler), ec, bytes_transferred));
