@@ -218,8 +218,8 @@ namespace v13 {
             buffer.clear();
             message.encode(buffer);
             strand_.dispatch([&, handler]() mutable {
-                async_send(boost::asio::buffer(buffer), [&, handler](boost::system::error_code ec, std::size_t bytes_transferred) {
-                    thread_pool_.post(std::bind(std::move(handler), ec, bytes_transferred));
+                async_send(boost::asio::buffer(buffer), [&, handler](boost::system::error_code ec, std::size_t bytes_transferred) mutable {
+                    thread_pool_.post(canard::detail::bind(std::move(handler), ec, bytes_transferred));
                 });
             });
         }
@@ -236,8 +236,9 @@ namespace v13 {
                     this_->handle_disconnected(error);
                     return;
                 }
+                auto function = canard::detail::bind(std::move(handler), error, bytes_transferred);
                 using boost::asio::asio_handler_invoke;
-                asio_handler_invoke([=]() mutable { handler(error, bytes_transferred); }, std::addressof(handler));
+                asio_handler_invoke(function, std::addressof(function.handler()));
             }));
         }
 
