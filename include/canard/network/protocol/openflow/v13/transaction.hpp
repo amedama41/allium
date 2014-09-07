@@ -21,11 +21,11 @@ namespace v13 {
     namespace detail {
 
         template <class Timer = boost::asio::steady_timer>
-        class reply_message_base
+        class transaction_base
         {
         private:
             template <class WaitHandler>
-            using wait_result = canard::async_result_init<
+            using wait_handler_result_init = canard::async_result_init<
                   typename canard::remove_cv_and_reference<WaitHandler>::type
                 , void(boost::system::error_code)
             >;
@@ -35,7 +35,7 @@ namespace v13 {
             using duration = typename Timer::duration;
 
         protected:
-            reply_message_base(boost::asio::io_service& io_service
+            transaction_base(boost::asio::io_service& io_service
                     , ofp_type const request_type, ofp_type const reply_type)
                 : timer_{io_service}
                 , error_{}
@@ -132,7 +132,7 @@ namespace v13 {
         protected:
             template <class WaitHandler>
             auto async_wait(WaitHandler&& handler)
-                -> typename wait_result<WaitHandler>::result_type
+                -> typename wait_handler_result_init<WaitHandler>::result_type
             {
                 return timer_.async_wait(std::forward<WaitHandler>(handler));
             }
@@ -144,47 +144,47 @@ namespace v13 {
             ofp_type reply_type_;
         };
 
-        template <class ReplyMessage, class ReplyWaitHandler>
-        class reply_wait_op
+        template <class Transaction, class WaitForReplyHandler>
+        class wait_handler_adaptor
         {
         public:
-            reply_wait_op(std::shared_ptr<ReplyMessage> message, ReplyWaitHandler handler)
-                : message_(std::move(message))
+            wait_handler_adaptor(std::shared_ptr<Transaction> transaction, WaitForReplyHandler handler)
+                : transaction_(std::move(transaction))
                 , handler_(std::move(handler))
             {
             }
 
-            void operator()(boost::system::error_code const& error)
+            void operator()(boost::system::error_code const& ec)
             {
-                if (message_->error()) {
-                    handler_(message_->error(), message_->message());
+                if (transaction_->error()) {
+                    handler_(transaction_->error(), transaction_->reply());
                 }
                 else {
-                    handler_(message_->message() ? boost::system::error_code{} : error, message_->message());
+                    handler_(transaction_->reply() ? boost::system::error_code{} : ec, transaction_->reply());
                 }
             }
 
-            friend auto asio_handler_allocate(std::size_t const size, reply_wait_op* const context)
+            friend auto asio_handler_allocate(std::size_t const size, wait_handler_adaptor* const context)
                 -> void*
             {
                 using boost::asio::asio_handler_allocate;
                 return asio_handler_allocate(size, std::addressof(context->handler_));
             }
 
-            friend void asio_handler_deallocate(void* const pointer, std::size_t const size, reply_wait_op* const context)
+            friend void asio_handler_deallocate(void* const pointer, std::size_t const size, wait_handler_adaptor* const context)
             {
                 using boost::asio::asio_handler_deallocate;
                 asio_handler_deallocate(pointer, size, std::addressof(context->handler_));
             }
 
             template <class Function>
-            friend void asio_handler_invoke(Function&& function, reply_wait_op* const context)
+            friend void asio_handler_invoke(Function&& function, wait_handler_adaptor* const context)
             {
                 using boost::asio::asio_handler_invoke;
                 asio_handler_invoke(std::forward<Function>(function), std::addressof(context->handler_));
             }
 
-            friend auto asio_handler_is_continuation(reply_wait_op* const context)
+            friend auto asio_handler_is_continuation(wait_handler_adaptor* const context)
                 -> bool
             {
                 using boost::asio::asio_handler_is_continuation;
@@ -192,22 +192,37 @@ namespace v13 {
             }
 
         private:
-            std::shared_ptr<ReplyMessage> message_;
-            ReplyWaitHandler handler_;
+            std::shared_ptr<Transaction> transaction_;
+            WaitForReplyHandler handler_;
         };
+
+        template <class Transaction, class WaitForReplyHandler>
+        inline auto make_wait_handler_adaptor(std::shared_ptr<Transaction> trans, WaitForReplyHandler&& handler)
+            -> wait_handler_adaptor<
+                  Transaction
+                , typename canard::remove_cv_and_reference<WaitForReplyHandler>::type>
+        {
+            return wait_handler_adaptor<
+                  Transaction
+                , typename canard::remove_cv_and_reference<WaitForReplyHandler>::type>{
+                std::move(trans), std::forward<WaitForReplyHandler>(handler)
+            };
+        }
 
     } // namespace detail
 
 
-    template <class T, class Timer = boost::asio::steady_timer>
-    class reply_message
-        : public detail::reply_message_base<Timer>
-        , public std::enable_shared_from_this<reply_message<T, Timer>>
+    template <class Message, class Timer = boost::asio::steady_timer>
+    class transaction
+        : public detail::transaction_base<Timer>
+        , public std::enable_shared_from_this<transaction<Message, Timer>>
     {
-        template <class ReplyWaitHandler>
-        using reply_wait_result = canard::async_result_init<
-              typename canard::remove_cv_and_reference<ReplyWaitHandler>::type
-            , void(boost::system::error_code, boost::optional<T>)
+        using base_type = detail::transaction_base<Timer>;
+
+        template <class WaitForReplyHandler>
+        using async_wait_for_reply_result_init = canard::async_result_init<
+              typename canard::remove_cv_and_reference<WaitForReplyHandler>::type
+            , void(boost::system::error_code, boost::optional<Message>)
         >;
 
     public:
@@ -215,48 +230,55 @@ namespace v13 {
         using duration = typename Timer::duration;
 
         template <class RequestType>
-        reply_message(boost::asio::io_service& io_service, RequestType*)
-            : detail::reply_message_base<Timer>{io_service, RequestType::message_type, T::message_type}
-            , reply_message_{boost::none}
+        transaction(boost::asio::io_service& io_service, RequestType*)
+            : base_type{io_service, RequestType::message_type, Message::message_type}
+            , reply_{boost::none}
         {
-            static_assert(std::is_same<typename request_to_reply<RequestType>::type, T>::value
-                    , "RequestType must be same as request type of T");
+            static_assert(std::is_same<typename request_to_reply<RequestType>::type, Message>::value
+                    , "RequestType must be same as request type of Message");
         }
 
-        auto message()
-            -> boost::optional<T>&
+        auto reply()
+            -> boost::optional<Message>&
         {
-            return reply_message_;
+            return reply_;
         }
 
-        auto message() const
-            -> boost::optional<T> const&
+        auto reply() const
+            -> boost::optional<Message> const&
         {
-            return reply_message_;
+            return reply_;
         }
 
-        template <class MessageType>
-        void message(MessageType&& reply_message)
+        void reply(Message const& reply)
         {
-            reply_message_ = std::forward<MessageType>(reply_message);
+            reply_ = reply;
             this->cancel();
         }
 
-        template <class ReplyWaitHandler>
-        auto async_wait(ReplyWaitHandler&& handler)
-            -> typename reply_wait_result<ReplyWaitHandler>::result_type
+        void reply(Message&& reply)
         {
-            using handler_type = typename reply_wait_result<ReplyWaitHandler>::handler_type;
+            reply_ = std::forward<Message>(reply);
+            this->cancel();
+        }
 
-            auto result = reply_wait_result<ReplyWaitHandler>{std::forward<ReplyWaitHandler>(handler)};
-            detail::reply_message_base<Timer>::async_wait(
-                    detail::reply_wait_op<reply_message, handler_type>{this->shared_from_this(), result.handler()});
+        template <class WaitForReplyHandler>
+        auto async_wait(WaitForReplyHandler&& handler)
+            -> typename async_wait_for_reply_result_init<WaitForReplyHandler>::result_type
+        {
+            auto result = async_wait_for_reply_result_init<WaitForReplyHandler>{
+                std::forward<WaitForReplyHandler>(handler)
+            };
+
+            base_type::async_wait(detail::make_wait_handler_adaptor(
+                    this->shared_from_this(), std::move(result.handler())
+            ));
 
             return result.get();
         }
 
     private:
-        boost::optional<T> reply_message_;
+        boost::optional<Message> reply_;
     };
 
 } // namespace v13

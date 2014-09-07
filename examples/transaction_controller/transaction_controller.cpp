@@ -13,7 +13,7 @@ public:
     {
         auto request = of::features_request{};
         channel->send_request(request
-                , [=](boost::system::error_code const& ec, std::shared_ptr<of::reply_message<of::features_reply>> reply)
+                , [=](boost::system::error_code const& ec, std::shared_ptr<of::transaction<of::features_reply>> reply)
         {
             if (ec) {
                 std::cerr << "send error: " << ec.message() << std::endl;

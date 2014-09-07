@@ -25,13 +25,12 @@
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/ordered_send_socket.hpp>
 #include <canard/network/protocol/openflow/v13/detail/dummy_handler.hpp>
-#include <canard/network/protocol/openflow/v13/detail/request_handler.hpp>
 #include <canard/network/protocol/openflow/v13/detail/shared_buffer_handler.hpp>
 #include <canard/network/protocol/openflow/v13/disconnected_info.hpp>
 #include <canard/network/protocol/openflow/v13/messages.hpp>
 #include <canard/network/protocol/openflow/v13/controller_decorator.hpp>
 #include <canard/network/protocol/openflow/v13/io/openflow_io.hpp>
-#include <canard/network/protocol/openflow/v13/reply_message.hpp>
+#include <canard/network/protocol/openflow/v13/transaction.hpp>
 #include <canard/network/protocol/openflow/v13/request_to_reply.hpp>
 #include <canard/network/protocol/openflow/v13/to_error_code.hpp>
 #include <canard/network/utils/thread_pool.hpp>
@@ -95,7 +94,7 @@ namespace v13 {
         template <class Handler, class T>
         using request_handler_type = typename boost::asio::handler_type<
                   typename canard::remove_cv_and_reference<Handler>::type
-                , void(boost::system::error_code, std::shared_ptr<reply_message<typename request_to_reply<T>::type>>)
+                , void(boost::system::error_code, std::shared_ptr<transaction<typename request_to_reply<T>::type>>)
         >::type;
 
     public:
@@ -194,13 +193,13 @@ namespace v13 {
     private:
         template <class T>
         auto register_request(std::uint32_t const xid)
-            -> std::shared_ptr<reply_message<typename request_to_reply<T>::type>>
+            -> std::shared_ptr<transaction<typename request_to_reply<T>::type>>
         {
             using reply_type = typename request_to_reply<T>::type;
             auto this_ = this->shared_from_this();
-            auto reply = std::shared_ptr<reply_message<reply_type>>(
-                  new reply_message<reply_type>{socket().get_io_service(), static_cast<T*>(nullptr)}
-                , [this_, xid](reply_message<reply_type>* const p) mutable {
+            auto reply = std::shared_ptr<transaction<reply_type>>(
+                  new transaction<reply_type>{socket().get_io_service(), static_cast<T*>(nullptr)}
+                , [this_, xid](transaction<reply_type>* const p) mutable {
                     auto& channel = *this_;
                     channel.strand_.dispatch([=]() {
                         this_->reply_map_.erase(xid);
@@ -379,9 +378,9 @@ namespace v13 {
             auto message = decode<T>(header);
             auto const it = reply_map_.find(message.xid());
             if (it != reply_map_.end() && header.type == it->second->reply_type()) {
-                auto reply = static_cast<reply_message<T>*>(it->second);
+                auto trans = static_cast<transaction<T>*>(it->second);
                 thread_pool_.post([=]() mutable {
-                    reply->message(std::move(message));
+                    trans->reply(std::move(message));
                 });
                 reply_map_.erase(it);
                 return;
@@ -414,7 +413,7 @@ namespace v13 {
         boost::asio::streambuf streambuf_;
         std::vector<unsigned char> send_buffer_;
         boost::asio::steady_timer timer_;
-        std::unordered_map<std::uint32_t, detail::reply_message_base<>*> reply_map_;
+        std::unordered_map<std::uint32_t, detail::transaction_base<>*> reply_map_;
         boost::optional<endpoint_type> endpoint_;
         ControllerHandler& controller_handler_;
         utils::thread_pool& thread_pool_;

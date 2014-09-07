@@ -22,8 +22,8 @@
 #include <canard/network/protocol/openflow/v13/oxm_match.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 #include <canard/network/protocol/openflow/v13/port.hpp>
-#include <canard/network/protocol/openflow/v13/reply_message.hpp>
 #include <canard/network/protocol/openflow/v13/request_to_reply.hpp>
 #include <canard/network/protocol/openflow/v13/to_error_code.hpp>
+#include <canard/network/protocol/openflow/v13/transaction.hpp>
 
 #endif // CANARD_NETWORK_OPENFLOW_V13_HPP
