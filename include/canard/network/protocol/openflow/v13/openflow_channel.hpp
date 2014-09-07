@@ -225,44 +225,73 @@ namespace v13 {
             });
         }
 
-        template <class ConstBufferSequence, class Handler>
-        void async_send(ConstBufferSequence const& buffers, Handler handler)
+        template <class WriteHandler>
+        class send_handler_adaptor
         {
-            auto this_ = this->shared_from_this();
-            stream_.async_write_some(buffers
-                    , strand_.wrap([this_, handler](boost::system::error_code const& error, std::size_t const bytes_transferred) mutable {
-                if (error) {
-                    this_->socket().close();
-                    this_->timer_.cancel();
-                    this_->handle_disconnected(error);
-                    return;
-                }
-                auto function = canard::detail::bind(std::move(handler), error, bytes_transferred);
+        public:
+            send_handler_adaptor(std::shared_ptr<openflow_channel> channel, WriteHandler handler)
+                : channel_(std::move(channel)), handler_(std::move(handler))
+            {
+            }
+
+            void operator()(boost::system::error_code const& ec, std::size_t const bytes_transferred)
+            {
+                auto function = canard::detail::bind(std::move(handler_), ec, bytes_transferred);
                 using boost::asio::asio_handler_invoke;
                 asio_handler_invoke(function, std::addressof(function.handler()));
+                if (ec) {
+                    channel_->close(ec);
+                }
+            }
+
+        private:
+            std::shared_ptr<openflow_channel> channel_;
+            WriteHandler handler_;
+        };
+
+        template <class ConstBufferSequence, class Handler>
+        void async_send(ConstBufferSequence const& buffers, Handler&& handler)
+        {
+            using handler_type = typename canard::remove_cv_and_reference<Handler>::type;
+            stream_.async_write_some(buffers
+                    , strand_.wrap(send_handler_adaptor<handler_type>{
+                        this->shared_from_this(), std::forward<Handler>(handler)
             }));
         }
+
+        class receive_messages_handler
+        {
+        public:
+            explicit receive_messages_handler(std::shared_ptr<openflow_channel> channel)
+                : channel_(std::move(channel))
+            {
+            }
+
+            void operator()(boost::system::error_code const& ec, std::size_t const) {
+                if (ec) {
+                    channel_->close(ec);
+                    return;
+                }
+                channel_->set_echo_request_timer();
+                auto const next_reading_size = channel_->handle_messages();
+                auto const channel = channel_.get();
+                channel->receive_messages(next_reading_size, std::move(*this));
+            }
+
+        private:
+            std::shared_ptr<openflow_channel> channel_;
+        };
 
         void start_message_loop()
         {
-            receive_messages(sizeof(detail::ofp_header));
+            receive_messages(sizeof(detail::ofp_header), receive_messages_handler{this->shared_from_this()});
         }
 
-        void receive_messages(std::size_t const least_length)
+        void receive_messages(std::size_t const least_length, receive_messages_handler handler)
         {
-            auto this_ = this->shared_from_this();
-            boost::asio::async_read(stream_, streambuf_, boost::asio::transfer_at_least(least_length)
-                    , strand_.wrap([this_](boost::system::error_code const& error, std::size_t const bytes_transferred) {
-                if (error) {
-                    this_->socket().close();
-                    this_->timer_.cancel();
-                    this_->handle_disconnected(error);
-                    return;
-                }
-                this_->set_echo_request_timer();
-                auto const next_reading_size = this_->handle_messages();
-                this_->receive_messages(next_reading_size);
-            }));
+            boost::asio::async_read(stream_, streambuf_
+                    , boost::asio::transfer_at_least(least_length)
+                    , strand_.wrap(std::move(handler)));
         }
 
         auto handle_messages()
@@ -299,10 +328,17 @@ namespace v13 {
             timer_.async_wait(strand_.wrap([this_](boost::system::error_code const& error) {
                 if (not error) {
                     std::cout << "no response from switch" << std::endl;
-                    this_->socket().close();
-                    this_->timer_.cancel();
+                    this_->close(error);
                 }
             }));
+        }
+
+        void close(boost::system::error_code const& ec)
+        {
+            auto ignored = boost::system::error_code{};
+            socket().close(ignored);
+            timer_.cancel(ignored);
+            handle_disconnected(ec);
         }
 
         /*****************************************************************************************/
