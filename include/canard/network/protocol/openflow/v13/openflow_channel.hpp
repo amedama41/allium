@@ -175,7 +175,9 @@ namespace v13 {
             strand_.dispatch([&, this_, xid, req_handler]() mutable {
                 auto reply = this_->template register_request<T>(xid);
                 async_send(boost::asio::buffer(buffer), [&, req_handler, reply](boost::system::error_code const& ec, std::size_t) {
-                    thread_pool_.post(canard::detail::bind(std::move(req_handler), ec, std::move(reply)));
+                    thread_pool_.post(canard::detail::bind(
+                              std::move(req_handler), ec
+                            , transaction<typename request_to_reply<T>::type>{std::move(reply)}));
                 });
             });
             return result.get();
@@ -193,13 +195,13 @@ namespace v13 {
     private:
         template <class T>
         auto register_request(std::uint32_t const xid)
-            -> std::shared_ptr<transaction<typename request_to_reply<T>::type>>
+            -> std::shared_ptr<transaction_impl<typename request_to_reply<T>::type>>
         {
             using reply_type = typename request_to_reply<T>::type;
             auto this_ = this->shared_from_this();
-            auto reply = std::shared_ptr<transaction<reply_type>>(
-                  new transaction<reply_type>{socket().get_io_service(), static_cast<T*>(nullptr)}
-                , [this_, xid](transaction<reply_type>* const p) mutable {
+            auto reply = std::shared_ptr<transaction_impl<reply_type>>(
+                  new transaction_impl<reply_type>{socket().get_io_service(), static_cast<T*>(nullptr)}
+                , [this_, xid](transaction_impl<reply_type>* const p) mutable {
                     auto& channel = *this_;
                     channel.strand_.dispatch([=]() {
                         this_->reply_map_.erase(xid);
@@ -378,9 +380,9 @@ namespace v13 {
             auto message = decode<T>(header);
             auto const it = reply_map_.find(message.xid());
             if (it != reply_map_.end() && header.type == it->second->reply_type()) {
-                auto trans = static_cast<transaction<T>*>(it->second);
+                auto txn = static_cast<transaction_impl<T>*>(it->second);
                 thread_pool_.post([=]() mutable {
-                    trans->reply(std::move(message));
+                    txn->reply(std::move(message));
                 });
                 reply_map_.erase(it);
                 return;

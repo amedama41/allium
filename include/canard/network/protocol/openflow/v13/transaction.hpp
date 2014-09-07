@@ -46,7 +46,7 @@ namespace v13 {
 
         public:
             auto error() const
-                -> boost::system::error_code
+                -> boost::system::error_code const&
             {
                 return error_;
             }
@@ -213,9 +213,9 @@ namespace v13 {
 
 
     template <class Message, class Timer = boost::asio::steady_timer>
-    class transaction
+    class transaction_impl
         : public detail::transaction_base<Timer>
-        , public std::enable_shared_from_this<transaction<Message, Timer>>
+        , public std::enable_shared_from_this<transaction_impl<Message, Timer>>
     {
         using base_type = detail::transaction_base<Timer>;
 
@@ -230,7 +230,7 @@ namespace v13 {
         using duration = typename Timer::duration;
 
         template <class RequestType>
-        transaction(boost::asio::io_service& io_service, RequestType*)
+        transaction_impl(boost::asio::io_service& io_service, RequestType*)
             : base_type{io_service, RequestType::message_type, Message::message_type}
             , reply_{boost::none}
         {
@@ -279,6 +279,95 @@ namespace v13 {
 
     private:
         boost::optional<Message> reply_;
+    };
+
+    template <class Message, class Timer = boost::asio::steady_timer>
+    class transaction
+    {
+        template <class WaitForReplyHandler>
+        using async_wait_for_reply_result_init = canard::async_result_init<
+              typename canard::remove_cv_and_reference<WaitForReplyHandler>::type
+            , void(boost::system::error_code, boost::optional<Message>)
+        >;
+
+    public:
+        using time_point = typename Timer::time_point;
+        using duration = typename Timer::duration;
+
+        explicit transaction(std::shared_ptr<transaction_impl<Message, Timer>> pimpl)
+            : pimpl_(std::move(pimpl))
+        {
+        }
+
+        auto cancel()
+            -> std::size_t
+        {
+            return pimpl_->cancel();
+        }
+
+        auto cancel(boost::system::error_code& ec)
+            -> std::size_t
+        {
+            return pimpl_->cancel(ec);
+        }
+
+        auto cancel_one()
+            -> std::size_t
+        {
+            return pimpl_->cancel_one();
+        }
+
+        auto cancel_one(boost::system::error_code& ec)
+            -> std::size_t
+        {
+            return pimpl_->cancel_one(ec);
+        }
+
+        auto expires_at() const
+            -> time_point
+        {
+            return pimpl_->expires_at();
+        }
+
+        auto expires_from_now() const
+            -> duration
+        {
+            return pimpl_->expires_from_now();
+        }
+
+        auto expires_at(time_point const& expire_time)
+            -> std::size_t
+        {
+            return pimpl_->expires_at(expire_time);
+        }
+
+        auto expires_at(time_point const& expire_time, boost::system::error_code& ec)
+            -> std::size_t
+        {
+            return pimpl_->expires_at(expire_time, ec);
+        }
+
+        auto expires_from_now(duration const& expiry_time)
+            -> std::size_t
+        {
+            return pimpl_->expires_from_now(expiry_time);
+        }
+
+        auto expires_from_now(duration const& expiry_time, boost::system::error_code& ec)
+            -> std::size_t
+        {
+            return pimpl_->expires_from_now(expiry_time, ec);
+        }
+
+        template <class WaitForReplyHandler>
+        auto async_wait(WaitForReplyHandler&& handler)
+            -> typename async_wait_for_reply_result_init<WaitForReplyHandler>::result_type
+        {
+            return pimpl_->async_wait(std::forward<WaitForReplyHandler>(handler));
+        }
+
+    private:
+        std::shared_ptr<transaction_impl<Message, Timer>> pimpl_;
     };
 
 } // namespace v13
