@@ -193,22 +193,37 @@ namespace v13 {
         }
 
     private:
+        template <class Reply>
+        class transaction_deleter
+        {
+        public:
+            explicit transaction_deleter(std::shared_ptr<openflow_channel> channel, std::uint32_t const xid)
+                : channel_(std::move(channel))
+                , xid_(xid)
+            {
+            }
+
+            void operator()(transaction_impl<Reply>* const txn) const
+            {
+                channel_->strand_.dispatch([=](){
+                    channel_->reply_map_.erase(xid_);
+                    delete txn;
+                });
+            }
+
+        private:
+            std::shared_ptr<openflow_channel> channel_;
+            std::uint32_t xid_;
+        };
+
         template <class T>
         auto register_request(std::uint32_t const xid)
             -> std::shared_ptr<transaction_impl<typename request_to_reply<T>::type>>
         {
             using reply_type = typename request_to_reply<T>::type;
-            auto this_ = this->shared_from_this();
             auto reply = std::shared_ptr<transaction_impl<reply_type>>(
                   new transaction_impl<reply_type>{socket().get_io_service(), static_cast<T*>(nullptr)}
-                , [this_, xid](transaction_impl<reply_type>* const p) mutable {
-                    auto& channel = *this_;
-                    channel.strand_.dispatch([=]() {
-                        this_->reply_map_.erase(xid);
-                        delete p;
-                    });
-                }
-            );
+                , transaction_deleter<reply_type>{this->shared_from_this(), xid});
             reply_map_.emplace(xid, reply.get());
             return reply;
         }
