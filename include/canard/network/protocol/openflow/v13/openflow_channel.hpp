@@ -94,7 +94,7 @@ namespace v13 {
         template <class Handler, class T>
         using request_handler_type = typename boost::asio::handler_type<
                   typename canard::remove_cv_and_reference<Handler>::type
-                , void(boost::system::error_code, std::shared_ptr<transaction<typename request_to_reply<T>::type>>)
+                , void(boost::system::error_code, transaction<typename request_to_reply<T>::type>)
         >::type;
 
     public:
@@ -367,7 +367,6 @@ namespace v13 {
                 thread_pool_.post([=]() {
                     detail::get_base_type(this_->controller_handler_).handle(this_, disconnected_info{error});
                 });
-                endpoint_ = boost::none;
             }
         }
 
@@ -547,7 +546,7 @@ namespace v13 {
         case std::tuple_element<N, reply_message_type_list>::type::message_type: \
             handle_reply<std::tuple_element<N, reply_message_type_list>::type>(header); \
             break;
-        BOOST_PP_REPEAT(3, CANARD_NETWORK_OPENFLOW_V13_REPLY_MESSAGE_TYPE_APPLY_CASE, _)
+        BOOST_PP_REPEAT(4, CANARD_NETWORK_OPENFLOW_V13_REPLY_MESSAGE_TYPE_APPLY_CASE, _)
 #       undef CANARD_NETWORK_OPENFLOW_V13_REPLY_MESSAGE_TYPE_APPLY_CASE
 
         default:
