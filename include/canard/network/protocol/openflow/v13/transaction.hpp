@@ -294,6 +294,8 @@ namespace v13 {
         using time_point = typename Timer::time_point;
         using duration = typename Timer::duration;
 
+        transaction() noexcept = default;
+
         explicit transaction(std::shared_ptr<transaction_impl<Message, Timer>> pimpl)
             : pimpl_(std::move(pimpl))
         {
