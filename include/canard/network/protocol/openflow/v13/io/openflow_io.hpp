@@ -2,6 +2,8 @@
 #define CANARD_NETWORK_OPENFLOW_V13_IO_HPP
 
 #include <cstdint>
+#include <array>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
 #include <canard/network/protocol/openflow/v13/messages.hpp>
 #include <canard/network/protocol/openflow/v13/io/enum_to_string.hpp>
@@ -11,13 +13,25 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
+    auto port_state_string(std::uint32_t const port_state)
+        -> std::string
+    {
+        return boost::algorithm::join(std::array<std::string, 3>{{
+                  (OFPPS_LINK_DOWN & port_state ? "LINK_DOWN" : "")
+                , (OFPPS_BLOCKED & port_state ? "BLOCKED" : "")
+                , (OFPPS_LIVE & port_state ? "LIVE" : "")
+        }}, " ");
+    }
+
     template <class OStream>
     auto operator<<(OStream& os, v13::port const& port)
         -> OStream&
     {
-        return os << boost::format{"port[port_no=%u, name=%s, curr_speed=%u, max_speed=%u]"}
+        return os << boost::format{"port[port_no=%u, name=%s, config=%s, state=(%s), curr_speed=%u, max_speed=%u]"}
             % port.port_no()
             % port.name()
+            % port.config()
+            % port_state_string(port.state().to_ulong())
             % port.curr_speed()
             % port.max_speed()
             ;
