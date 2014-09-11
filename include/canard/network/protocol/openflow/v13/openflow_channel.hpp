@@ -492,7 +492,7 @@ namespace v13 {
         case std::tuple_element<N, multipart_list>::type::multipart_type_value: \
             handle_reply<std::tuple_element<N, multipart_list>::type>(multipart_reply.header); \
             break;
-        BOOST_PP_REPEAT(6, CANARD_NETWORK_OPENFLOW_V13_MULTIPART_TYPE_APPLY_CASE, _)
+        BOOST_PP_REPEAT(7, CANARD_NETWORK_OPENFLOW_V13_MULTIPART_TYPE_APPLY_CASE, _)
 #       undef CANARD_NETWORK_OPENFLOW_V13_MULTIPART_TYPE_APPLY_CASE
 
         default:
