@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
+#include <boost/optional/optional_io.hpp>
 
 namespace canard {
 namespace network {

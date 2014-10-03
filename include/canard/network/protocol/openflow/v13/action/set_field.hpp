@@ -14,6 +14,7 @@
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -27,7 +28,7 @@ namespace v13 {
         public:
             static ofp_action_type const action_type = OFPAT_SET_FIELD;
 
-            template <class OXMField>
+            template <class OXMField, typename std::enable_if<!is_related<set_field, OXMField>::value>::type* = nullptr>
             explicit set_field(OXMField&& oxm_field)
                 : type_{action_type}
                 , length_{detail::exact_length(sizeof(type_) + sizeof(length_) + oxm_field.length())}

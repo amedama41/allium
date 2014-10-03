@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <boost/optional/optional_io.hpp>
 
 namespace canard {
 namespace network {

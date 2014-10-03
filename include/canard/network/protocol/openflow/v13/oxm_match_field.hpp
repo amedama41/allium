@@ -11,6 +11,7 @@
 #include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/oxm_type_definition_map.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -39,7 +40,13 @@ namespace v13 {
         {
         }
 
-        template <class T, typename std::enable_if<!std::is_scalar<typename std::remove_reference<T>::type>::value>::type* = nullptr>
+        template <
+              class T
+            , typename std::enable_if<
+                       !std::is_scalar<typename std::remove_reference<T>::type>::value
+                    && !canard::is_related<oxm_match_field, T>::value
+              >::type* = nullptr
+        >
         explicit oxm_match_field(T&& value)
             : value_(std::forward<T>(value).to_bytes())
             , mask_{boost::none}
@@ -62,7 +69,7 @@ namespace v13 {
         auto oxm_has_mask() const
             -> bool
         {
-            return mask_;
+            return static_cast<bool>(mask_);
         }
 
         auto oxm_length() const

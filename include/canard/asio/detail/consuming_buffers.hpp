@@ -46,10 +46,22 @@ namespace detail {
             return buffers_.empty();
         }
 
+        auto begin()
+            -> iterator
+        {
+            return buffers_.begin();
+        }
+
         auto begin() const
             -> const_iterator
         {
             return buffers_.begin();
+        }
+
+        auto end()
+            -> iterator
+        {
+            return buffers_.end();
         }
 
         auto end() const
