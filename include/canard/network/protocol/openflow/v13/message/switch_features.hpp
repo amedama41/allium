@@ -87,6 +87,12 @@ namespace v13 {
             return switch_features_.header;
         }
 
+        auto datapath_id() const
+            -> std::uint64_t
+        {
+            return switch_features_.datapath_id;
+        }
+
         auto num_buffers() const
             -> std::uint32_t
         {
