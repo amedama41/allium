@@ -5,6 +5,7 @@ examples/decorator_controller/decorator_controller
 examples/dump_table_features/dump_table_features
 examples/learning_switch/learning_switch
 examples/repeater_hub/repeater_hub
+examples/topology/topology
 examples/transaction_controller/transaction_controller
 include/canard/network/protocol/openflow/v13/detail/byteorder.hpp
 include/canard/network/protocol/openflow/v13/detail/fusion_adaptor.hpp
