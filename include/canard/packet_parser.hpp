@@ -181,6 +181,73 @@ namespace canard {
         std::uint8_t const* data_;
     };
 
+    class lldpdu
+    {
+    public:
+        lldpdu(std::uint8_t const* const first, std::uint8_t const* const last)
+            : data_(first)
+            , last_(last)
+        {
+        }
+
+        auto chassis_id() const
+            -> std::string
+        {
+            auto const tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            return std::string{
+                  data_ + sizeof(std::uint16_t) + sizeof(std::uint8_t)
+                , data_ + sizeof(std::uint16_t) + tlv_length(tlv_header)
+            };
+        }
+
+        auto chassis_id_subtype() const
+            -> std::uint8_t
+        {
+            return *(data_ + sizeof(std::uint16_t));
+        }
+
+        auto port_id() const
+            -> std::string
+        {
+            auto const chassis_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            auto const first = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
+            auto const tlv_header = canard::ntoh(detail::decode<std::uint16_t>(first));
+            return std::string{
+                  first + sizeof(std::uint16_t) + sizeof(std::uint8_t)
+                , first + sizeof(std::uint16_t) + tlv_length(tlv_header)
+            };
+        }
+
+        auto port_id_subtype() const
+            -> std::uint8_t
+        {
+            auto const chassis_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            auto const first = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
+            return *(first + sizeof(std::uint16_t));
+        }
+
+        auto time_to_live() const
+            -> std::uint16_t
+        {
+            auto const chassis_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            auto first = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
+            auto const port_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(first));
+            first += sizeof(std::uint16_t) + tlv_length(port_id_tlv_header);
+            return canard::ntoh(detail::decode<std::uint16_t>(first + sizeof(std::uint16_t)));
+        }
+
+    private:
+        static auto tlv_length(std::uint16_t const tlv_header)
+            -> std::uint16_t
+        {
+            return tlv_header & 0x1FF;
+        }
+
+    private:
+        std::uint8_t const* data_;
+        std::uint8_t const* last_;
+    };
+
     class ipv4_header
     {
     public:
@@ -1112,6 +1179,13 @@ namespace canard {
     }
 
     template <class Function>
+    inline void parse_lldpdu(std::uint8_t const* const first, std::uint8_t const* const last, Function&& f)
+    {
+        auto const header = lldpdu{first, last};
+        f(header);
+    }
+
+    template <class Function>
     inline void ether_next_header(std::uint16_t const type, std::uint8_t const* const first, std::uint8_t const* const last, Function& f);
 
     template <class Function>
@@ -1143,6 +1217,9 @@ namespace canard {
             return;
         case ETHERTYPE_IPV6:
             parse_ipv6(first, last, f);
+            return;
+        case 0x88CC:
+            parse_lldpdu(first, last, f);
             return;
         default:
             f(boost::make_iterator_range(first, last));
@@ -1177,7 +1254,7 @@ namespace canard {
         auto operator()(Header&&) const
             -> bool
         {
-            return false;
+            return true;
         }
 
         auto operator()(T header) const
@@ -1208,6 +1285,15 @@ namespace canard {
         }
 
         template <class Function>
+        auto lldpdu(Function&& function) const
+            -> packet const&
+        {
+            auto func = hoge<Function, canard::lldpdu>{std::forward<Function>(function)};
+            parse_ether_frame(first_, last_, func);
+            return *this;
+        }
+
+        template <class Function>
         void for_each(Function&& function) const
         {
         }
@@ -1216,6 +1302,7 @@ namespace canard {
         std::uint8_t const* first_;
         std::uint8_t const* last_;
     };
+
 } // namespace canard
 
 #endif // CANARD_PACKET_PARSER_HPP
