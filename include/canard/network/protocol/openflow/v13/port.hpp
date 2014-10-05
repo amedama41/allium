@@ -84,10 +84,22 @@ namespace v13 {
             return {port_->config};
         }
 
+        auto administratively_down() const
+            -> bool
+        {
+            return port_->config & OFPPC_PORT_DOWN;
+        }
+
         auto state() const
             -> std::bitset<std::numeric_limits<std::uint32_t>::digits>
         {
             return {port_->state};
+        }
+
+        auto link_down() const
+            -> bool
+        {
+            return port_->state & OFPPS_LINK_DOWN;
         }
 
         auto curr_speed() const
