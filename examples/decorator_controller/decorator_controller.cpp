@@ -29,7 +29,7 @@ struct flooding_handler
     }
 
     template <class... Args>
-    void handle(Args const&...) {}
+    void handle(controller::channel_ptr channel, Args const&...) {}
 };
 
 int main(int argc, char* argv[])

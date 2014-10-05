@@ -19,7 +19,7 @@ struct dump_table_features
     }
 
     template <class... Args>
-    void handle(Args const&...) {}
+    void handle(controller::channel_ptr, Args const&...) {}
 };
 
 int main()
