@@ -11,6 +11,9 @@ namespace canard {
     {
     };
 
+    template <class T>
+    using remove_cv_and_reference_t = typename remove_cv_and_reference<T>::type;
+
     template <class T, class... U>
     struct is_related : std::false_type {};
 
