@@ -1,5 +1,6 @@
 *.o
 *.depends
+examples/coroutine/coroutine
 examples/decorator_controller/decorator_controller
 examples/dump_table_features/dump_table_features
 examples/learning_switch/learning_switch
