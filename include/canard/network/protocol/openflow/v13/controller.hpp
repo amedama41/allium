@@ -10,7 +10,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/system/error_code.hpp>
-#include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
+#include <canard/network/protocol/openflow/v13/openflow_channel_impl.hpp>
 #include <canard/network/protocol/openflow/v13/options.hpp>
 #include <canard/network/utils/thread_pool.hpp>
 
@@ -23,10 +23,9 @@ namespace v13 {
     class controller
     {
         using tcp = boost::asio::ip::tcp;
-        using channel = openflow_channel<ControllerHandler>;
 
     public:
-        using channel_ptr = std::shared_ptr<openflow_channel<ControllerHandler>>;
+        using channel_ptr = std::shared_ptr<openflow_channel<>>;
         using options = controller_options<ControllerHandler>;
 
         controller(controller_options<ControllerHandler> const& options)
@@ -66,7 +65,7 @@ namespace v13 {
     private:
         void async_accept()
         {
-            auto channel = std::make_shared<openflow_channel<ControllerHandler>>(
+            auto channel = std::make_shared<openflow_channel_impl<ControllerHandler>>(
                     *io_service_, controller_handler_, *thread_pool_);
             acceptor_.async_accept(channel->socket(), [=](boost::system::error_code const& error) {
                 if (!error) {
