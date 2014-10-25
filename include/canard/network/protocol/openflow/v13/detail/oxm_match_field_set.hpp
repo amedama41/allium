@@ -10,7 +10,6 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
-#include <boost/type_erasure/any_cast.hpp>
 #include <canard/type_traits.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_match_field.hpp>
 #include <canard/network/protocol/openflow/v13/decode_oxm_match_field.hpp>
@@ -33,24 +32,6 @@ namespace v13 {
                 add_impl(std::forward<OXMMatchFields>(match_fields)...);
             }
 
-            oxm_match_field_set(oxm_match_field_set const&) = default;
-            oxm_match_field_set(oxm_match_field_set&&) noexcept = default;
-            auto operator=(oxm_match_field_set&&) noexcept
-                -> oxm_match_field_set& = default;
-
-            auto operator=(oxm_match_field_set const& other)
-                -> oxm_match_field_set&
-            {
-                auto tmp = other;
-                swap(tmp);
-                return *this;
-            }
-
-            void swap(oxm_match_field_set& other)
-            {
-                oxm_match_field_map_.swap(other.oxm_match_field_map_);
-            }
-
             auto length() const
                 -> std::uint16_t
             {
@@ -67,9 +48,7 @@ namespace v13 {
                 auto const oxm_type = field.oxm_type();
                 auto const it = oxm_match_field_map_.lower_bound(oxm_type);
                 if (it != oxm_match_field_map_.end() && !oxm_match_field_map_.key_comp()(oxm_type, it->first)) {
-                    boost::type_erasure::any_cast<
-                        typename std::remove_cv<typename std::remove_reference<OXMMatchField>::type>::type&
-                    >(it->second) = std::forward<OXMMatchField>(field);
+                    it->second = std::forward<OXMMatchField>(field);
                 }
                 else {
                     oxm_match_field_map_.emplace_hint(it, oxm_type, std::forward<OXMMatchField>(field));
@@ -84,7 +63,7 @@ namespace v13 {
                 if (it == oxm_match_field_map_.end()) {
                     return boost::none;
                 }
-                return boost::type_erasure::any_cast<OXMMatchField const&>(it->second);
+                return any_cast<OXMMatchField>(it->second);
             }
 
             auto operator[](std::uint32_t const oxm_type) const

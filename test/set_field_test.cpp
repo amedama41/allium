@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <vector>
 #include <utility>
-#include <boost/type_erasure/any_cast.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 
 namespace canard {
@@ -26,7 +25,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
         BOOST_CHECK_EQUAL(sut.length(), ((4 + oxm.length()) + 7) / 8 * 8);
         BOOST_CHECK_EQUAL(sut.length() % 8, 0);
         BOOST_CHECK_EQUAL(sut.oxm_match_field().oxm_type(), oxm.oxm_type());
-        auto const sut_field = boost::type_erasure::any_cast<oxm_eth_type const*>(&sut.oxm_match_field());
+        auto const sut_field = any_cast<oxm_eth_type>(&sut.oxm_match_field());
         BOOST_REQUIRE(sut_field);
         BOOST_CHECK_EQUAL(sut_field->oxm_value(), oxm.oxm_value());
     }
@@ -51,7 +50,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
         BOOST_CHECK_EQUAL(sut.length(), ((4 + sizeof(std::uint32_t) + sizeof(std::uint16_t)) + 7) / 8 * 8);
         BOOST_CHECK_EQUAL(sut.length() % 8, 0);
         BOOST_CHECK_EQUAL(sut.oxm_match_field().oxm_type(), oxm_vlan_vid::oxm_type());
-        auto const sut_field = boost::type_erasure::any_cast<oxm_vlan_vid const*>(&sut.oxm_match_field());
+        auto const sut_field = any_cast<oxm_vlan_vid>(&sut.oxm_match_field());
         BOOST_REQUIRE(sut_field);
         BOOST_CHECK_EQUAL(sut_field->oxm_value(), 0x0fff);
     }
@@ -78,7 +77,7 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
         BOOST_CHECK_EQUAL(copy.type(), sut.type());
         BOOST_CHECK_EQUAL(copy.length(), sut.length());
         BOOST_CHECK_EQUAL(copy.oxm_match_field().oxm_type(), oxm_ipv4_src::oxm_type());
-        auto const field = boost::type_erasure::any_cast<oxm_ipv4_src const*>(&copy.oxm_match_field());
+        auto const field = any_cast<oxm_ipv4_src>(&copy.oxm_match_field());
         BOOST_REQUIRE(field);
         BOOST_CHECK_EQUAL(field->oxm_value(), 0x7f000001);
     }
@@ -93,7 +92,7 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
         BOOST_CHECK_EQUAL(copy.type(), sut.type());
         BOOST_CHECK_EQUAL(copy.length(), sut.length());
         BOOST_CHECK_EQUAL(copy.oxm_match_field().oxm_type(), oxm_ipv4_src::oxm_type());
-        auto const field = boost::type_erasure::any_cast<oxm_ipv4_src const*>(&copy.oxm_match_field());
+        auto const field = any_cast<oxm_ipv4_src>(&copy.oxm_match_field());
         BOOST_REQUIRE(field);
         BOOST_CHECK_EQUAL(field->oxm_value(), 0x7f000001);
     }
@@ -116,7 +115,7 @@ BOOST_AUTO_TEST_CASE(encode_decode_test)
     BOOST_CHECK_EQUAL(decoded_action.type(), sut.type());
     BOOST_CHECK_EQUAL(decoded_action.length(), sut.length());
     BOOST_CHECK_EQUAL(decoded_action.oxm_match_field().oxm_type(), oxm_ipv4_src::oxm_type());
-    auto const decode_action_field = boost::type_erasure::any_cast<oxm_ipv4_src const*>(&sut.oxm_match_field());
+    auto const decode_action_field = any_cast<oxm_ipv4_src>(&sut.oxm_match_field());
     BOOST_REQUIRE(decode_action_field);
     BOOST_CHECK_EQUAL(decode_action_field->oxm_value(), 0x7f000001);
 }

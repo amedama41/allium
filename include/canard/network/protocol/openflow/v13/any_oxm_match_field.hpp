@@ -2,34 +2,117 @@
 #define CANARD_NETWORK_OPENFLOW_V13_ANY_OXM_MATCH_FIELD_HPP
 
 #include <cstdint>
-#include <boost/mpl/vector.hpp>
-#include <boost/type_erasure/any.hpp>
-#include <boost/type_erasure/builtin.hpp>
-#include <boost/type_erasure/placeholder.hpp>
-#include <canard/network/protocol/openflow/v13/detail/type_erasure_concepts.hpp>
-
-#include <vector>
+#include <type_traits>
+#include <utility>
+#include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/get.hpp>
+#include <boost/variant/variant.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
+#include <canard/network/protocol/openflow/v13/oxm_match_field_list.hpp>
+#include <canard/mpl/adapted/std_tuple.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
 
-    using any_oxm_match_field = boost::type_erasure::any<
-        boost::mpl::vector<
-              boost::type_erasure::typeid_<>
-            , boost::type_erasure::copy_constructible<>
-            , boost::type_erasure::destructible<>
-            , boost::type_erasure::assignable<>
-            , has_length<std::uint16_t(), boost::type_erasure::_self const>
-            , has_oxm_type<std::uint32_t(), boost::type_erasure::_self const>
-            , has_oxm_header<std::uint32_t(), boost::type_erasure::_self const>
-            , has_oxm_has_mask<bool(), boost::type_erasure::_self const>
-            , has_oxm_length<std::uint8_t(), boost::type_erasure::_self const>
-            , has_wildcard<bool(), boost::type_erasure::_self const>
-            , has_encode<std::vector<unsigned char>&(std::vector<unsigned char>&), boost::type_erasure::_self const>
-        >
-    >;
+    class any_oxm_match_field
+    {
+        using oxm_match_field_variant = boost::make_variant_over<
+            default_oxm_match_field_list
+        >::type;
+
+    public:
+        template <class OXMMatchField, typename std::enable_if<!is_related<any_oxm_match_field, OXMMatchField>::value>::type* = nullptr>
+        any_oxm_match_field(OXMMatchField&& field)
+            : variant_(std::forward<OXMMatchField>(field))
+        {
+        }
+
+        template <class OXMMatchField, typename std::enable_if<!is_related<any_oxm_match_field, OXMMatchField>::value>::type* = nullptr>
+        auto operator=(OXMMatchField&& field)
+            -> any_oxm_match_field&
+        {
+            variant_ = std::forward<OXMMatchField>(field);
+            return *this;
+        }
+
+        auto length() const
+            -> std::uint16_t
+        {
+            auto visitor = detail::length_visitor{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        auto oxm_type() const
+            -> std::uint32_t
+        {
+            auto visitor = detail::oxm_type_visitor{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        auto oxm_header() const
+            -> std::uint32_t
+        {
+            auto visitor = detail::oxm_header_visitor{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        auto oxm_has_mask() const
+            -> bool
+        {
+            auto visitor = detail::oxm_has_mask_visitor{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        auto oxm_length() const
+            -> std::uint8_t
+        {
+            auto visitor = detail::oxm_length_visitor{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        auto wildcard() const
+            -> bool
+        {
+            auto visitor = detail::wildcard_visitor{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            auto visitor = detail::encoding_visitor<Container>{container};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        template <class T>
+        friend auto any_cast(any_oxm_match_field const& field)
+            -> T const&;
+
+        template <class T>
+        friend auto any_cast(any_oxm_match_field const* field)
+            -> T const*;
+
+    private:
+        oxm_match_field_variant variant_;
+    };
+
+    template <class T>
+    auto any_cast(any_oxm_match_field const& field)
+        -> T const&
+    {
+        return boost::get<T>(field.variant_);
+    }
+
+    template <class T>
+    auto any_cast(any_oxm_match_field const* field)
+        -> T const*
+    {
+        return boost::get<T>(&field->variant_);
+    }
 
 } // namespace v13
 } // namespace openflow

@@ -33,6 +33,30 @@ namespace v13 {
             Container* container_;
         };
 
+        template <class Type>
+        class type_visitor
+            : public boost::static_visitor<Type>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> Type
+            {
+                return t.type();
+            }
+        };
+
+        class length_visitor
+            : public boost::static_visitor<std::uint16_t>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> std::uint16_t
+            {
+                return t.length();
+            }
+        };
 
         class calculating_exact_length_visitor
             : public boost::static_visitor<std::uint16_t>
@@ -43,6 +67,66 @@ namespace v13 {
                 -> std::uint16_t
             {
                 return detail::exact_length(t.length());
+            }
+        };
+
+        class oxm_type_visitor
+            : public boost::static_visitor<std::uint32_t>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> std::uint32_t
+            {
+                return t.oxm_type();
+            }
+        };
+
+        class oxm_header_visitor
+            : public boost::static_visitor<std::uint32_t>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> std::uint32_t
+            {
+                return t.oxm_header();
+            }
+        };
+
+        class oxm_has_mask_visitor
+            : public boost::static_visitor<bool>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> bool
+            {
+                return t.oxm_has_mask();
+            }
+        };
+
+        class oxm_length_visitor
+            : public boost::static_visitor<std::uint8_t>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> std::uint8_t
+            {
+                return t.oxm_length();
+            }
+        };
+
+        class wildcard_visitor
+            : public boost::static_visitor<bool>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> bool
+            {
+                return t.wildcard();
             }
         };
 
