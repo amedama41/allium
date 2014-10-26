@@ -2,29 +2,90 @@
 #define CANARD_NETWORK_OPENFLOW_V13_ANY_ACTION_HPP
 
 #include <cstdint>
-#include <boost/mpl/vector.hpp>
-#include <boost/type_erasure/any.hpp>
-#include <boost/type_erasure/builtin.hpp>
-#include <boost/type_erasure/placeholder.hpp>
-#include <canard/network/protocol/openflow/v13/detail/type_erasure_concepts.hpp>
+#include <type_traits>
+#include <utility>
+#include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/get.hpp>
+#include <boost/variant/variant.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <canard/network/protocol/openflow/v13/default_action_list.hpp>
+#include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
-
-#include <vector>
+#include <canard/mpl/adapted/std_tuple.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
 
-    using any_action = boost::type_erasure::any<
-        boost::mpl::vector<
-              boost::type_erasure::typeid_<>
-            , boost::type_erasure::copy_constructible<>
-            , has_type<ofp_action_type(), boost::type_erasure::_self const>
-            , has_length<std::uint16_t(), boost::type_erasure::_self const>
-            , has_encode<std::vector<unsigned char>&(std::vector<unsigned char>&), boost::type_erasure::_self const>
-        >
-    >;
+    class any_action
+    {
+        using action_variant = boost::make_variant_over<
+            default_action_list
+        >::type;
+
+    public:
+        template <class Action, typename std::enable_if<!is_related<any_action, Action>::value>::type* = nullptr>
+        any_action(Action&& action)
+            : variant_(std::forward<Action>(action))
+        {
+        }
+
+        template <class Action, typename std::enable_if<!is_related<any_action, Action>::value>::type* = nullptr>
+        auto operator=(Action&& action)
+            -> any_action&
+        {
+            variant_ = std::forward<Action>(action);
+            return *this;
+        }
+
+        auto type() const
+            -> ofp_action_type
+        {
+            auto visitor = detail::type_visitor<ofp_action_type>{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        auto length() const
+            -> std::uint16_t
+        {
+            auto visitor = detail::length_visitor{};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            auto visitor = detail::encoding_visitor<Container>{container};
+            return boost::apply_visitor(visitor, variant_);
+        }
+
+        template <class T>
+        friend auto any_cast(any_action const&)
+            -> T const&;
+
+        template <class T>
+        friend auto any_cast(any_action const*)
+            -> T const*;
+
+    private:
+        action_variant variant_;
+    };
+
+    template <class T>
+    auto any_cast(any_action const& action)
+        -> T const&
+    {
+        return boost::get<T>(action.variant_);
+    }
+
+    template <class T>
+    auto any_cast(any_action const* action)
+        -> T const*
+    {
+        return boost::get<T>(&action->variant_);
+    }
 
 } // namespace v13
 } // namespace openflow
