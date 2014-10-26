@@ -6,13 +6,13 @@
 #include <string>
 #include <tuple>
 #include <utility>
-#include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/size.hpp>
 #include <canard/as_byte_range.hpp>
 #include <canard/byteorder.hpp>
 #include <canard/constant_range.hpp>
+#include <canard/mpl/adapted/std_tuple.hpp>
 #include <canard/nabe/ether_header.hpp>
 #include <canard/type_traits.hpp>
 
