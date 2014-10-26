@@ -9,11 +9,9 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
-#include <boost/type_erasure/any_cast.hpp>
 #include <canard/type_traits.hpp>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
 #include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
-#include <canard/network/protocol/openflow/v13/ordered_action.hpp>
 
 namespace canard {
 namespace network {
@@ -134,33 +132,13 @@ namespace v13 {
             add_impl(std::forward<Actions>(actions)...);
         }
 
-        action_set(action_set const&) = default;
-        action_set(action_set&&) noexcept = default;
-        auto operator=(action_set&&) noexcept
-            -> action_set& = default;
-
-        auto operator=(action_set const& other)
-            -> action_set&
-        {
-            auto tmp = action_set{other};
-            swap(tmp);
-            return *this;
-        }
-
-        void swap(action_set& other)
-        {
-            action_map_.swap(other.action_map_);
-        }
-
         template <class Action>
         void add(Action&& action)
         {
             auto const order = action_order(action);
             auto const it = action_map_.lower_bound(order);
             if (it != action_map_.end() && !action_map_.key_comp()(order, it->first)) {
-                boost::type_erasure::any_cast<
-                    typename std::remove_cv<typename std::remove_reference<Action>::type>::type&
-                >(it->second) = std::forward<Action>(action);
+                it->second = std::forward<Action>(action);
             }
             else {
                 action_map_.emplace_hint(it, order, std::forward<Action>(action));
@@ -172,7 +150,7 @@ namespace v13 {
         {
             using boost::adaptors::map_values;
             using boost::adaptors::transformed;
-            return boost::accumulate(action_map_ | map_values | transformed([](ordered_action const& action) {
+            return boost::accumulate(action_map_ | map_values | transformed([](any_action const& action) {
                     return action.length();
             }), std::uint16_t{0});
         }
@@ -182,7 +160,7 @@ namespace v13 {
             -> Container&
         {
             using boost::adaptors::map_values;
-            boost::for_each(action_map_ | map_values, [&](ordered_action const& action) {
+            boost::for_each(action_map_ | map_values, [&](any_action const& action) {
                 action.encode(container);
             });
             return container;
@@ -212,7 +190,7 @@ namespace v13 {
         }
 
     private:
-        std::map<std::uint64_t, ordered_action> action_map_;
+        std::map<std::uint64_t, any_action> action_map_;
     };
 
 } // namespace v13

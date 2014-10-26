@@ -31,22 +31,6 @@ namespace v13 {
         {
         }
 
-        action_list(action_list const&) = default;
-        action_list(action_list&&) noexcept = default;
-        action_list& operator=(action_list&&) noexcept = default;
-
-        action_list& operator=(action_list const& other)
-        {
-            auto tmp = action_list{other};
-            swap(tmp);
-            return *this;
-        }
-
-        void swap(action_list& other)
-        {
-            this->actions_.swap(other.actions_);
-        }
-
         auto length() const
             -> std::uint16_t
         {
