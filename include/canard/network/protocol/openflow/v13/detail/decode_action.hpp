@@ -11,6 +11,7 @@
 #include <canard/as_byte_range.hpp>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
@@ -28,11 +29,11 @@ namespace v13 {
 
             static_assert(std::tuple_size<default_action_list>::value == 16, "");
             switch (detail::ntoh(header.type)) {
-#       define CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE(z, N, _) \
+#           define CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE(z, N, _) \
             case std::tuple_element<N, default_action_list>::type::action_type: \
                 return function(std::tuple_element<N, default_action_list>::type::decode(first, last));
             BOOST_PP_REPEAT(16, CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE, _)
-#       undef CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE
+#           undef CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE
 
             default:
                 std::advance(first, detail::ntoh(header.len));
