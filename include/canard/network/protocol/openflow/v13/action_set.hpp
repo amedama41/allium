@@ -10,112 +10,14 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
 #include <canard/type_traits.hpp>
-#include <canard/network/protocol/openflow/v13/actions.hpp>
+#include <canard/network/protocol/openflow/v13/any_action.hpp>
 #include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
+#include <canard/network/protocol/openflow/v13/detail/decode_action.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
-
-    // TODO: each set_field change independent type
-    namespace actions {
-        inline auto action_order(copy_ttl_in const&)
-            -> std::uint64_t
-        {
-            return 0x0001000000000000;
-        }
-
-        inline auto action_order(pop_vlan const&)
-            -> std::uint64_t
-        {
-            return 0x0002000000000000 | pop_vlan::action_type;
-        }
-
-        inline auto action_order(pop_mpls const&)
-            -> std::uint64_t
-        {
-            return 0x0002000000000000 | pop_mpls::action_type;
-        }
-
-        inline auto action_order(pop_pbb const&)
-            -> std::uint64_t
-        {
-            return 0x0002000000000000 | pop_pbb::action_type;
-        }
-
-        inline auto action_order(push_mpls const&)
-            -> std::uint64_t
-        {
-            return 0x0003000000000000;
-        }
-
-        inline auto action_order(push_pbb const&)
-            -> std::uint64_t
-        {
-            return 0x0004000000000000;
-        }
-
-        inline auto action_order(push_vlan const&)
-            -> std::uint64_t
-        {
-            return 0x0005000000000000;
-        }
-
-        inline auto action_order(copy_ttl_out const&)
-            -> std::uint64_t
-        {
-            return 0x0006000000000000;
-        }
-
-        inline auto action_order(decrement_mpls_ttl const&)
-            -> std::uint64_t
-        {
-            return 0x0007000000000000 | decrement_mpls_ttl::action_type;
-        }
-
-        inline auto action_order(decrement_nw_ttl const&)
-            -> std::uint64_t
-        {
-            return 0x0007000000000000 | decrement_nw_ttl::action_type;
-        }
-
-        inline auto action_order(set_mpls_ttl const&)
-            -> std::uint64_t
-        {
-            return 0x0008000000000000 | set_mpls_ttl::action_type;
-        }
-
-        inline auto action_order(set_nw_ttl const&)
-            -> std::uint64_t
-        {
-            return 0x0008000000000000 | set_nw_ttl::action_type;
-        }
-
-        inline auto action_order(set_field const& set_field_action)
-            -> std::uint64_t
-        {
-            return 0x0008000000800000 | set_field_action.oxm_match_field().oxm_type();
-        }
-
-        inline auto action_order(set_queue const&)
-            -> std::uint64_t
-        {
-            return 0x0009000000000000;
-        }
-
-        inline auto action_order(group const&)
-            -> std::uint64_t
-        {
-            return 0x000a000000000000;
-        }
-
-        inline auto action_order(output const&)
-            -> std::uint64_t
-        {
-            return 0x000b000000000000;
-        }
-    } // namespace actions
 
     class action_set
     {
@@ -172,7 +74,7 @@ namespace v13 {
         {
             auto act_set = action_set{};
             while (first != last) {
-                decode_action<void>(first, last, detail::add_helper<action_set>{act_set});
+                detail::decode_action<void>(first, last, detail::add_helper<action_set>{act_set});
             }
             return act_set;
         }

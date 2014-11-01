@@ -8,7 +8,7 @@
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
-#include <canard/network/protocol/openflow/v13/default_action_list.hpp>
+#include <canard/network/protocol/openflow/v13/detail/decode_action.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
@@ -61,6 +61,13 @@ namespace v13 {
             return boost::apply_visitor(visitor, variant_);
         }
 
+        template <class Iterator>
+        static auto decode(Iterator& first, Iterator last)
+            -> any_action
+        {
+            return detail::decode_action<any_action>(first, last, to_any_action{});
+        }
+
         template <class T>
         friend auto any_cast(any_action const&)
             -> T const&;
@@ -68,6 +75,17 @@ namespace v13 {
         template <class T>
         friend auto any_cast(any_action const*)
             -> T const*;
+
+    private:
+        struct to_any_action
+        {
+            template <class Action>
+            auto operator()(Action&& action) const
+                -> any_action
+            {
+                return any_action{std::forward<Action>(action)};
+            }
+        };
 
     private:
         action_variant variant_;

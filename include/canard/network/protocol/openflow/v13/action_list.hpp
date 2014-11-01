@@ -9,8 +9,9 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
 #include <canard/type_traits.hpp>
-#include <canard/network/protocol/openflow/v13/actions.hpp>
 #include <canard/network/protocol/openflow/v13/any_action.hpp>
+#include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
+#include <canard/network/protocol/openflow/v13/detail/decode_action.hpp>
 
 namespace canard {
 namespace network {
@@ -43,7 +44,7 @@ namespace v13 {
         template <class Action>
         void add(Action&& action)
         {
-            actions_.push_back(std::forward<Action>(action));
+            actions_.emplace_back(std::forward<Action>(action));
         }
 
         template <class Container>
@@ -62,7 +63,7 @@ namespace v13 {
         {
             auto act_list = action_list{};
             while (first != last) {
-                act_list.add(decode_action(first, last));
+                detail::decode_action<void>(first, last, detail::add_helper<action_list>{act_list});
             }
             return act_list;
         }
