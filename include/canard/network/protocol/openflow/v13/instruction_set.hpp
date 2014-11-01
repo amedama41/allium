@@ -11,6 +11,7 @@
 #include <boost/range/numeric.hpp>
 #include <canard/type_traits.hpp>
 #include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
+#include <canard/network/protocol/openflow/v13/detail/decode_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/instructions.hpp>
 #include <canard/network/protocol/openflow/v13/any_instruction.hpp>
 
@@ -18,46 +19,6 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
-
-    namespace instructions {
-
-        inline constexpr auto instruction_order(meter const&)
-            -> std::uint64_t
-        {
-            return 0x0001000000000000;
-        }
-
-        inline constexpr auto instruction_order(apply_actions const&)
-            -> std::uint64_t
-        {
-            return 0x0002000000000000;
-        }
-
-        inline constexpr auto instruction_order(clear_actions const&)
-            -> std::uint64_t
-        {
-            return 0x0003000000000000;
-        }
-
-        inline constexpr auto instruction_order(write_actions const&)
-            -> std::uint64_t
-        {
-            return 0x0004000000000000;
-        }
-
-        inline constexpr auto instruction_order(write_metadata const&)
-            -> std::uint64_t
-        {
-            return 0x0005000000000000;
-        }
-
-        inline constexpr auto instruction_order(goto_table const&)
-            -> std::uint64_t
-        {
-            return 0x0006000000000000;
-        }
-
-    } // namespace instructions
 
     class instruction_set
     {
@@ -132,7 +93,7 @@ namespace v13 {
         {
             auto insts_set = instruction_set{};
             while (first != last) {
-                decode_instruction<void>(first, last, detail::add_helper<instruction_set>{insts_set});
+                detail::decode_instruction<void>(first, last, detail::add_helper<instruction_set>{insts_set});
             }
             return insts_set;
         }

@@ -8,7 +8,7 @@
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
-#include <canard/network/protocol/openflow/v13/default_instruction_list.hpp>
+#include <canard/network/protocol/openflow/v13/detail/decode_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
@@ -61,12 +61,30 @@ namespace v13 {
             return boost::apply_visitor(visitor, variant_);
         }
 
+        template <class Iterator>
+        static auto decode(Iterator& first, Iterator last)
+            -> any_instruction
+        {
+            return detail::decode_instruction<any_instruction>(first, last, to_any_instruction{});
+        }
+
         friend auto instruction_order(any_instruction const& instruction)
             -> std::uint64_t
         {
             auto visitor = detail::instruction_order_visitor{};
             return boost::apply_visitor(visitor, instruction.variant_);
         }
+
+    private:
+        struct to_any_instruction
+        {
+            template <class Instruction>
+            auto operator()(Instruction&& instruction) const
+                -> any_action
+            {
+                return any_instruction{std::forward<Instruction>(instruction)};
+            }
+        };
 
     private:
         instruction_variant variant_;
