@@ -48,7 +48,10 @@ namespace v13 {
 
         void stop()
         {
-            io_service_->stop();
+            std::lock_guard<std::mutex> lock{listening_mutex_};
+            if (listening_) {
+                io_service_->stop();
+            }
         }
 
         void listen()
