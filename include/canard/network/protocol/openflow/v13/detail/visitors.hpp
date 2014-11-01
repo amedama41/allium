@@ -70,6 +70,18 @@ namespace v13 {
             }
         };
 
+        class instruction_order_visitor
+            : public boost::static_visitor<std::uint64_t>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> std::uint64_t
+            {
+                return instruction_order(t);
+            }
+        };
+
         class oxm_type_visitor
             : public boost::static_visitor<std::uint32_t>
         {

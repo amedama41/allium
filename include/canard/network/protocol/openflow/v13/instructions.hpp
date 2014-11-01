@@ -9,6 +9,7 @@
 #include <boost/preprocessor/repeat.hpp>
 #include <canard/as_byte_range.hpp>
 #include <canard/network/protocol/openflow/v13/any_instruction.hpp>
+#include <canard/network/protocol/openflow/v13/default_instruction_list.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/instruction/clear_actions.hpp>
@@ -30,19 +31,10 @@ namespace v13 {
         auto instruction = detail::ofp_instruction{};
         std::copy_n(first, sizeof(instruction), canard::as_byte_range(instruction).begin());
 
-        using instruction_list = std::tuple<
-              instructions::goto_table
-            , instructions::write_metadata
-            , instructions::write_actions
-            , instructions::apply_actions
-            , instructions::clear_actions
-            , instructions::meter
-        >;
-
         switch (detail::ntoh(instruction.type)) {
 #       define CANARD_NETWORK_OPENFLOW_V13_DECODE_INSTRUCTION_CASE(z, N, _) \
-        case std::tuple_element<N, instruction_list>::type::instruction_type: \
-            return func(std::tuple_element<N, instruction_list>::type::decode(first, last));
+        case std::tuple_element<N, default_instruction_list>::type::instruction_type: \
+            return func(std::tuple_element<N, default_instruction_list>::type::decode(first, last));
         BOOST_PP_REPEAT(6, CANARD_NETWORK_OPENFLOW_V13_DECODE_INSTRUCTION_CASE, _)
 #       undef CANARD_NETWORK_OPENFLOW_V13_DECODE_INSTRUCTION_CASE
 

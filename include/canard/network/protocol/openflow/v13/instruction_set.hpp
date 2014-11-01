@@ -9,7 +9,6 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
-#include <boost/type_erasure/any_cast.hpp>
 #include <canard/type_traits.hpp>
 #include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
 #include <canard/network/protocol/openflow/v13/instructions.hpp>
@@ -99,9 +98,7 @@ namespace v13 {
             auto const order = instruction_order(instruction);
             auto const it = instruction_map_.lower_bound(order);
             if (it != instruction_map_.end() && !instruction_map_.key_comp()(order, it->first)) {
-                boost::type_erasure::any_cast<
-                        typename std::remove_cv<typename std::remove_reference<Instruction>::type>::type&
-                >(it->second) = std::forward<Instruction>(instruction);
+                it->second = std::forward<Instruction>(instruction);
             }
             else {
                 instruction_map_.emplace_hint(it, order, std::forward<Instruction>(instruction));
