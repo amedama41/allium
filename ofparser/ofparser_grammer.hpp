@@ -70,20 +70,20 @@ namespace ofparser {
             using qi::lit;
             using qi::ascii::string;
             using qi::ascii::char_;
-            using qi::raw;
             using qi::oct;
             using qi::hex;
             using qi::ulong_long;
+            using qi::raw;
+            using qi::hold;
             using qi::_val;
             using qi::labels::_1;
             using phoenix::at_c;
 
             constant
-                =   integer_constant            [_val = _1]
+                %=  integer_constant
                 // |   floating_constant
                 |   enumerator_constant         [([this](auto& enumrator, auto& ctx, bool& pass) {
                                                     pass = (enum_constants_.find(enumrator) != enum_constants_.end());
-                                                    at_c<0>(ctx.attributes) = enumrator;
                                                 })]
                 // |   character_constant
                 ;
@@ -119,23 +119,22 @@ namespace ofparser {
                 ;
 
             primary_expression
-                =   constant
-                |   identifer
+                =   hold[ constant ]
+                |   hold[ identifer ]
                 // |   string_litral
-                |   '(' >> expression >> ')'
+                |   char_('(') >> expression >> char_(')')
                 ;
 
             postfix_expression
-                =   primary_expression          [_val = _1]
-                    >> *qi::as_string
-                        [ ( '[' >> expression >> ']' )
-                        | ( '(' >> -argument_expression_list >> ')' )
-                        | ( '.' >> identifer )
-                        | ( "->" >> identifer )
-                        | ( "++" )
-                        | ( "--" )
-                        | ( '(' >> type_name >> ')' >> '{' >> initializer_list >> -lit(',') >> '}' )
-                        ]                       [_val += _1]
+                =   primary_expression
+                    >> *( qi::as_string[( '[' >> expression >> ']' )]
+                        | hold[ qi::as_string[( '(' >> -argument_expression_list >> ')' )] ]
+                        | qi::as_string[( '.' >> identifer )]
+                        | qi::as_string[( "->" >> identifer )]
+                        | string( "++" )
+                        | string( "--" )
+                        | hold[ qi::as_string[( '(' >> type_name >> ')' >> '{' >> initializer_list >> -lit(',') >> '}' )] ]
+                        )
                 ;
 
             argument_expression_list
@@ -143,12 +142,12 @@ namespace ofparser {
                 ;
 
             unary_expression
-                =   postfix_expression
-                |   "++" >> unary_expression
-                |   "--" >> unary_expression
+                =   hold[ postfix_expression ]
+                |   string("++") >> unary_expression
+                |   string("--") >> unary_expression
                 |   unary_operator >> cast_expression
-                |   string("sizeof") >> '(' >> type_name >> ')'
-                |   string("sizeof") >> unary_expression
+                |   hold[ sizeof_ >> '(' >> type_name >> ')' ]
+                |   sizeof_ >> unary_expression
                 ;
 
             sizeof_
@@ -166,34 +165,34 @@ namespace ofparser {
                 ;
 
             cast_expression
-                =   '(' >> type_name >> ')' >> cast_expression
+                =   hold[ '(' >> type_name >> ')' >> cast_expression ]
                 |   unary_expression
                 ;
 
             multiplicative_expression
                 =   cast_expression
-                    >> *(   ( char_('*') | '/' | '%' )
+                    >> *(   ( char_('*') | char_('/') | char_('%') )
                             >> cast_expression
                         )
                 ;
 
             additive_expression
                 =   multiplicative_expression
-                    >> *(   ( char_('+') | '-' )
+                    >> *(   ( char_('+') | char_('-') )
                             >> multiplicative_expression
                         )
                 ;
 
             shift_expression
-                =   additive_expression                     [_val = _1]
-                    >> *(   ( string("<<") | string(">>") ) [_val += _1]
-                            >> additive_expression          [_val += _1]
+                =   additive_expression
+                    >> *(   ( string("<<") | string(">>") )
+                            >> additive_expression
                         )
                 ;
 
             relational_expression
                 =   shift_expression
-                    >> *(   ( char_('<') | '>' | "<=" | ">=" )
+                    >> *(   ( char_('<') | char_('>') | char_("<=") | char_(">=") )
                             >> shift_expression
                         )
                 ;
@@ -207,38 +206,40 @@ namespace ofparser {
 
             and_expression
                 =   equality_expression
-                    >> -( '&' >> equality_expression )
+                    >> -( char_('&') >> equality_expression )
                 ;
 
             exclusive_or_expression
                 =   and_expression
-                    >> -( '^' >> and_expression )
+                    >> -( char_('^') >> and_expression )
                 ;
 
             inclusive_or_expression
                 =   exclusive_or_expression
-                    >> -( '|' >> exclusive_or_expression )
+                    >> -( char_('|') >> exclusive_or_expression )
                 ;
 
             logical_and_expression
                 =   inclusive_or_expression
-                    >> -( "&&" >> inclusive_or_expression )
+                    >> -( string("&&") >> inclusive_or_expression )
                 ;
 
             logical_or_expression
                 =   logical_and_expression
-                    >> -( "||" >> logical_and_expression )
+                    >> -( string("||") >> logical_and_expression )
                 ;
 
             conditional_expression
                 =   logical_or_expression
-                    >> -( '?' >> expression >> ':' >> conditional_expression )
+                    >> -( char_('?') >> expression >> char_(':') >> conditional_expression )
                 ;
 
             assignment_expression
-                =   unary_expression
+                =   hold[
+                       unary_expression
                     >> assignment_operator
                     >> assignment_expression
+                    ]
                 |   conditional_expression
                 ;
 
@@ -258,7 +259,7 @@ namespace ofparser {
 
             expression
                 =   assignment_expression
-                    >> *( ',' >> assignment_expression )
+                    >> *( char_(',') >> assignment_expression )
                 ;
 
             constant_expression
@@ -436,7 +437,12 @@ namespace ofparser {
                     >> *(   ( '[' >> assignment_expression >> ']' )
                                                 [([](auto& n, auto& ctx, auto&) {
                                                     at_c<0>(ctx.attributes).is_array = true;
-                                                    at_c<0>(ctx.attributes).array_length = std::stoul(n);
+                                                    try {
+                                                        at_c<0>(ctx.attributes).array_length = std::stoul(n);
+                                                    }
+                                                    catch (std::invalid_argument const& e) {
+                                                        std::cout << e.what() << ": " << n << std::endl;
+                                                    }
                                                 })]
                         |   ( '(' >> ( parameter_type_list | -identifer_list ) >> ')' )
                         )
