@@ -168,41 +168,6 @@ namespace v13 {
             std::vector<unsigned char> data_;
         };
 
-
-        using variant = boost::variant<versionbitmap, unknown_element>;
-
-        namespace hello_element_detail {
-
-            template <class Iterator>
-            inline auto parse_hello_elem_header(Iterator first, Iterator last)
-                -> detail::ofp_hello_elem_header
-            {
-                if (std::distance(first, last) < sizeof(detail::ofp_hello_elem_header)) {
-                    throw 1;
-                }
-                auto header = detail::ofp_hello_elem_header{};
-                std::copy_n(first, sizeof(header), canard::as_byte_range(header).begin());
-                return detail::ntoh(header);
-            }
-
-        } // namespace detail
-
-        template <class Iterator>
-        inline auto decode(Iterator& first, Iterator last)
-            -> hello_elements::variant
-        {
-            auto header = hello_element_detail::parse_hello_elem_header(first, last);
-            if (header.length > std::distance(first, last)) {
-                throw 1;
-            }
-            switch (header.type) {
-                case OFPHET_VERSIONBITMAP:
-                    return versionbitmap::decode(first, last);
-                default:
-                    return unknown_element::decode(first, last);
-            }
-        }
-
     } // namespace hello_elements
 
     using hello_element_list = std::tuple<
