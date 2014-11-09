@@ -205,6 +205,11 @@ namespace v13 {
 
     } // namespace hello_elements
 
+    using hello_element_list = std::tuple<
+          hello_elements::versionbitmap
+        , hello_elements::unknown_element
+    >;
+
 } // namespace v13
 } // namespace openflow
 } // namespace network
