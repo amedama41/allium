@@ -28,8 +28,8 @@ namespace v13 {
     public:
         static ofp_type const message_type = OFPT_HELLO;
 
-        hello()
-            : hello_{{OFP_VERSION, message_type, sizeof(detail::ofp_hello), get_xid()}}
+        explicit hello(std::uint8_t const version = OFP_VERSION)
+            : hello_{{version, message_type, sizeof(detail::ofp_hello), get_xid()}}
         {
         }
 
