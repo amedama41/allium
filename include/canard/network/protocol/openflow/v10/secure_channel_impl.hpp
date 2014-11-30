@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <utility>
 #include <boost/asio/buffer.hpp>
@@ -133,9 +134,21 @@ namespace v10 {
         {
             void run(std::size_t const least_size = sizeof(detail::ofp_header))
             {
+                (*this)(least_size);
+            }
+
+            void operator()()
+            {
+                auto const least_size = channel_->handle_read();
+                auto const channel = channel_.get();
+                channel->strand_.dispatch(std::bind(std::move(*this), least_size));
+            }
+
+            void operator()(std::size_t const least_size)
+            {
                 auto const channel = channel_.get();
                 boost::asio::async_read(channel->stream_, channel->streambuf_
-                        , boost::asio::transfer_at_least(channel->handle_read())
+                        , boost::asio::transfer_at_least(least_size)
                         , channel->strand_.wrap(std::move(*this)));
             }
 
@@ -145,8 +158,8 @@ namespace v10 {
                     std::cout << "connection closed: " << ec.message() << " " << channel_.use_count() << std::endl;
                     return;
                 }
-                auto const least_size = channel_->handle_read();
-                run(least_size);
+                auto const channel = channel_.get();
+                channel->thread_pool().post(std::move(*this));
             }
 
             std::shared_ptr<secure_channel_impl> channel_;
