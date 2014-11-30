@@ -119,7 +119,7 @@ namespace messages {
             auto ports = std::vector<port>{};
             ports.reserve((features.header.length - sizeof(features)) / sizeof(detail::ofp_phy_port));
             while (first != last) {
-                ports.emplace(port::decode(first, last));
+                ports.emplace_back(port::decode(first, last));
             }
             return features_reply{features, std::move(ports)};
         }
