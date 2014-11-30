@@ -6,6 +6,7 @@
 #include <cstring>
 #include <functional>
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/completion_condition.hpp>
@@ -13,6 +14,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/streambuf.hpp>
+#include <boost/preprocessor/repeat.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/io/enum_to_string.hpp>
@@ -95,38 +97,23 @@ namespace v10 {
             auto first = boost::asio::buffer_cast<unsigned char const*>(streambuf_.data());
             auto const last = std::next(first, header.length);
             switch (header.type) {
-            case messages::error_msg::message_type:
-                handle(messages::error_msg::decode(first, last));
+#           define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
+            using msg ## N = std::tuple_element<N, default_switch_message_list>::type; \
+            case msg ## N::message_type: \
+                handle(msg ## N::decode(first, last)); \
                 break;
-            case messages::packet_in::message_type:
-                handle(messages::packet_in::decode(first, last));
-                break;
-            // case messages::features_reply::message_type:
-            //     handle(messages::features_reply::decode(first, last));
-            //     break;
+            BOOST_PP_REPEAT(4, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
+#           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
             default:
                 break;
             }
         }
 
-        void handle(messages::packet_in&& pkt_in)
-        {
-            std::cout
-                << "    buffer_id:   " << pkt_in.buffer_id() << '\n'
-                << "    in_port:     " << pkt_in.in_port() << '\n'
-                << "    reason:      " << v10::to_string(pkt_in.reason()) << '\n'
-                << std::endl;
-            controller_handler_.handle(base_type::shared_from_this(), std::forward<messages::packet_in>(pkt_in));
-        }
-
         template <class Message>
         void handle(Message&& msg)
         {
-            std::cout
-                << "    error_type:   " << v10::to_string(msg.error_type()) << "\n"
-                << "    error_code:   " << msg.error_code() << "\n"
-                << "    request type: " << v10::to_string(ofp_type(msg.failed_request_header().type)) << "\n"
-                << std::endl;
+            controller_handler_.handle(
+                    base_type::shared_from_this(), std::forward<Message>(msg));
         }
 
     private:
