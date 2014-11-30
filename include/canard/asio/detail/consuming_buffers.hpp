@@ -40,6 +40,11 @@ namespace detail {
             buffers_.erase(buffers_.begin(), it);
         }
 
+        void clear()
+        {
+            buffers_.clear();
+        }
+
         auto empty() const
             -> bool
         {

@@ -106,6 +106,7 @@ namespace canard {
                         total_transferred -= total_transferred;
                     });
                     stream_.handlers().clear();
+                    stream_.buffers().clear();
                     return;
                 }
 
