@@ -25,19 +25,26 @@ namespace detail {
         {
         }
 
-        void consume(std::size_t bytes_transferred)
+        auto consume(std::size_t const bytes_transferred)
+            -> std::size_t
         {
+            auto bytes_consumed = std::size_t{0};
             auto const it = boost::find_if(buffers_, [&](value_type& buffer) {
                 auto const buffer_size = boost::asio::buffer_size(buffer);
-                if (bytes_transferred >= buffer_size) {
-                    bytes_transferred -= buffer_size;
-                    return false;
+                if (bytes_transferred - bytes_consumed < buffer_size) {
+                    return true;
                 }
-                buffer = buffer + bytes_transferred;
-                return true;
+                bytes_consumed += buffer_size;
+                return false;
             });
 
+            if (it != buffers_.end()) {
+                *it = *it + (bytes_transferred - bytes_consumed);
+                bytes_consumed = bytes_transferred;
+            }
             buffers_.erase(buffers_.begin(), it);
+
+            return bytes_consumed;
         }
 
         void clear()
