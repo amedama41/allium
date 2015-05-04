@@ -12,7 +12,7 @@
 #include <boost/system/error_code.hpp>
 #include <canard/asio/detail/bind_handler.hpp>
 #include <canard/asio/async_result_init.hpp>
-#include <canard/asio/ordered_send_socket.hpp>
+#include <canard/asio/queueing_write_stream.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/network/utils/thread_pool.hpp>
 #include <canard/type_traits.hpp>
@@ -99,7 +99,7 @@ namespace v10 {
         }
 
     protected:
-        canard::ordered_send_socket<Socket> stream_;
+        canard::queueing_write_stream<Socket> stream_;
         boost::asio::io_service::strand strand_;
         utils::thread_pool& thread_pool_;
     };
