@@ -12,13 +12,25 @@ OBJS=main.o \
 	 generate_byteorder.o
 TARGET=ofparser
 
-all: $(TARGET)
+cppparser: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(CXXLIBS)
 
-run: all
+run_cppparser: cppparser
 	./$(TARGET) ./of13/openflow.h
 
 clean:
+	-rm *.pyc ./generator/*.pyc
 	-rm $(OBJS) $(TARGET)
+
+run:
+	python ./generator.py ./of10/openflow.h
+	mv ./of10/{openflow,error}.hpp ../include/canard/network/protocol/openflow/v10/
+	mv ./of10/enum_to_string.hpp ../include/canard/network/protocol/openflow/v10/io/
+	mv ./of10/{fusion_adaptor,byteorder}.hpp ../include/canard/network/protocol/openflow/v10/detail/
+	python ./generator.py ./of13/openflow.h
+	mv ./of13/{openflow,error}.hpp ../include/canard/network/protocol/openflow/v13/
+	mv ./of13/enum_to_string.hpp ../include/canard/network/protocol/openflow/v13/io/
+	mv ./of13/{fusion_adaptor,byteorder}.hpp ../include/canard/network/protocol/openflow/v13/detail/
+
