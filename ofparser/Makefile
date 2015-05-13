@@ -26,11 +26,15 @@ clean:
 
 run:
 	python ./generator.py ./of10/openflow.h
-	mv ./of10/{openflow,error}.hpp ../include/canard/network/protocol/openflow/v10/
+	mv ./of10/openflow.hpp ../include/canard/network/protocol/openflow/v10/
+	mv ./of10/error.hpp ../include/canard/network/protocol/openflow/v10/
 	mv ./of10/enum_to_string.hpp ../include/canard/network/protocol/openflow/v10/io/
-	mv ./of10/{fusion_adaptor,byteorder}.hpp ../include/canard/network/protocol/openflow/v10/detail/
+	mv ./of10/fusion_adaptor.hpp ../include/canard/network/protocol/openflow/v10/detail/
+	mv ./of10/byteorder.hpp ../include/canard/network/protocol/openflow/v10/detail/
 	python ./generator.py ./of13/openflow.h
-	mv ./of13/{openflow,error}.hpp ../include/canard/network/protocol/openflow/v13/
+	mv ./of13/openflow.hpp ../include/canard/network/protocol/openflow/v13/
+	mv ./of13/error.hpp ../include/canard/network/protocol/openflow/v13/
 	mv ./of13/enum_to_string.hpp ../include/canard/network/protocol/openflow/v13/io/
-	mv ./of13/{fusion_adaptor,byteorder}.hpp ../include/canard/network/protocol/openflow/v13/detail/
+	mv ./of13/fusion_adaptor.hpp ../include/canard/network/protocol/openflow/v13/detail/
+	mv ./of13/byteorder.hpp ../include/canard/network/protocol/openflow/v13/detail/
 
