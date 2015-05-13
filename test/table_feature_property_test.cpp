@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
             , instruction_id{OFPIT_APPLY_ACTIONS}
             , instruction_id{OFPIT_CLEAR_ACTIONS}
             , instruction_id{OFPIT_METER}
-            , experimenter_instruction_id{32}
+            , instruction_experimenter_id{32}
         };
 
         BOOST_CHECK_EQUAL(sut.type(), OFPTFPT_INSTRUCTIONS);
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
               instruction_id{OFPIT_GOTO_TABLE}
             , instruction_id{OFPIT_WRITE_ACTIONS}
             , instruction_id{OFPIT_CLEAR_ACTIONS}
-            , experimenter_instruction_id{0, {'A', 'B', 'C', 'D'}}
+            , instruction_experimenter_id{0, {'A', 'B', 'C', 'D'}}
         };
 
         auto const copy = sut;
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
               instruction_id{OFPIT_GOTO_TABLE}
             , instruction_id{OFPIT_WRITE_ACTIONS}
             , instruction_id{OFPIT_CLEAR_ACTIONS}
-            , experimenter_instruction_id{0, {'A', 'B', 'C', 'D'}}
+            , instruction_experimenter_id{0, {'A', 'B', 'C', 'D'}}
         };
         auto copy = table_feature_properties::prop_instructions{};
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
     BOOST_AUTO_TEST_CASE(move_assign_test)
     {
         auto sut = table_feature_properties::prop_instructions{
-            experimenter_instruction_id{0xffffffff, {'A', 'B', 'C', 'D'}}
+            instruction_experimenter_id{0xffffffff, {'A', 'B', 'C', 'D'}}
         };
         auto copy = table_feature_properties::prop_instructions{};
 
@@ -145,7 +145,7 @@ struct encode_decode_fixture {
         , instruction_id{OFPIT_APPLY_ACTIONS}
         , instruction_id{OFPIT_CLEAR_ACTIONS}
         , instruction_id{OFPIT_METER}
-        , experimenter_instruction_id{0x12345678, {'A', 'B'}}
+        , instruction_experimenter_id{0x12345678, {'A', 'B'}}
     };
     std::vector<std::uint8_t> buffer{};
 };

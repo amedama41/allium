@@ -2,7 +2,6 @@
 #include <canard/network/protocol/openflow/v13/any_action.hpp>
 #include <boost/test/unit_test.hpp>
 #include <vector>
-#include <boost/type_erasure/any_cast.hpp>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 

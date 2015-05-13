@@ -62,7 +62,7 @@ namespace v13 {
             return oxm_header_;
         }
 
-        static constexpr auto length()
+        auto length() const
             -> std::uint16_t
         {
             return sizeof(std::uint32_t);
@@ -137,7 +137,7 @@ namespace v13 {
             return header_.experimenter;
         }
 
-        static constexpr auto length()
+        auto length() const
             -> std::uint16_t
         {
             return sizeof(detail::ofp_oxm_experimenter_header);
@@ -161,18 +161,6 @@ namespace v13 {
     private:
         detail::ofp_oxm_experimenter_header header_;
     };
-
-    template <class Iterator>
-    inline auto decode_oxm_id(Iterator& first, Iterator last)
-        -> any_oxm_id
-    {
-        auto copy_first = first;
-        auto const oxm_header = detail::decode<std::uint32_t>(copy_first, last);
-        if ((oxm_header >> 16) == OFPXMC_EXPERIMENTER) {
-            return oxm_experimenter_id::decode(first, last);
-        }
-        return oxm_id::decode(first, last);
-    }
 
 } // namespace v13
 } // namespace openflow

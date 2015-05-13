@@ -20,7 +20,7 @@ struct table_features_fixture {
                       instruction_id{OFPIT_GOTO_TABLE}, instruction_id{OFPIT_WRITE_METADATA}
                     , instruction_id{OFPIT_WRITE_ACTIONS}, instruction_id{OFPIT_APPLY_ACTIONS}
                     , instruction_id{OFPIT_CLEAR_ACTIONS}, instruction_id{OFPIT_METER}
-                    , experimenter_instruction_id{32, {'A', 'B'}}
+                    , instruction_experimenter_id{32, {'A', 'B'}}
                   } // 4 + 4 * 6 + (8 + 2) = 38 => 40
                 , table_feature_properties::prop_next_tables{
                     1, 2, 3, 4, 5, 6, 7

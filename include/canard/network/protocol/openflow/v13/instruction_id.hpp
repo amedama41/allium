@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 #include <boost/range/algorithm_ext/push_back.hpp>
-#include <canard/network/protocol/openflow/v13/any_instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -30,7 +29,7 @@ namespace v13 {
             return ofp_instruction_type(type_);
         }
 
-        static constexpr auto length()
+        auto length() const
             -> std::uint16_t
         {
             return sizeof(detail::ofp_instruction);
@@ -40,7 +39,8 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(detail::encode(container, type_), length());
+            detail::encode(container, type_);
+            return detail::encode(container, length());
         }
 
         template <class Iterator>
@@ -50,7 +50,7 @@ namespace v13 {
             auto const type = detail::decode<std::uint16_t>(first, last);
             auto const length = detail::decode<std::uint16_t>(first, last);
             if (length != sizeof(detail::ofp_instruction)) {
-                throw 2;
+                throw std::runtime_error{__func__};
             }
             return instruction_id{type};
         }
@@ -60,22 +60,22 @@ namespace v13 {
     };
 
 
-    class experimenter_instruction_id
+    class instruction_experimenter_id
     {
     public:
-        explicit experimenter_instruction_id(std::uint32_t const experimenter)
+        explicit instruction_experimenter_id(std::uint32_t const experimenter)
             : experimenter_{experimenter}
             , data_{}
         {
         }
 
-        experimenter_instruction_id(std::uint32_t const experimenter, std::vector<std::uint8_t> data)
+        instruction_experimenter_id(std::uint32_t const experimenter, std::vector<unsigned char> data)
             : experimenter_{experimenter}
             , data_(std::move(data))
         {
         }
 
-        static constexpr auto type()
+        auto type() const
             -> ofp_instruction_type
         {
             return OFPIT_EXPERIMENTER;
@@ -97,44 +97,33 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(detail::encode(container, std::uint16_t{type()}), length());
-            return boost::push_back(detail::encode(container, experimenter()), data_);
+            detail::encode(container, std::uint16_t(type()));
+            detail::encode(container, length());
+            detail::encode(container, experimenter());
+            return boost::push_back(container, data_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
-            -> experimenter_instruction_id
+            -> instruction_experimenter_id
         {
-            std::advance(first, sizeof(detail::ofp_instruction_experimenter::type));
-            auto const length = detail::decode<std::uint16_t>(first, last);
-            auto const experimenter = detail::decode<std::uint32_t>(first, last);
-            auto data = std::vector<std::uint8_t>(first, std::next(first, length - sizeof(detail::ofp_instruction_experimenter)));
-            std::advance(first, data.size());
-            return experimenter_instruction_id{experimenter, std::move(data)};
+            auto const experimenter_header
+                = detail::decode<detail::ofp_instruction_experimenter>(first, last);
+            if (experimenter_header.len > sizeof(experimenter_header) + std::distance(first, last)) {
+                throw std::runtime_error{__func__};
+            }
+            auto const data_last = std::next(first, experimenter_header.len - sizeof(experimenter_header));
+            auto data = std::vector<unsigned char>(first, data_last);
+            first = data_last;
+            return instruction_experimenter_id{
+                experimenter_header.experimenter, std::move(data)
+            };
         }
 
     private:
         std::uint32_t experimenter_;
-        std::vector<std::uint8_t> data_;
+        std::vector<unsigned char> data_;
     };
-
-    template <class Iterator>
-    inline auto decode_instruction_id(Iterator& first, Iterator last)
-        -> any_instruction_id
-    {
-        auto copy_first = first;
-        auto const type = detail::decode<std::uint16_t>(copy_first, last);
-        switch (type) {
-        case OFPIT_EXPERIMENTER:
-            std::advance(copy_first, sizeof(detail::ofp_instruction_experimenter::len));
-            switch (detail::decode<std::uint32_t>(copy_first, last)) {
-            default:
-                return experimenter_instruction_id::decode(first, last);
-            }
-        default:
-            return instruction_id::decode(first, last);
-        }
-    }
 
 } // namespace v13
 } // namespace openflow

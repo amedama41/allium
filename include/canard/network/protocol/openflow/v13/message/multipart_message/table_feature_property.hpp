@@ -4,11 +4,10 @@
 #include <cstdint>
 #include <initializer_list>
 #include <iterator>
+#include <tuple>
 #include <utility>
 #include <vector>
 #include <boost/format.hpp>
-#include <boost/mpl/int.hpp>
-#include <boost/mpl/vector.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/numeric.hpp>
 #include <boost/range/algorithm/for_each.hpp>
@@ -25,6 +24,7 @@
 #include <canard/network/protocol/openflow/v13/instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_id.hpp>
+#include <canard/mpl/adapted/std_tuple.hpp>
 
 namespace canard {
 namespace network {
@@ -122,7 +122,7 @@ namespace v13 {
                     auto instruction_ids = instruction_id_list{};
                     instruction_ids.reserve(std::distance(first, last) / sizeof(std::uint32_t));
                     while (first != last) {
-                        instruction_ids.push_back(decode_instruction_id(first, last));
+                        instruction_ids.push_back(any_instruction_id::decode(first, last));
                     }
                     std::advance(first, detail::padding_length(prop_instructions.length));
                     return T{std::move(instruction_ids)};
@@ -310,7 +310,7 @@ namespace v13 {
                     auto action_ids = action_id_list{};
                     action_ids.reserve(std::distance(first, last) / sizeof(std::uint32_t));
                     while (first != last) {
-                        action_ids.push_back(decode_action_id(first, last));
+                        action_ids.push_back(any_action_id::decode(first, last));
                     }
                     std::advance(first, detail::padding_length(prop_actions.length));
                     return T{std::move(action_ids)};
@@ -408,7 +408,7 @@ namespace v13 {
                     auto oxm_ids = oxm_id_list{};
                     oxm_ids.reserve(std::distance(first, last) / sizeof(std::uint32_t));
                     while (first != last) {
-                        oxm_ids.push_back(decode_oxm_id(first, last));
+                        oxm_ids.push_back(any_oxm_id::decode(first, last));
                     }
                     std::advance(first, detail::padding_length(prop_oxm.length));
                     return T{std::move(oxm_ids)};
@@ -671,7 +671,7 @@ namespace v13 {
             }
         };
 
-        using property_list = boost::mpl::vector<
+        using property_list = std::tuple<
               prop_instructions, prop_instructions_miss
             , prop_next_tables, prop_next_tables_miss
             , prop_write_actions, prop_write_actions_miss, prop_apply_actions, prop_apply_actions_miss
@@ -688,8 +688,9 @@ namespace v13 {
             auto const header = detail::decode<detail::ofp_table_feature_prop_header>(copy_first, last);
             switch (header.type) {
 #           define CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_DECODE_CASE(z, N, _) \
-            case boost::mpl::at<property_list, boost::mpl::int_<N>>::type::prop_type: \
-                return function(boost::mpl::at<property_list, boost::mpl::int_<N>>::type::decode(first, last));
+            case std::tuple_element<N, property_list>::type::prop_type: \
+                return function(std::tuple_element<N, property_list>::type::decode(first, last));
+            static_assert(std::tuple_size<property_list>::value == 14, "");
             BOOST_PP_REPEAT(14, CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_DECODE_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_DECODE_CASE
             default:
