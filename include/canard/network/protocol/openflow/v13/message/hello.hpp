@@ -6,7 +6,9 @@
 #include <iterator>
 #include <utility>
 #include <vector>
+#include <boost/optional/optional.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
 #include <canard/network/protocol/openflow/v13/any_hello_element.hpp>
@@ -21,6 +23,32 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+
+    namespace hello_detail {
+
+        template <class HelloElement>
+        auto find(std::vector<any_hello_element> const& elements)
+            -> boost::optional<HelloElement const&>
+        {
+            auto const it = boost::find_if(elements, [](any_hello_element const& element) {
+                return element.type() == HelloElement::hello_element_type;
+            });
+            if (it == elements.end()) {
+                return boost::none;
+            }
+            return any_cast<HelloElement>(*it);
+        }
+
+        auto get_version(std::vector<any_hello_element> const& elements, std::uint8_t const default_version)
+            -> std::uint8_t
+        {
+            if (auto const versionbitmap = find<hello_elements::versionbitmap>(elements)) {
+                return versionbitmap->max_support_version();
+            }
+            return default_version;
+        }
+
+    } // namespace hello_detail
 
     class hello
         : public detail::basic_openflow_message<hello>
@@ -39,9 +67,37 @@ namespace v13 {
         }
 
         explicit hello(std::vector<any_hello_element> elements)
-            : hello_{{OFP_VERSION, message_type, calc_length(elements), get_xid()}}
+            : hello_{{hello_detail::get_version(elements, OFP_VERSION), message_type, calc_length(elements), get_xid()}}
             , elements_(std::move(elements))
         {
+        }
+
+        auto support(std::uint8_t const version) const
+            -> bool
+        {
+            if (this->version() == version) {
+                return true;
+            }
+            if (auto const versionbitmap = find<hello_elements::versionbitmap>()) {
+                return versionbitmap->support(version);
+            }
+            return false;
+        }
+
+        auto max_support_version() const
+            -> std::uint8_t
+        {
+            if (auto const versionbitmap = find<hello_elements::versionbitmap>()) {
+                return versionbitmap->max_support_version();
+            }
+            return version();
+        }
+
+        template <class HelloElement>
+        auto find() const
+            -> boost::optional<HelloElement const&>
+        {
+            return hello_detail::find<HelloElement>(elements_);
         }
 
         auto header() const

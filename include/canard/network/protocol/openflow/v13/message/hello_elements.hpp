@@ -6,7 +6,9 @@
 #include <iterator>
 #include <utility>
 #include <vector>
+#include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/irange.hpp>
@@ -31,11 +33,6 @@ namespace v13 {
         public:
             static ofp_hello_elem_type const hello_element_type = OFPHET_VERSIONBITMAP;
 
-            versionbitmap()
-                : versionbitmap{std::vector<std::uint32_t>{}}
-            {
-            }
-
             explicit versionbitmap(std::vector<std::uint32_t> bitmaps)
                 : versionbitmap_{
                       hello_element_type
@@ -43,6 +40,14 @@ namespace v13 {
                   }
                 , bitmaps_{std::move(bitmaps)}
             {
+                using boost::adaptors::reversed;
+                auto const it = boost::find_if(
+                          bitmaps_ | reversed
+                        , [](std::uint32_t const bitmap) { return bitmap != 0; });
+                bitmaps_.erase(it.base(), bitmaps_.end());
+                if (bitmaps_.empty()) {
+                    throw std::runtime_error{"versionbitmap nust not be empty"};
+                }
             }
 
             auto type() const
@@ -55,6 +60,30 @@ namespace v13 {
                 -> std::uint16_t
             {
                 return versionbitmap_.length;
+            }
+
+            auto support(std::uint8_t const version) const
+                -> bool
+            {
+                auto const bitmap_bits = std::size_t(32);
+                auto const array_index = std::size_t(version / bitmap_bits);
+                auto const bit_index = std::size_t(version % bitmap_bits);
+                if (bitmaps_.size() < array_index) {
+                    return false;
+                }
+                return (std::uint32_t(1) << bit_index) & bitmaps_[array_index];
+            }
+
+            auto max_support_version() const
+                -> std::uint8_t
+            {
+                auto bit_index = std::size_t{0};
+                auto bitmap = bitmaps_.back();
+                while (bitmap != 0) {
+                    bitmap >>= 1;
+                    ++bit_index;
+                }
+                return bit_index - 1 + (bitmaps_.size() - 1) * 32;
             }
 
             template <class Container>
