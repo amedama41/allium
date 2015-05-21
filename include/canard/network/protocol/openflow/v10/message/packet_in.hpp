@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 #include <boost/range/algorithm_ext/overwrite.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <canard/network/protocol/openflow/v10/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
@@ -19,37 +20,58 @@ namespace openflow {
 namespace v10 {
 namespace messages {
 
-    auto const pkt_in_size
-        = offsetof(detail::ofp_packet_in, pad) + sizeof(detail::ofp_packet_in::pad);
+    namespace packet_in_detail {
 
-    auto packet_in_byte_range(detail::ofp_packet_in& pkt_in)
-        -> boost::iterator_range<unsigned char*>
-    {
-        return boost::make_iterator_range(
-                  reinterpret_cast<unsigned char*>(&pkt_in)
-                , reinterpret_cast<unsigned char*>(&pkt_in) + pkt_in_size);
-    }
+        auto const pkt_in_size
+            = offsetof(v10_detail::ofp_packet_in, pad) + sizeof(v10_detail::ofp_packet_in::pad);
 
-    template <class Iterator>
-    auto decode_packet_in(Iterator& first, Iterator last)
-        -> detail::ofp_packet_in
-    {
-        auto pkt_in = detail::ofp_packet_in{};
-        boost::overwrite(
-                  boost::make_iterator_range(first, std::next(first, pkt_in_size))
-                , packet_in_byte_range(pkt_in));
-        std::advance(first, pkt_in_size);
-        return detail::ntoh(pkt_in);
-    }
+        auto packet_in_byte_range(v10_detail::ofp_packet_in& pkt_in)
+            -> boost::iterator_range<unsigned char*>
+        {
+            return boost::make_iterator_range(
+                      reinterpret_cast<unsigned char*>(&pkt_in)
+                    , reinterpret_cast<unsigned char*>(&pkt_in) + pkt_in_size);
+        }
+
+        auto packet_in_byte_range(v10_detail::ofp_packet_in const& pkt_in)
+            -> boost::iterator_range<unsigned char const*>
+        {
+            return boost::make_iterator_range(
+                      reinterpret_cast<unsigned char const*>(&pkt_in)
+                    , reinterpret_cast<unsigned char const*>(&pkt_in) + pkt_in_size);
+        }
+
+        template <class Container>
+        auto encode_packet_in(Container& container, v10_detail::ofp_packet_in const& pkt_in)
+            -> Container&
+        {
+            return boost::push_back(
+                    container, packet_in_byte_range(v10_detail::hton(pkt_in)));
+        }
+
+        template <class Iterator>
+        auto decode_packet_in(Iterator& first, Iterator last)
+            -> v10_detail::ofp_packet_in
+        {
+            auto pkt_in = v10_detail::ofp_packet_in{};
+            auto const pkt_in_last = std::next(first, pkt_in_size);
+            boost::overwrite(
+                      boost::make_iterator_range(first, pkt_in_last)
+                    , packet_in_byte_range(pkt_in));
+            first = pkt_in_last;
+            return v10_detail::ntoh(pkt_in);
+        }
+
+    } // namespace packet_in_detail
 
     class packet_in
-        : public detail::basic_openflow_message<packet_in>
+        : public v10_detail::basic_openflow_message<packet_in>
     {
     public:
         static ofp_type const message_type = OFPT_PACKET_IN;
 
         auto header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             return packet_in_.header;
         }
@@ -58,6 +80,12 @@ namespace messages {
             -> std::uint32_t
         {
             return packet_in_.buffer_id;
+        }
+
+        auto total_length() const
+            -> std::uint16_t
+        {
+            return packet_in_.total_len;
         }
 
         auto in_port() const
@@ -78,17 +106,25 @@ namespace messages {
             return data_;
         }
 
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            packet_in_detail::encode_packet_in(container, packet_in_);
+            return boost::push_back(container, data_);
+        }
+
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> packet_in
         {
-            auto const pkt_in = decode_packet_in(first, last);
+            auto const pkt_in = packet_in_detail::decode_packet_in(first, last);
             auto data = std::vector<std::uint8_t>(first, last);
             return packet_in{pkt_in, std::move(data)};
         }
 
     private:
-        packet_in(detail::ofp_packet_in const& pkt_in, std::vector<std::uint8_t> data)
+        packet_in(v10_detail::ofp_packet_in const& pkt_in, std::vector<std::uint8_t> data)
             : packet_in_(pkt_in)
             , data_(std::move(data))
         {
@@ -101,7 +137,7 @@ namespace messages {
         }
 
     private:
-        detail::ofp_packet_in packet_in_;
+        v10_detail::ofp_packet_in packet_in_;
         std::vector<std::uint8_t> data_;
     };
 

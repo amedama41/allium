@@ -45,7 +45,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_action_output);
+                return sizeof(v13_detail::ofp_action_output);
             }
 
             auto port() const
@@ -68,13 +68,13 @@ namespace v13 {
             }
 
         private:
-            explicit output(detail::ofp_action_output const& action_output)
+            explicit output(v13_detail::ofp_action_output const& action_output)
                 : output_(action_output)
             {
                 if (output_.type != action_type) {
                     throw 1;
                 }
-                if (output_.len != sizeof(detail::ofp_action_output)) {
+                if (output_.len != sizeof(v13_detail::ofp_action_output)) {
                     throw 2;
                 }
                 if (!validate_output_port(output_.port)) {
@@ -87,7 +87,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> output
             {
-                auto const action_output = detail::decode<detail::ofp_action_output>(first, last);
+                auto const action_output = detail::decode<v13_detail::ofp_action_output>(first, last);
                 return output{action_output};
             }
 
@@ -104,7 +104,7 @@ namespace v13 {
                 return port != 0 && port != OFPP_ANY;
             }
 
-            detail::ofp_action_output output_;
+            v13_detail::ofp_action_output output_;
         };
 
     } // namespace actions

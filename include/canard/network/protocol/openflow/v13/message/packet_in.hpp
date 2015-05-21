@@ -18,13 +18,13 @@ namespace openflow {
 namespace v13 {
 
     class packet_in
-        : public detail::basic_openflow_message<packet_in>
+        : public v13_detail::basic_openflow_message<packet_in>
     {
     public:
         static ofp_type const message_type = OFPT_PACKET_IN;
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return packet_in_.header;
         }
@@ -94,8 +94,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> packet_in
         {
-            auto const pkt_in = detail::decode<detail::ofp_packet_in>(first, last);
-            if (std::distance(first, last) != pkt_in.header.length - sizeof(detail::ofp_packet_in)) {
+            auto const pkt_in = detail::decode<v13_detail::ofp_packet_in>(first, last);
+            if (std::distance(first, last) != pkt_in.header.length - sizeof(v13_detail::ofp_packet_in)) {
                 throw 2;
             }
             auto match = oxm_match::decode(first, last);
@@ -110,7 +110,7 @@ namespace v13 {
         }
 
     private:
-        packet_in(detail::ofp_packet_in const& pkt_in, oxm_match match, std::vector<unsigned char> frame)
+        packet_in(v13_detail::ofp_packet_in const& pkt_in, oxm_match match, std::vector<unsigned char> frame)
             : packet_in_(pkt_in)
             , match_(std::move(match))
             , frame_(std::move(frame))
@@ -118,7 +118,7 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_packet_in packet_in_;
+        v13_detail::ofp_packet_in packet_in_;
         oxm_match match_;
         std::vector<unsigned char> frame_;
     };

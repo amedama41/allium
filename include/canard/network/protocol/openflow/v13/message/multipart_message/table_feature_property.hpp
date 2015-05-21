@@ -84,7 +84,7 @@ namespace v13 {
                     using boost::adaptors::transformed;
                     return boost::accumulate(instruction_ids_ | transformed([](any_instruction_id const& id) {
                             return id.length();
-                    }), std::uint16_t{sizeof(detail::ofp_table_feature_prop_instructions)});
+                    }), std::uint16_t{sizeof(v13_detail::ofp_table_feature_prop_instructions)});
                 }
 
                 auto begin() const
@@ -103,7 +103,7 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, detail::ofp_table_feature_prop_instructions{std::uint16_t(type()), length()});
+                    detail::encode(container, v13_detail::ofp_table_feature_prop_instructions{std::uint16_t(type()), length()});
                     boost::for_each(instruction_ids_, [&](any_instruction_id const& id) {
                         id.encode(container);
                     });
@@ -114,11 +114,11 @@ namespace v13 {
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_instructions = detail::decode<detail::ofp_table_feature_prop_instructions>(first, last);
-                    if (std::distance(first, last) < prop_instructions.length - sizeof(detail::ofp_table_feature_prop_instructions)) {
+                    auto const prop_instructions = detail::decode<v13_detail::ofp_table_feature_prop_instructions>(first, last);
+                    if (std::distance(first, last) < prop_instructions.length - sizeof(v13_detail::ofp_table_feature_prop_instructions)) {
                         throw 2;
                     }
-                    last = std::next(first, prop_instructions.length - sizeof(detail::ofp_table_feature_prop_instructions));
+                    last = std::next(first, prop_instructions.length - sizeof(v13_detail::ofp_table_feature_prop_instructions));
                     auto instruction_ids = instruction_id_list{};
                     instruction_ids.reserve(std::distance(first, last) / sizeof(std::uint32_t));
                     while (first != last) {
@@ -178,7 +178,7 @@ namespace v13 {
                 auto length() const
                     -> std::uint16_t
                 {
-                    return sizeof(detail::ofp_table_feature_prop_next_tables)
+                    return sizeof(v13_detail::ofp_table_feature_prop_next_tables)
                         + table_ids_.size() * sizeof(value_type);
                 }
 
@@ -198,7 +198,7 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, detail::ofp_table_feature_prop_next_tables{std::uint16_t(type()), length()});
+                    detail::encode(container, v13_detail::ofp_table_feature_prop_next_tables{std::uint16_t(type()), length()});
                     boost::push_back(container, table_ids_);
                     return boost::push_back(container, canard::make_constant_range(detail::padding_length(length()), 0));
                 }
@@ -207,11 +207,11 @@ namespace v13 {
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_next_tables = detail::decode<detail::ofp_table_feature_prop_next_tables>(first, last);
-                    if (std::distance(first, last) < prop_next_tables.length - sizeof(detail::ofp_table_feature_prop_next_tables)) {
+                    auto const prop_next_tables = detail::decode<v13_detail::ofp_table_feature_prop_next_tables>(first, last);
+                    if (std::distance(first, last) < prop_next_tables.length - sizeof(v13_detail::ofp_table_feature_prop_next_tables)) {
                         throw 2;
                     }
-                    last = std::next(first, prop_next_tables.length - sizeof(detail::ofp_table_feature_prop_next_tables));
+                    last = std::next(first, prop_next_tables.length - sizeof(v13_detail::ofp_table_feature_prop_next_tables));
                     auto table_ids = table_id_list(first, last);
                     std::advance(first, table_ids.size());
                     std::advance(first, detail::padding_length(prop_next_tables.length));
@@ -272,7 +272,7 @@ namespace v13 {
                     using boost::adaptors::transformed;
                     return boost::accumulate(action_ids_ | transformed([](any_action_id const& id) {
                             return id.length();
-                    }), std::uint16_t{sizeof(detail::ofp_table_feature_prop_actions)});
+                    }), std::uint16_t{sizeof(v13_detail::ofp_table_feature_prop_actions)});
                 }
 
                 auto begin() const
@@ -291,7 +291,7 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, detail::ofp_table_feature_prop_actions{std::uint16_t(type()), length()});
+                    detail::encode(container, v13_detail::ofp_table_feature_prop_actions{std::uint16_t(type()), length()});
                     boost::for_each(action_ids_, [&](any_action_id const& id) {
                         id.encode(container);
                     });
@@ -302,11 +302,11 @@ namespace v13 {
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_actions = detail::decode<detail::ofp_table_feature_prop_actions>(first, last);
-                    if (std::distance(first, last) < prop_actions.length - sizeof(detail::ofp_table_feature_prop_actions)) {
+                    auto const prop_actions = detail::decode<v13_detail::ofp_table_feature_prop_actions>(first, last);
+                    if (std::distance(first, last) < prop_actions.length - sizeof(v13_detail::ofp_table_feature_prop_actions)) {
                         throw 2;
                     }
-                    last = std::next(first, prop_actions.length - sizeof(detail::ofp_table_feature_prop_actions));
+                    last = std::next(first, prop_actions.length - sizeof(v13_detail::ofp_table_feature_prop_actions));
                     auto action_ids = action_id_list{};
                     action_ids.reserve(std::distance(first, last) / sizeof(std::uint32_t));
                     while (first != last) {
@@ -370,7 +370,7 @@ namespace v13 {
                     using boost::adaptors::transformed;
                     return boost::accumulate(oxm_ids_ | transformed([](any_oxm_id const& id) {
                             return id.length();
-                    }), std::uint16_t{sizeof(detail::ofp_table_feature_prop_oxm)});
+                    }), std::uint16_t{sizeof(v13_detail::ofp_table_feature_prop_oxm)});
                 }
 
                 auto begin() const
@@ -389,7 +389,7 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, detail::ofp_table_feature_prop_oxm{std::uint16_t(type()), length()});
+                    detail::encode(container, v13_detail::ofp_table_feature_prop_oxm{std::uint16_t(type()), length()});
                     boost::for_each(oxm_ids_, [&](any_oxm_id const& id) {
                         id.encode(container);
                     });
@@ -400,11 +400,11 @@ namespace v13 {
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_oxm = detail::decode<detail::ofp_table_feature_prop_oxm>(first, last);
-                    if (std::distance(first, last) < prop_oxm.length - sizeof(detail::ofp_table_feature_prop_oxm)) {
+                    auto const prop_oxm = detail::decode<v13_detail::ofp_table_feature_prop_oxm>(first, last);
+                    if (std::distance(first, last) < prop_oxm.length - sizeof(v13_detail::ofp_table_feature_prop_oxm)) {
                         throw 2;
                     }
-                    last = std::next(first, prop_oxm.length - sizeof(detail::ofp_table_feature_prop_oxm));
+                    last = std::next(first, prop_oxm.length - sizeof(v13_detail::ofp_table_feature_prop_oxm));
                     auto oxm_ids = oxm_id_list{};
                     oxm_ids.reserve(std::distance(first, last) / sizeof(std::uint32_t));
                     while (first != last) {
@@ -685,7 +685,7 @@ namespace v13 {
             -> ReturnType
         {
             auto copy_first = first;
-            auto const header = detail::decode<detail::ofp_table_feature_prop_header>(copy_first, last);
+            auto const header = detail::decode<v13_detail::ofp_table_feature_prop_header>(copy_first, last);
             switch (header.type) {
 #           define CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_DECODE_CASE(z, N, _) \
             case std::tuple_element<N, property_list>::type::prop_type: \

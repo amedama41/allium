@@ -74,7 +74,7 @@ namespace v13 {
                     throw 1;
                 }
                 auto const length = detail::decode<std::uint16_t>(first, last);
-                if (length <= sizeof(detail::ofp_action_set_field)) {
+                if (length <= sizeof(v13_detail::ofp_action_set_field)) {
                     throw 2;
                 }
                 auto field = decode_oxm_match_field(first, last);

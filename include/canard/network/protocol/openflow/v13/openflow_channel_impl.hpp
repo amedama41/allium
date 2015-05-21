@@ -27,15 +27,15 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         inline auto parse_header(boost::asio::const_buffer const& buffer)
-            -> detail::ofp_header
+            -> v13_detail::ofp_header
         {
-            auto header = detail::ofp_header{};
+            auto header = v13_detail::ofp_header{};
             std::memcpy(&header, boost::asio::buffer_cast<unsigned char const*>(buffer)
-                      , sizeof(detail::ofp_header));
-            return detail::ntoh(header);
+                      , sizeof(v13_detail::ofp_header));
+            return v13_detail::ntoh(header);
         }
 
         template <class T>
@@ -64,7 +64,7 @@ namespace v13 {
             return controller;
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
     template <class ControllerHandler, class Socket = boost::asio::ip::tcp::socket>
     class openflow_channel_impl
@@ -140,7 +140,7 @@ namespace v13 {
 
         void start_message_loop()
         {
-            receive_messages(sizeof(detail::ofp_header), receive_messages_handler{shared_from_this()});
+            receive_messages(sizeof(v13_detail::ofp_header), receive_messages_handler{shared_from_this()});
         }
 
         void receive_messages(std::size_t const least_length, receive_messages_handler handler)
@@ -153,14 +153,14 @@ namespace v13 {
         auto handle_messages()
             -> std::size_t
         {
-            while (streambuf_.size() >= sizeof(detail::ofp_header)) {
-                auto const header = detail::parse_header(streambuf_.data());
+            while (streambuf_.size() >= sizeof(v13_detail::ofp_header)) {
+                auto const header = v13_detail::parse_header(streambuf_.data());
                 if (streambuf_.size() < header.length) {
                     return header.length - streambuf_.size();
                 }
                 handle_message(header);
             }
-            return sizeof(detail::ofp_header) - streambuf_.size();
+            return sizeof(v13_detail::ofp_header) - streambuf_.size();
         }
 
         void set_echo_request_timer()
@@ -190,19 +190,19 @@ namespace v13 {
         }
 
     private:
-        void handle_message(detail::ofp_header const& header);
+        void handle_message(v13_detail::ofp_header const& header);
 
         void handle_disconnected(boost::system::error_code const& error)
         {
             if (this->endpoint_) {
                 auto this_ = shared_from_this();
                 this->thread_pool().post([this_, error]() {
-                    detail::get_base_type(this_->controller_handler_).handle(this_, disconnected_info{error});
+                    v13_detail::get_base_type(this_->controller_handler_).handle(this_, disconnected_info{error});
                 });
             }
         }
 
-        void handle_hello(detail::ofp_header const& header)
+        void handle_hello(v13_detail::ofp_header const& header)
         {
             auto const hello_msg = decode<hello>(header);
             std::cout << boost::format{"handle_hello: %s"} % hello_msg;
@@ -215,11 +215,11 @@ namespace v13 {
             auto this_ = shared_from_this();
             this->thread_pool().post([this_]() {
                 auto& controller_handler = this_->controller_handler_;
-                detail::get_base_type(controller_handler).handle(std::move(this_));
+                v13_detail::get_base_type(controller_handler).handle(std::move(this_));
             });
         }
 
-        void handle_error(detail::ofp_header const& header)
+        void handle_error(v13_detail::ofp_header const& header)
         {
             auto error = decode<error_msg>(header);
             auto const it = this->reply_map_.find(error.xid());
@@ -234,11 +234,11 @@ namespace v13 {
             auto this_ = shared_from_this();
             this->thread_pool().post([this_, error]() mutable {
                 auto& controller_handler = this_->controller_handler_;
-                detail::get_base_type(controller_handler).handle(std::move(this_), std::move(error));
+                v13_detail::get_base_type(controller_handler).handle(std::move(this_), std::move(error));
             });
         }
 
-        void handle_echo_request(detail::ofp_header const& header)
+        void handle_echo_request(v13_detail::ofp_header const& header)
         {
             auto echo_req = decode<echo_request>(header);
             std::cout << __func__ << ": " << echo_req;
@@ -249,18 +249,18 @@ namespace v13 {
         void handle_multipart();
 
         template <class T>
-        void handle(detail::ofp_header const& header)
+        void handle(v13_detail::ofp_header const& header)
         {
             auto message = decode<T>(header);
             auto this_ = shared_from_this();
             this->thread_pool().post([message, this_]() mutable {
                 auto& controller_handler = this_->controller_handler_;
-                detail::get_base_type(controller_handler).handle(std::move(this_), std::move(message));
+                v13_detail::get_base_type(controller_handler).handle(std::move(this_), std::move(message));
             });
         }
 
         template <class T>
-        void handle_reply(detail::ofp_header const& header)
+        void handle_reply(v13_detail::ofp_header const& header)
         {
             auto message = decode<T>(header);
             auto const it = this->reply_map_.find(message.xid());
@@ -275,7 +275,7 @@ namespace v13 {
             auto this_ = shared_from_this();
             this->thread_pool().post([this_, message]() mutable {
                 auto& controller_handler = this_->controller_handler_;
-                detail::get_base_type(controller_handler).handle(std::move(this_), std::move(message));
+                v13_detail::get_base_type(controller_handler).handle(std::move(this_), std::move(message));
             });
         }
 
@@ -287,7 +287,7 @@ namespace v13 {
         }
 
         template <class T>
-        auto decode(detail::ofp_header const& header)
+        auto decode(v13_detail::ofp_header const& header)
             -> T
         {
             auto first = boost::asio::buffer_cast<unsigned char const*>(streambuf_.data());
@@ -313,7 +313,7 @@ namespace v13 {
     inline void
     openflow_channel_impl<ControllerHandler, Socket>::handle_multipart()
     {
-        auto multipart_reply = detail::ofp_multipart_reply{};
+        auto multipart_reply = v13_detail::ofp_multipart_reply{};
         std::memcpy(&multipart_reply, boost::asio::buffer_cast<unsigned char const*>(streambuf_.data()), sizeof(multipart_reply));
         multipart_reply = ntoh(multipart_reply);
         using multipart_list = std::tuple<
@@ -346,7 +346,7 @@ namespace v13 {
 
     template <class ControllerHandler, class Socket>
     inline void
-    openflow_channel_impl<ControllerHandler, Socket>::handle_message(detail::ofp_header const& header)
+    openflow_channel_impl<ControllerHandler, Socket>::handle_message(v13_detail::ofp_header const& header)
     {
         if (!this->endpoint_ and header.type != OFPT_HELLO) {
             std::cout << "received non-hello message before hello";

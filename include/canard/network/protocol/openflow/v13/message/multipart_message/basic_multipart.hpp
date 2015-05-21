@@ -16,17 +16,17 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         inline auto over_64kb(std::size_t const body_length)
             -> bool
         {
-            return sizeof(detail::ofp_multipart_request) + body_length > std::numeric_limits<std::uint16_t>::max();
+            return sizeof(v13_detail::ofp_multipart_request) + body_length > std::numeric_limits<std::uint16_t>::max();
         }
 
         template <class T>
         class basic_multipart_request
-            : public detail::basic_openflow_message<T>
+            : public v13_detail::basic_openflow_message<T>
         {
         public:
             static ofp_type const message_type = OFPT_MULTIPART_REQUEST;
@@ -37,10 +37,10 @@ namespace v13 {
                       {
                             OFP_VERSION
                           , OFPT_MULTIPART_REQUEST
-                          , detail::over_64kb(body_length)
+                          , v13_detail::over_64kb(body_length)
                               ? std::numeric_limits<std::uint16_t>::max()
-                              : std::uint16_t(sizeof(detail::ofp_multipart_request) + body_length)
-                          , detail::basic_openflow_message<T>::get_xid()
+                              : std::uint16_t(sizeof(v13_detail::ofp_multipart_request) + body_length)
+                          , v13_detail::basic_openflow_message<T>::get_xid()
                       }
                     , T::multipart_type_value
                     , flags
@@ -51,7 +51,7 @@ namespace v13 {
 
         public:
             auto header() const
-                -> detail::ofp_header const&
+                -> v13_detail::ofp_header const&
             {
                 return request_.header;
             }
@@ -68,7 +68,7 @@ namespace v13 {
                 return request_.flags;
             }
 
-            using detail::basic_openflow_message<T>::encode;
+            using v13_detail::basic_openflow_message<T>::encode;
 
             template <class Container>
             auto encode(Container& container) const
@@ -79,24 +79,24 @@ namespace v13 {
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
-                -> detail::ofp_multipart_request
+                -> v13_detail::ofp_multipart_request
             {
-                return detail::decode<detail::ofp_multipart_request>(first, last);
+                return detail::decode<v13_detail::ofp_multipart_request>(first, last);
             }
 
         protected:
-            explicit basic_multipart_request(detail::ofp_multipart_request const& request)
+            explicit basic_multipart_request(v13_detail::ofp_multipart_request const& request)
                 : request_(request)
             {
             }
 
         private:
-            detail::ofp_multipart_request request_;
+            v13_detail::ofp_multipart_request request_;
         };
 
         template <class T>
         class basic_multipart_reply
-            : public detail::basic_openflow_message<T>
+            : public v13_detail::basic_openflow_message<T>
         {
         public:
             static ofp_type const message_type = OFPT_MULTIPART_REPLY;
@@ -107,10 +107,10 @@ namespace v13 {
                       {
                             OFP_VERSION
                           , OFPT_MULTIPART_REPLY
-                          , detail::over_64kb(body_length)
+                          , v13_detail::over_64kb(body_length)
                               ? std::numeric_limits<std::uint16_t>::max()
-                              : std::uint16_t(sizeof(detail::ofp_multipart_reply) + body_length)
-                          , detail::basic_openflow_message<T>::get_xid()
+                              : std::uint16_t(sizeof(v13_detail::ofp_multipart_reply) + body_length)
+                          , v13_detail::basic_openflow_message<T>::get_xid()
                       }
                     , T::multipart_type_value
                     , flags
@@ -121,7 +121,7 @@ namespace v13 {
 
         public:
             auto header() const
-                -> detail::ofp_header const&
+                -> v13_detail::ofp_header const&
             {
                 return reply_.header;
             }
@@ -138,7 +138,7 @@ namespace v13 {
                 return reply_.flags;
             }
 
-            using detail::basic_openflow_message<T>::encode;
+            using v13_detail::basic_openflow_message<T>::encode;
 
             template <class Container>
             auto encode(Container& container) const
@@ -149,16 +149,16 @@ namespace v13 {
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
-                -> detail::ofp_multipart_reply
+                -> v13_detail::ofp_multipart_reply
             {
-                return detail::decode<detail::ofp_multipart_reply>(first, last);
+                return detail::decode<v13_detail::ofp_multipart_reply>(first, last);
             }
 
         protected:
-            explicit basic_multipart_reply(detail::ofp_multipart_reply const& reply)
+            explicit basic_multipart_reply(v13_detail::ofp_multipart_reply const& reply)
                 : reply_(reply)
             {
-                if (detail::basic_openflow_message<T>::type() != message_type) {
+                if (v13_detail::basic_openflow_message<T>::type() != message_type) {
                     throw std::runtime_error{"invalid type"};
                 }
 
@@ -168,10 +168,10 @@ namespace v13 {
             }
 
         private:
-            detail::ofp_multipart_reply reply_;
+            v13_detail::ofp_multipart_reply reply_;
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const sut = actions::set_nw_ttl{255};
 
     BOOST_CHECK_EQUAL(sut.type(), OFPAT_SET_NW_TTL);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_action_nw_ttl));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_nw_ttl));
     BOOST_CHECK_EQUAL(sut.ttl(), 255);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }

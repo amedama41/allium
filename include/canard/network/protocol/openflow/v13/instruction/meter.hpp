@@ -19,7 +19,7 @@ namespace v13 {
             static ofp_instruction_type const instruction_type = OFPIT_METER;
 
             explicit meter(std::uint32_t const meter_id)
-                : meter_{instruction_type, sizeof(detail::ofp_instruction_meter), meter_id}
+                : meter_{instruction_type, sizeof(v13_detail::ofp_instruction_meter), meter_id}
             {
                 if (meter_id == 0 || meter_id > OFPM_MAX) {
                     throw 3;
@@ -35,7 +35,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_instruction_meter);
+                return sizeof(v13_detail::ofp_instruction_meter);
             }
 
             auto meter_id() const
@@ -55,18 +55,18 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> meter
             {
-                auto const instruction_meter = detail::decode<detail::ofp_instruction_meter>(first, last);
+                auto const instruction_meter = detail::decode<v13_detail::ofp_instruction_meter>(first, last);
                 if (instruction_meter.type != instruction_type) {
                     throw 1;
                 }
-                if (instruction_meter.len != sizeof(detail::ofp_instruction_meter)) {
+                if (instruction_meter.len != sizeof(v13_detail::ofp_instruction_meter)) {
                     throw 2;
                 }
                 return meter{instruction_meter.meter_id};
             }
 
         private:
-            detail::ofp_instruction_meter meter_;
+            v13_detail::ofp_instruction_meter meter_;
         };
 
     } // namespace instructions

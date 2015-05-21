@@ -4,7 +4,7 @@ def _maybe_qualify(version, typename):
     if typename.startswith('uint'):
         return 'std::' + typename
     if typename.startswith('ofp_'):
-        return 'canard::network::openflow::v{version}::detail::{name}'.format(version=version, name=typename)
+        return 'canard::network::openflow::v{version}::v{version}_detail::{name}'.format(version=version, name=typename)
     return typename
 
 def _enumerate_array(version, array):
@@ -33,7 +33,7 @@ def _generate_adapt_structs(collector):
         lambda (name, struct): (
 """\
 BOOST_FUSION_ADAPT_STRUCT(
-    canard::network::openflow::v{version}::detail::{name},
+    canard::network::openflow::v{version}::v{version}_detail::{name},
 {member_ppseq}
 )\
 """.format(version=collector.version, name=name, member_ppseq=_generate_member_ppseq(

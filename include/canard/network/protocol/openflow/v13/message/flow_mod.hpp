@@ -24,7 +24,7 @@ namespace openflow {
 namespace v13 {
 
     class flow_mod_add
-        : public detail::basic_openflow_message<flow_mod_add>
+        : public v13_detail::basic_openflow_message<flow_mod_add>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_MOD;
@@ -51,7 +51,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return mod_add_.header;
         }
@@ -83,8 +83,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_add
         {
-            auto const mod_add = detail::decode<detail::ofp_flow_mod>(first, last);
-            if (std::distance(first, last) != mod_add.header.length - sizeof(detail::ofp_flow_mod)) {
+            auto const mod_add = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            if (std::distance(first, last) != mod_add.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
             auto match = oxm_match::decode(first, last);
@@ -93,7 +93,7 @@ namespace v13 {
         }
 
     private:
-        flow_mod_add(detail::ofp_flow_mod const& mod_add, oxm_match match, instruction_set instructions)
+        flow_mod_add(v13_detail::ofp_flow_mod const& mod_add, oxm_match match, instruction_set instructions)
             : mod_add_(mod_add)
             , entry_{
                   {std::move(match), mod_add.priority}
@@ -108,17 +108,17 @@ namespace v13 {
         static auto calc_length(flow_entry const& entry)
             -> std::uint16_t
         {
-            return std::uint16_t{sizeof(detail::ofp_flow_mod)}
+            return std::uint16_t{sizeof(v13_detail::ofp_flow_mod)}
                 + detail::exact_length(entry.match().length()) + entry.instructions().length();
         }
 
     private:
-        detail::ofp_flow_mod mod_add_;
+        v13_detail::ofp_flow_mod mod_add_;
         flow_entry entry_;
     };
 
     class flow_mod_modify_strict
-        : public detail::basic_openflow_message<flow_mod_modify_strict>
+        : public v13_detail::basic_openflow_message<flow_mod_modify_strict>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_MOD;
@@ -137,7 +137,7 @@ namespace v13 {
                   {
                       OFP_VERSION
                     , message_type
-                    , detail::exact_length(sizeof(detail::ofp_flow_mod) + entry_id.match_.length() + instructions.length())
+                    , detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length() + instructions.length())
                     , get_xid()
                   }
                 , cookie, cookie_mask
@@ -154,7 +154,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return mod_modify_.header;
         }
@@ -174,8 +174,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_modify_strict
         {
-            auto const mod_modify = detail::decode<detail::ofp_flow_mod>(first, last);
-            if (std::distance(first, last) != mod_modify.header.length - sizeof(detail::ofp_flow_mod)) {
+            auto const mod_modify = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            if (std::distance(first, last) != mod_modify.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
             auto match = oxm_match::decode(first, last);
@@ -184,7 +184,7 @@ namespace v13 {
         }
 
     private:
-        flow_mod_modify_strict(detail::ofp_flow_mod const& mod_modify, oxm_match match, instruction_set instructions)
+        flow_mod_modify_strict(v13_detail::ofp_flow_mod const& mod_modify, oxm_match match, instruction_set instructions)
             : mod_modify_(mod_modify)
             , match_(std::move(match))
             , instructions_(std::move(instructions))
@@ -192,14 +192,14 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_flow_mod mod_modify_;
+        v13_detail::ofp_flow_mod mod_modify_;
         oxm_match match_;
         instruction_set instructions_;
     };
 
 
     class flow_mod_modify
-        : public detail::basic_openflow_message<flow_mod_modify>
+        : public v13_detail::basic_openflow_message<flow_mod_modify>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_MOD;
@@ -234,7 +234,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return mod_modify_.header;
         }
@@ -254,8 +254,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_modify
         {
-            auto const mod_modify = detail::decode<detail::ofp_flow_mod>(first, last);
-            if (std::distance(first, last) != mod_modify.header.length - sizeof(detail::ofp_flow_mod)) {
+            auto const mod_modify = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            if (std::distance(first, last) != mod_modify.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
             auto match = oxm_match::decode(first, last);
@@ -264,7 +264,7 @@ namespace v13 {
         }
 
     private:
-        flow_mod_modify(detail::ofp_flow_mod const& mod_modify, oxm_match match, instruction_set instructions)
+        flow_mod_modify(v13_detail::ofp_flow_mod const& mod_modify, oxm_match match, instruction_set instructions)
             : mod_modify_(mod_modify)
             , match_(std::move(match))
             , instructions_(std::move(instructions))
@@ -275,18 +275,18 @@ namespace v13 {
         static auto calc_length(oxm_match const& match, instruction_set const& instructions)
             -> std::uint16_t
         {
-            return std::uint16_t{sizeof(detail::ofp_flow_mod)}
+            return std::uint16_t{sizeof(v13_detail::ofp_flow_mod)}
                 + detail::exact_length(match.length()) + instructions.length();
         }
 
     private:
-        detail::ofp_flow_mod mod_modify_;
+        v13_detail::ofp_flow_mod mod_modify_;
         oxm_match match_;
         instruction_set instructions_;
     };
 
     class flow_mod_delete_strict
-        : public detail::basic_openflow_message<flow_mod_delete_strict>
+        : public v13_detail::basic_openflow_message<flow_mod_delete_strict>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_MOD;
@@ -306,7 +306,7 @@ namespace v13 {
                 , std::uint64_t const cookie, std::uint64_t const cookie_mask
                 , std::uint32_t const out_port, std::uint32_t const out_group)
             : mod_delete_{
-                  {OFP_VERSION, message_type, detail::exact_length(sizeof(detail::ofp_flow_mod) + entry_id.match_.length()), get_xid()}
+                  {OFP_VERSION, message_type, detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length()), get_xid()}
                 , cookie, cookie_mask
                 , table_id
                 , command_type
@@ -322,7 +322,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return mod_delete_.header;
         }
@@ -341,8 +341,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_delete_strict
         {
-            auto const mod_delete = detail::decode<detail::ofp_flow_mod>(first, last);
-            if (std::distance(first, last) != mod_delete.header.length - sizeof(detail::ofp_flow_mod)) {
+            auto const mod_delete = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            if (std::distance(first, last) != mod_delete.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
             auto match = oxm_match::decode(first, last);
@@ -350,19 +350,19 @@ namespace v13 {
         }
 
     private:
-        flow_mod_delete_strict(detail::ofp_flow_mod const& mod_delete, oxm_match match)
+        flow_mod_delete_strict(v13_detail::ofp_flow_mod const& mod_delete, oxm_match match)
             : mod_delete_(mod_delete)
             , match_(std::move(match))
         {
         }
 
     private:
-        detail::ofp_flow_mod mod_delete_;
+        v13_detail::ofp_flow_mod mod_delete_;
         oxm_match match_;
     };
 
     class flow_mod_delete
-        : public detail::basic_openflow_message<flow_mod_delete>
+        : public v13_detail::basic_openflow_message<flow_mod_delete>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_MOD;
@@ -377,7 +377,7 @@ namespace v13 {
                 , std::uint64_t const cookie, std::uint64_t const cookie_mask
                 , std::uint32_t const out_port, std::uint32_t const out_group)
             : mod_delete_{
-                  { OFP_VERSION, message_type, detail::exact_length(sizeof(detail::ofp_flow_mod) + match.length()), get_xid() }
+                  { OFP_VERSION, message_type, detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + match.length()), get_xid() }
                 , 0, 0, table_id, command_type, 0, 0, 0, 0, out_port, out_group, 0, {0, 0}
               }
             , match_(std::move(match))
@@ -385,7 +385,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return mod_delete_.header;
         }
@@ -404,8 +404,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_delete
         {
-            auto const mod_delete = detail::decode<detail::ofp_flow_mod>(first, last);
-            if (std::distance(first, last) != mod_delete.header.length - sizeof(detail::ofp_flow_mod)) {
+            auto const mod_delete = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            if (std::distance(first, last) != mod_delete.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
             auto match = oxm_match::decode(first, last);
@@ -413,14 +413,14 @@ namespace v13 {
         }
 
     private:
-        flow_mod_delete(detail::ofp_flow_mod const& mod_delete, oxm_match match)
+        flow_mod_delete(v13_detail::ofp_flow_mod const& mod_delete, oxm_match match)
             : mod_delete_(mod_delete)
             , match_(std::move(match))
         {
         }
 
     private:
-        detail::ofp_flow_mod mod_delete_;
+        v13_detail::ofp_flow_mod mod_delete_;
         oxm_match match_;
     };
 

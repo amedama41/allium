@@ -34,7 +34,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return offsetof(detail::ofp_action_header, pad);
+            return offsetof(v13_detail::ofp_action_header, pad);
         }
 
         template <class Container>
@@ -51,11 +51,11 @@ namespace v13 {
         {
             auto const type = detail::decode<std::uint16_t>(first, last);
             auto const length = detail::decode<std::uint16_t>(first, last);
-            if (length != offsetof(detail::ofp_action_header, pad)) {
+            if (length != offsetof(v13_detail::ofp_action_header, pad)) {
                 throw std::runtime_error{
                     boost::str(boost::format{
                         "%s: ofp_action_header:length is invalid, expected %u but %u"
-                    } % __func__ % offsetof(detail::ofp_action_header, pad) % length)
+                    } % __func__ % offsetof(v13_detail::ofp_action_header, pad) % length)
                 };
             }
             return action_id{type};
@@ -83,7 +83,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return sizeof(detail::ofp_action_experimenter_header) + data_.size();
+            return sizeof(v13_detail::ofp_action_experimenter_header) + data_.size();
         }
 
         auto experimenter() const
@@ -113,7 +113,7 @@ namespace v13 {
             -> action_experimenter_id
         {
             auto const experimenter_header
-                = detail::decode<detail::ofp_action_experimenter_header>(first, last);
+                = detail::decode<v13_detail::ofp_action_experimenter_header>(first, last);
             if (experimenter_header.len > sizeof(experimenter_header) + std::distance(first, last)) {
                 throw std::runtime_error{__func__};
             }

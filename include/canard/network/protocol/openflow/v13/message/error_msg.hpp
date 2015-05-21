@@ -21,7 +21,7 @@ namespace openflow {
 namespace v13 {
 
     class error_msg
-        : public detail::basic_openflow_message<error_msg>
+        : public v13_detail::basic_openflow_message<error_msg>
     {
     public:
         static ofp_type const message_type = OFPT_ERROR;
@@ -29,18 +29,18 @@ namespace v13 {
         error_msg(ofp_error_type const type, std::uint16_t const code
                 , std::vector<unsigned char> data)
             : error_msg_{
-                  { OFP_VERSION, message_type, std::uint16_t(sizeof(detail::ofp_error_msg) + data.size()), get_xid() }
+                  { OFP_VERSION, message_type, std::uint16_t(sizeof(v13_detail::ofp_error_msg) + data.size()), get_xid() }
                 , std::uint16_t(type), code
               }
             , data_(std::move(data))
         {
-            if (data_.size() < sizeof(detail::ofp_header)) {
+            if (data_.size() < sizeof(v13_detail::ofp_header)) {
                 throw 2;
             }
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return error_msg_.header;
         }
@@ -64,11 +64,11 @@ namespace v13 {
         }
 
         auto failed_request_header() const
-            -> detail::ofp_header
+            -> v13_detail::ofp_header
         {
-            auto header = detail::ofp_header();
+            auto header = v13_detail::ofp_header();
             boost::copy_n(data_, sizeof(header), canard::as_byte_range(header).begin());
-            return detail::ntoh(header);
+            return v13_detail::ntoh(header);
         }
 
         using basic_openflow_message::encode;
@@ -85,28 +85,28 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> error_msg
         {
-            auto const error = detail::decode<detail::ofp_error_msg>(first, last);
-            if (std::distance(first, last) != error.header.length - sizeof(detail::ofp_error_msg)) {
+            auto const error = detail::decode<v13_detail::ofp_error_msg>(first, last);
+            if (std::distance(first, last) != error.header.length - sizeof(v13_detail::ofp_error_msg)) {
                 throw 2;
             }
-            if (error.header.length < sizeof(detail::ofp_error_msg) + sizeof(detail::ofp_header)) {
+            if (error.header.length < sizeof(v13_detail::ofp_error_msg) + sizeof(v13_detail::ofp_header)) {
                 throw 3;
             }
-            auto data = std::vector<unsigned char>(first, std::next(first, error.header.length - sizeof(detail::ofp_error_msg)));
+            auto data = std::vector<unsigned char>(first, std::next(first, error.header.length - sizeof(v13_detail::ofp_error_msg)));
             std::advance(first, data.size());
 
             return {error, std::move(data)};
         }
 
     private:
-        error_msg(detail::ofp_error_msg const& error, std::vector<unsigned char> data)
+        error_msg(v13_detail::ofp_error_msg const& error, std::vector<unsigned char> data)
             : error_msg_(error)
             , data_{std::move(data)}
         {
         }
 
     private:
-        detail::ofp_error_msg error_msg_;
+        v13_detail::ofp_error_msg error_msg_;
         std::vector<unsigned char> data_;
     };
 

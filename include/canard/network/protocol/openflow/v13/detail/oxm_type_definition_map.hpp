@@ -16,7 +16,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <ofp_oxm_class OXMClass, std::uint8_t OXMField>
         struct oxm_type;
@@ -72,7 +72,7 @@ namespace v13 {
             using oxm_type_definition = boost::fusion::result_of::value_at_c<
                       typename boost::fusion::result_of::value_at_key<
                               oxm_type_definition_map
-                            , detail::oxm_type<OXMClass, OXMField>
+                            , v13_detail::oxm_type<OXMClass, OXMField>
                       >::type
                     , M
             >;
@@ -106,7 +106,7 @@ namespace v13 {
             }
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

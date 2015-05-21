@@ -17,9 +17,9 @@ namespace messages {
 
     template <class T>
     class switch_config_base
-        : public detail::basic_openflow_message<T>
+        : public v10_detail::basic_openflow_message<T>
     {
-        using base_type = detail::basic_openflow_message<T>;
+        using base_type = v10_detail::basic_openflow_message<T>;
 
     protected:
         switch_config_base(ofp_config_flags const flags, std::uint16_t const miss_send_len
@@ -31,7 +31,7 @@ namespace messages {
         {
         }
 
-        explicit switch_config_base(detail::ofp_switch_config const& config)
+        explicit switch_config_base(v10_detail::ofp_switch_config const& config)
             : config_(config)
         {
             if (base_type::version() != OFP_VERSION) {
@@ -40,14 +40,14 @@ namespace messages {
             if (base_type::type() != T::message_type) {
                 throw std::runtime_error("invalid message type");
             }
-            if (base_type::length() != sizeof(detail::ofp_switch_config)) {
+            if (base_type::length() != sizeof(v10_detail::ofp_switch_config)) {
                 throw std::runtime_error("invalid length");
             }
         }
 
     public:
         auto header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             return config_.header;
         }
@@ -68,7 +68,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return openflow::detail::encode(container, config_);
+            return detail::encode(container, config_);
         }
 
         template <class Iterator>
@@ -76,17 +76,17 @@ namespace messages {
             -> T
         {
             auto const config
-                = openflow::detail::decode<detail::ofp_switch_config>(first, last);
+                = detail::decode<v10_detail::ofp_switch_config>(first, last);
             return T{config};
         }
 
     private:
-        detail::ofp_switch_config config_;
+        v10_detail::ofp_switch_config config_;
     };
 
 
     class get_config_request
-        : public detail::basic_openflow_message<get_config_request>
+        : public v10_detail::basic_openflow_message<get_config_request>
     {
     public:
         static ofp_type const message_type = OFPT_GET_CONFIG_REQUEST;
@@ -97,7 +97,7 @@ namespace messages {
         }
 
         auto header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             return header_;
         }
@@ -106,7 +106,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return openflow::detail::encode(container, header_);
+            return detail::encode(container, header_);
         }
 
         template <class Iterator>
@@ -114,12 +114,12 @@ namespace messages {
             -> get_config_request
         {
             auto const header
-                = openflow::detail::encode<detail::ofp_header>(first, last);
+                = detail::decode<v10_detail::ofp_header>(first, last);
             return get_config_request{header};
         }
 
     private:
-        explicit get_config_request(detail::ofp_header const header)
+        explicit get_config_request(v10_detail::ofp_header const header)
             : header_(header)
         {
             if (version() != OFP_VERSION) {
@@ -128,13 +128,13 @@ namespace messages {
             if (type() != message_type) {
                 throw std::runtime_error("invalid message type");
             }
-            if (length() != sizeof(detail::ofp_header)) {
+            if (length() != sizeof(v10_detail::ofp_header)) {
                 throw std::runtime_error("invalid length");
             }
         }
 
     private:
-        detail::ofp_header header_;
+        v10_detail::ofp_header header_;
     };
 
 
@@ -147,13 +147,13 @@ namespace messages {
     private:
         friend switch_config_base;
 
-        explicit get_config_reply(detail::ofp_switch_config const& config)
+        explicit get_config_reply(v10_detail::ofp_switch_config const& config)
             : switch_config_base{config}
         {
         }
 
     private:
-        detail::ofp_switch_config config_;
+        v10_detail::ofp_switch_config config_;
     };
 
 
@@ -177,7 +177,7 @@ namespace messages {
     private:
         friend switch_config_base;
 
-        explicit set_config(detail::ofp_switch_config const& config)
+        explicit set_config(v10_detail::ofp_switch_config const& config)
             : switch_config_base{config}
         {
         }

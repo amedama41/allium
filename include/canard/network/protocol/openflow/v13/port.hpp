@@ -20,7 +20,7 @@ namespace v13 {
     {
     public:
         port(port const& other)
-            : port_{new detail::ofp_port(*other.port_)}
+            : port_{new v13_detail::ofp_port(*other.port_)}
         {
         }
 
@@ -122,7 +122,7 @@ namespace v13 {
         }
 
     private:
-        explicit port(std::unique_ptr<detail::ofp_port> port)
+        explicit port(std::unique_ptr<v13_detail::ofp_port> port)
             : port_(std::move(port))
         {
         }
@@ -132,13 +132,13 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> port
         {
-            auto port_ptr = std::unique_ptr<detail::ofp_port>{new detail::ofp_port};
-            *port_ptr = detail::decode<detail::ofp_port>(first, last);
+            auto port_ptr = std::unique_ptr<v13_detail::ofp_port>{new v13_detail::ofp_port};
+            *port_ptr = detail::decode<v13_detail::ofp_port>(first, last);
             return port{std::move(port_ptr)};
         }
 
     private:
-        std::unique_ptr<detail::ofp_port> port_;
+        std::unique_ptr<v13_detail::ofp_port> port_;
     };
 
 } // namespace v13

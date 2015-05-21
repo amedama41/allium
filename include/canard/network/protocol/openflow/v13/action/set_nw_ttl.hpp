@@ -20,7 +20,7 @@ namespace v13 {
             static ofp_action_type const action_type = OFPAT_SET_NW_TTL;
 
             explicit set_nw_ttl(std::uint8_t const nw_ttl)
-                : nw_ttl_{action_type, sizeof(detail::ofp_action_nw_ttl), nw_ttl, {0}}
+                : nw_ttl_{action_type, sizeof(v13_detail::ofp_action_nw_ttl), nw_ttl, {0}}
             {
             }
 
@@ -33,7 +33,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_action_nw_ttl);
+                return sizeof(v13_detail::ofp_action_nw_ttl);
             }
 
             auto ttl() const
@@ -54,18 +54,18 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> set_nw_ttl
             {
-                auto const action_nw_ttl = detail::decode<detail::ofp_action_nw_ttl>(first, last);
+                auto const action_nw_ttl = detail::decode<v13_detail::ofp_action_nw_ttl>(first, last);
                 if (action_nw_ttl.type != action_type) {
                     throw 1;
                 }
-                if (action_nw_ttl.len != sizeof(detail::ofp_action_nw_ttl)) {
+                if (action_nw_ttl.len != sizeof(v13_detail::ofp_action_nw_ttl)) {
                     throw 2;
                 }
                 return set_nw_ttl{action_nw_ttl.nw_ttl};
             }
 
         private:
-            detail::ofp_action_nw_ttl nw_ttl_;
+            v13_detail::ofp_action_nw_ttl nw_ttl_;
         };
 
     } // namespace actions

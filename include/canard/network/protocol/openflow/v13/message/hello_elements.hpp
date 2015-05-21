@@ -100,7 +100,7 @@ namespace v13 {
             }
 
         private:
-            versionbitmap(detail::ofp_hello_elem_versionbitmap const& versionbitmap, std::vector<std::uint32_t> bitmaps)
+            versionbitmap(v13_detail::ofp_hello_elem_versionbitmap const& versionbitmap, std::vector<std::uint32_t> bitmaps)
                 : versionbitmap_(versionbitmap)
                 , bitmaps_(std::move(bitmaps))
             {
@@ -117,14 +117,14 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> versionbitmap
             {
-                auto const vbitmap = detail::decode<detail::ofp_hello_elem_versionbitmap>(first, last);
+                auto const vbitmap = detail::decode<v13_detail::ofp_hello_elem_versionbitmap>(first, last);
 
                 auto bitmaps = std::vector<std::uint32_t>((vbitmap.length - sizeof(vbitmap)) / sizeof(std::uint32_t));
                 std::copy_n(first, bitmaps.size() * sizeof(std::uint32_t)
                         , reinterpret_cast<unsigned char*>(&bitmaps[0]));
                 std::advance(first, bitmaps.size() * sizeof(std::uint32_t));
                 boost::for_each(bitmaps, [](std::uint32_t& bitmap) {
-                    bitmap = detail::ntoh(bitmap);
+                    bitmap = v13_detail::ntoh(bitmap);
                 });
 
                 std::advance(first, detail::padding_length(vbitmap.length));
@@ -133,7 +133,7 @@ namespace v13 {
             }
 
         private:
-            detail::ofp_hello_elem_versionbitmap versionbitmap_;
+            v13_detail::ofp_hello_elem_versionbitmap versionbitmap_;
             std::vector<std::uint32_t> bitmaps_;
         };
 
@@ -171,7 +171,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> unknown_element
             {
-                auto const header = detail::decode<detail::ofp_hello_elem_header>(first, last);
+                auto const header = detail::decode<v13_detail::ofp_hello_elem_header>(first, last);
 
                 auto data = std::vector<unsigned char>(header.length - sizeof(header));
                 std::copy_n(first, data.size(), data.begin());
@@ -183,7 +183,7 @@ namespace v13 {
             }
 
         private:
-            unknown_element(detail::ofp_hello_elem_header const& header, std::vector<unsigned char> data)
+            unknown_element(v13_detail::ofp_hello_elem_header const& header, std::vector<unsigned char> data)
                 : header_(header)
                 , data_(std::move(data))
             {
@@ -193,7 +193,7 @@ namespace v13 {
             }
 
         private:
-            detail::ofp_hello_elem_header header_;
+            v13_detail::ofp_hello_elem_header header_;
             std::vector<unsigned char> data_;
         };
 

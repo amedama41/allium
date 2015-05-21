@@ -30,17 +30,17 @@ namespace network {
 namespace openflow {
 namespace v10 {
 
-    namespace detail {
+    namespace secure_channel_detail {
 
         auto read_ofp_header(boost::asio::streambuf& streambuf)
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
-            auto header = detail::ofp_header{};
+            auto header = v10_detail::ofp_header{};
             std::memcpy(&header, boost::asio::buffer_cast<std::uint8_t const*>(streambuf.data()), sizeof(header));
-            return detail::ntoh(header);
+            return v10_detail::ntoh(header);
         }
 
-    } // namespace detail
+    } // namespace secure_channel_detail
 
     template <class ControllerHandler, class Socket = boost::asio::ip::tcp::socket>
     class secure_channel_impl
@@ -75,18 +75,18 @@ namespace v10 {
         auto handle_read()
             -> std::size_t
         {
-            while (streambuf_.size() >= sizeof(detail::ofp_header)) {
-                auto const header = detail::read_ofp_header(streambuf_);
+            while (streambuf_.size() >= sizeof(v10_detail::ofp_header)) {
+                auto const header = secure_channel_detail::read_ofp_header(streambuf_);
                 if (streambuf_.size() < header.length) {
                     return header.length - streambuf_.size();
                 }
                 handle_message(header);
                 streambuf_.consume(header.length);
             }
-            return sizeof(detail::ofp_header) - streambuf_.size();
+            return sizeof(v10_detail::ofp_header) - streambuf_.size();
         }
 
-        void handle_message(detail::ofp_header const& header)
+        void handle_message(v10_detail::ofp_header const& header)
         {
             std::cout
                 << "version: " << std::uint16_t{header.version} << "\n"
@@ -119,7 +119,7 @@ namespace v10 {
     private:
         struct message_loop
         {
-            void run(std::size_t const least_size = sizeof(detail::ofp_header))
+            void run(std::size_t const least_size = sizeof(v10_detail::ofp_header))
             {
                 (*this)(least_size);
             }

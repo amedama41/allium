@@ -19,7 +19,7 @@ namespace openflow {
 namespace v13 {
 
     class flow_removed
-        : public detail::basic_openflow_message<flow_removed>
+        : public v13_detail::basic_openflow_message<flow_removed>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_REMOVED;
@@ -27,7 +27,7 @@ namespace v13 {
         flow_removed(flow_entry const& entry, std::uint8_t const table_id, ofp_flow_removed_reason const reason
                 , std::uint32_t const duration_sec, std::uint32_t const duration_nsec)
             : flow_removed_{
-                  { OFP_VERSION, message_type, detail::exact_length(sizeof(detail::ofp_flow_removed) + entry.match().length()), get_xid() }
+                  { OFP_VERSION, message_type, detail::exact_length(sizeof(v13_detail::ofp_flow_removed) + entry.match().length()), get_xid() }
                 , entry.cookie()
                 , entry.priority()
                 , std::uint8_t(reason)
@@ -44,7 +44,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return flow_removed_.header;
         }
@@ -108,8 +108,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_removed
         {
-            auto const flow_rm = detail::decode<detail::ofp_flow_removed>(first, last);
-            if (std::distance(first, last) != flow_rm.header.length - sizeof(detail::ofp_flow_removed)) {
+            auto const flow_rm = detail::decode<v13_detail::ofp_flow_removed>(first, last);
+            if (std::distance(first, last) != flow_rm.header.length - sizeof(v13_detail::ofp_flow_removed)) {
                 throw 2;
             }
             auto match = oxm_match::decode(first, last);
@@ -117,14 +117,14 @@ namespace v13 {
         }
 
     private:
-        flow_removed(detail::ofp_flow_removed const& flow_rm, oxm_match match)
+        flow_removed(v13_detail::ofp_flow_removed const& flow_rm, oxm_match match)
             : flow_removed_(flow_rm)
             , match_(std::move(match))
         {
         }
 
     private:
-        detail::ofp_flow_removed flow_removed_;
+        v13_detail::ofp_flow_removed flow_removed_;
         oxm_match match_;
     };
 

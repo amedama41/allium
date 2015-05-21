@@ -18,7 +18,7 @@ namespace openflow {
 namespace v13 {
 
     class packet_out
-        : public detail::basic_openflow_message<packet_out>
+        : public v13_detail::basic_openflow_message<packet_out>
     {
     public:
         static ofp_type const message_type = OFPT_PACKET_OUT;
@@ -26,7 +26,7 @@ namespace v13 {
         template <class... Actions>
         packet_out(std::vector<std::uint8_t> data, std::uint32_t const in_port, Actions&&... actions)
             : packet_out_{
-                { OFP_VERSION, message_type, std::uint16_t(sizeof(detail::ofp_packet_out) + actions_length(actions...) + data.size()), get_xid() }
+                { OFP_VERSION, message_type, std::uint16_t(sizeof(v13_detail::ofp_packet_out) + actions_length(actions...) + data.size()), get_xid() }
                 , OFP_NO_BUFFER, in_port, actions_length(actions...), {0}
               }
             , action_list_{std::forward<Actions>(actions)...}
@@ -37,7 +37,7 @@ namespace v13 {
         template <class... Actions>
         packet_out(std::uint32_t const buffer_id, std::uint32_t const in_port, Actions&&... actions)
             : packet_out_{
-                { OFP_VERSION, message_type, std::uint16_t(sizeof(detail::ofp_packet_out) + actions_length(actions...)), get_xid() }
+                { OFP_VERSION, message_type, std::uint16_t(sizeof(v13_detail::ofp_packet_out) + actions_length(actions...)), get_xid() }
                 , buffer_id, in_port, actions_length(actions...), {0}
               }
             , action_list_{std::forward<Actions>(actions)...}
@@ -46,7 +46,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return packet_out_.header;
         }
@@ -63,7 +63,7 @@ namespace v13 {
         }
 
     private:
-        packet_out(detail::ofp_packet_out const& pkt_out, action_list list, std::vector<std::uint8_t> data)
+        packet_out(v13_detail::ofp_packet_out const& pkt_out, action_list list, std::vector<std::uint8_t> data)
             : packet_out_(pkt_out)
             , action_list_(std::move(list))
             , data_(std::move(data))
@@ -75,8 +75,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator& last)
             -> packet_out
         {
-            auto const pkt_out = detail::decode<detail::ofp_packet_out>(first, last);
-            if (std::distance(first, last) < std::max<std::uint16_t>(pkt_out.actions_len, pkt_out.header.length - sizeof(detail::ofp_packet_out))) {
+            auto const pkt_out = detail::decode<v13_detail::ofp_packet_out>(first, last);
+            if (std::distance(first, last) < std::max<std::uint16_t>(pkt_out.actions_len, pkt_out.header.length - sizeof(v13_detail::ofp_packet_out))) {
                 throw 1;
             }
             auto act_list = action_list::decode(first, std::next(first, pkt_out.actions_len));
@@ -100,7 +100,7 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_packet_out packet_out_;
+        v13_detail::ofp_packet_out packet_out_;
         action_list action_list_;
         std::vector<std::uint8_t> data_;
     };

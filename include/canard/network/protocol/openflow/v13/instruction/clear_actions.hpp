@@ -19,7 +19,7 @@ namespace v13 {
             static ofp_instruction_type const instruction_type = OFPIT_CLEAR_ACTIONS;
 
             clear_actions()
-                : actions_{instruction_type, sizeof(detail::ofp_instruction_actions), {0}}
+                : actions_{instruction_type, sizeof(v13_detail::ofp_instruction_actions), {0}}
             {
             }
 
@@ -32,7 +32,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_instruction_actions);
+                return sizeof(v13_detail::ofp_instruction_actions);
             }
 
             template <class Container>
@@ -46,18 +46,18 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> clear_actions
             {
-                auto const instruction_actions = detail::decode<detail::ofp_instruction_actions>(first, last);
+                auto const instruction_actions = detail::decode<v13_detail::ofp_instruction_actions>(first, last);
                 if (instruction_actions.type != instruction_type) {
                     throw 1;
                 }
-                if (instruction_actions.len != sizeof(detail::ofp_instruction_actions)) {
+                if (instruction_actions.len != sizeof(v13_detail::ofp_instruction_actions)) {
                     throw 2;
                 }
                 return clear_actions{};
             }
 
         private:
-            detail::ofp_instruction_actions actions_;
+            v13_detail::ofp_instruction_actions actions_;
         };
 
     } // namespace instructions

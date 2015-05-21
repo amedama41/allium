@@ -140,7 +140,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return sizeof(detail::ofp_oxm_experimenter_header);
+            return sizeof(v13_detail::ofp_oxm_experimenter_header);
         }
 
         template <class Container>
@@ -154,12 +154,12 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> oxm_experimenter_id
         {
-            auto const header = detail::decode<detail::ofp_oxm_experimenter_header>(first, last);
+            auto const header = detail::decode<v13_detail::ofp_oxm_experimenter_header>(first, last);
             return oxm_experimenter_id{header.oxm_header, header.experimenter};
         }
 
     private:
-        detail::ofp_oxm_experimenter_header header_;
+        v13_detail::ofp_oxm_experimenter_header header_;
     };
 
 } // namespace v13

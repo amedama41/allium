@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const sut = actions::pop_mpls{ethertype};
 
     BOOST_CHECK_EQUAL(sut.type(), OFPAT_POP_MPLS);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_action_pop_mpls));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_pop_mpls));
     BOOST_CHECK_EQUAL(sut.ethertype(), ethertype);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }

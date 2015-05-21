@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), OFPT_GROUP_MOD);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_group_mod) + sizeof(detail::ofp_bucket) + sizeof(detail::ofp_action_output));
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_group_mod) + sizeof(v13_detail::ofp_bucket) + sizeof(v13_detail::ofp_action_output));
         BOOST_CHECK_EQUAL(sut.command(), OFPGC_ADD);
         BOOST_CHECK_EQUAL(sut.group_id(), group_id);
         BOOST_CHECK_EQUAL(sut.group_type(), OFPGT_INDIRECT);
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(copy.version(), sut.version());
         BOOST_CHECK_EQUAL(copy.type(), sut.type());
-        BOOST_CHECK_EQUAL(copy.length(), sizeof(detail::ofp_group_mod) + 40 + 48);
+        BOOST_CHECK_EQUAL(copy.length(), sizeof(v13_detail::ofp_group_mod) + 40 + 48);
         BOOST_CHECK_EQUAL(copy.command(), sut.command());
         BOOST_CHECK_EQUAL(copy.group_id(), sut.group_id());
         BOOST_CHECK_EQUAL(copy.group_type(), sut.group_type());
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), OFPT_GROUP_MOD);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_group_mod));
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_group_mod));
         BOOST_CHECK_EQUAL(sut.command(), OFPGC_DELETE);
         BOOST_CHECK_EQUAL(sut.group_id(), group_id);
     }
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(copy.version(), sut.version());
         BOOST_CHECK_EQUAL(copy.type(), sut.type());
-        BOOST_CHECK_EQUAL(copy.length(), sizeof(detail::ofp_group_mod));
+        BOOST_CHECK_EQUAL(copy.length(), sizeof(v13_detail::ofp_group_mod));
         BOOST_CHECK_EQUAL(copy.command(), sut.command());
         BOOST_CHECK_EQUAL(copy.group_id(), sut.group_id());
     }

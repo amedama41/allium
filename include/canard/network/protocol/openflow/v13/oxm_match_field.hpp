@@ -20,9 +20,9 @@ namespace v13 {
 
     template <ofp_oxm_class OXMClass, std::uint8_t OXMField>
     class oxm_match_field
-        : public detail::basic_oxm_type<OXMClass, OXMField>
+        : public v13_detail::basic_oxm_type<OXMClass, OXMField>
     {
-        using base_type = detail::basic_oxm_type<OXMClass, OXMField>;
+        using base_type = v13_detail::basic_oxm_type<OXMClass, OXMField>;
 
     public:
         using value_type = typename base_type::value_type;

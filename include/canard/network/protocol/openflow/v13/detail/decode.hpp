@@ -19,7 +19,7 @@ namespace v13 {
         auto decode_impl(T const& value, std::true_type)
             -> T
         {
-            return detail::ntoh(value);
+            return v13_detail::ntoh(value);
         }
 
         template <class T>

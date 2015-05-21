@@ -24,7 +24,7 @@ namespace v13 {
     {
     public:
         static ofp_match_type const match_type = OFPMT_OXM;
-        static std::uint16_t const match_base_length = offsetof(detail::ofp_match, pad);
+        static std::uint16_t const match_base_length = offsetof(v13_detail::ofp_match, pad);
 
         template <class... OXMMatchFields, typename std::enable_if<!is_related<oxm_match, OXMMatchFields...>::value>::type* = nullptr>
         oxm_match(OXMMatchFields&&... oxm_fields)
@@ -64,13 +64,13 @@ namespace v13 {
         }
 
         auto begin() const
-            -> decltype(detail::oxm_match_field_set{}.begin())
+            -> decltype(v13_detail::oxm_match_field_set{}.begin())
         {
             return oxm_match_fields_.begin();
         }
 
         auto end() const
-            -> decltype(detail::oxm_match_field_set{}.end())
+            -> decltype(v13_detail::oxm_match_field_set{}.end())
         {
             return oxm_match_fields_.end();
         }
@@ -86,7 +86,7 @@ namespace v13 {
         }
 
     private:
-        oxm_match(detail::oxm_match_field_set&& oxm_field)
+        oxm_match(v13_detail::oxm_match_field_set&& oxm_field)
             : oxm_match_fields_{std::move(oxm_field)}
         {
         }
@@ -101,7 +101,7 @@ namespace v13 {
                 throw 1;
             }
             auto const length = detail::decode<std::uint16_t>(first, last);
-            auto oxm_fields = detail::oxm_match_field_set::decode(first, std::next(first, length - match_base_length));
+            auto oxm_fields = v13_detail::oxm_match_field_set::decode(first, std::next(first, length - match_base_length));
             if (length != match_base_length + oxm_fields.length()) {
                 throw 2;
             }
@@ -110,7 +110,7 @@ namespace v13 {
         }
 
     private:
-        detail::oxm_match_field_set oxm_match_fields_;
+        v13_detail::oxm_match_field_set oxm_match_fields_;
     };
 
 } // namespace v13

@@ -16,7 +16,7 @@ namespace openflow {
 namespace v13 {
 
     class port_description_request
-        : public detail::basic_multipart_request<port_description_request>
+        : public v13_detail::basic_multipart_request<port_description_request>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_PORT_DESC;
@@ -34,14 +34,14 @@ namespace v13 {
         }
 
     private:
-        explicit port_description_request(detail::ofp_multipart_request const& request)
+        explicit port_description_request(v13_detail::ofp_multipart_request const& request)
             : basic_multipart_request{request}
         {
         }
     };
 
     class port_description_reply
-        : public detail::basic_multipart_reply<port_description_reply>
+        : public v13_detail::basic_multipart_reply<port_description_reply>
     {
     public:
         using ports_type = std::vector<port>;
@@ -53,7 +53,7 @@ namespace v13 {
         static ofp_multipart_type const multipart_type_value = OFPMP_PORT_DESC;
 
         port_description_reply(std::vector<port> ports, std::uint16_t const flags)
-            : basic_multipart_reply{ports.size() * sizeof(detail::ofp_port), flags}
+            : basic_multipart_reply{ports.size() * sizeof(v13_detail::ofp_port), flags}
             , ports_(std::move(ports))
         {
         }
@@ -88,26 +88,26 @@ namespace v13 {
             -> port_description_reply
         {
             auto reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(detail::ofp_multipart_reply)) {
+            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw std::runtime_error{(boost::format{"%1%: invalid length(%2%) for buffer length(%3%)"}
                     % __func__ % reply.header.length % std::distance(first, last)).str()};
             }
-            if (std::distance(first, last) % sizeof(detail::ofp_port) != 0) {
+            if (std::distance(first, last) % sizeof(v13_detail::ofp_port) != 0) {
                 throw std::runtime_error{(boost::format{"%1%: invalid buffer length(%2%)"}
                     % __func__ % std::distance(first, last)).str()};
             }
 
             auto ports = std::vector<port>{};
-            ports.reserve(std::distance(first, last) / sizeof(detail::ofp_port));
+            ports.reserve(std::distance(first, last) / sizeof(v13_detail::ofp_port));
             while (first != last) {
-                ports.push_back(port::decode(first, std::next(first, sizeof(detail::ofp_port))));
+                ports.push_back(port::decode(first, std::next(first, sizeof(v13_detail::ofp_port))));
             }
 
             return {reply, std::move(ports)};
         }
 
     private:
-        port_description_reply(detail::ofp_multipart_reply const& reply, std::vector<port> ports)
+        port_description_reply(v13_detail::ofp_multipart_reply const& reply, std::vector<port> ports)
             : basic_multipart_reply{reply}
             , ports_(std::move(ports))
         {

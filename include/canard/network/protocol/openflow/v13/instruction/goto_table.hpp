@@ -19,7 +19,7 @@ namespace v13 {
             static ofp_instruction_type const instruction_type = OFPIT_GOTO_TABLE;
 
             explicit goto_table(std::uint8_t const table_id)
-                : goto_table_{instruction_type, sizeof(detail::ofp_instruction_goto_table), table_id, {0}}
+                : goto_table_{instruction_type, sizeof(v13_detail::ofp_instruction_goto_table), table_id, {0}}
             {
                 if (table_id > OFPTT_MAX) {
                     throw 3;
@@ -35,7 +35,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_instruction_goto_table);
+                return sizeof(v13_detail::ofp_instruction_goto_table);
             }
 
             auto table_id() const
@@ -55,18 +55,18 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> goto_table
             {
-                auto const instruction_goto_table = detail::decode<detail::ofp_instruction_goto_table>(first, last);
+                auto const instruction_goto_table = detail::decode<v13_detail::ofp_instruction_goto_table>(first, last);
                 if (instruction_goto_table.type != instruction_type) {
                     throw 1;
                 }
-                if (instruction_goto_table.len != sizeof(detail::ofp_instruction_goto_table)) {
+                if (instruction_goto_table.len != sizeof(v13_detail::ofp_instruction_goto_table)) {
                     throw 2;
                 }
                 return goto_table{instruction_goto_table.table_id};
             }
 
         private:
-            detail::ofp_instruction_goto_table goto_table_;
+            v13_detail::ofp_instruction_goto_table goto_table_;
         };
 
     } // namespace instructions

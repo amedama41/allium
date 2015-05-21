@@ -17,7 +17,7 @@ struct error_data_fixture
     std::vector<std::uint8_t> data;
     error_data_fixture()
     {
-        auto header = detail::hton(detail::ofp_header{OFP_VERSION, OFPT_HELLO, 8, 50});
+        auto header = v13_detail::hton(v13_detail::ofp_header{OFP_VERSION, OFPT_HELLO, 8, 50});
         data.assign(reinterpret_cast<unsigned char*>(&header), reinterpret_cast<unsigned char*>(&header + 1));
     }
 };

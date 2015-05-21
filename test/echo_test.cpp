@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 {
     BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
     BOOST_CHECK_EQUAL(sut.type(), OFPT_ECHO_REQUEST);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_header));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header));
     // BOOST_CHECK_EQUAL(sut.xid(), 0);
 }
 BOOST_AUTO_TEST_CASE(lvalue_create_reply_test)
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(lvalue_create_reply_test)
     BOOST_CHECK_EQUAL(reply.length(), sut.length());
     BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
     BOOST_CHECK_EQUAL(sut.data().size(), 0);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_header));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header));
 }
 BOOST_AUTO_TEST_CASE(rvalue_create_reply_test)
 {
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(rvalue_create_reply_test)
     BOOST_CHECK_EQUAL(reply.length(), sut.length());
     BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
     BOOST_CHECK_EQUAL(sut.data().size(), 0);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_header));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header));
 }
 struct buffer_fixture
 {
@@ -52,7 +52,7 @@ struct buffer_fixture
 BOOST_FIXTURE_TEST_SUITE(buffer_test, buffer_fixture)
     BOOST_AUTO_TEST_CASE(buffer_size_test)
     {
-        BOOST_CHECK_EQUAL(buffer.size(), sizeof(detail::ofp_header));
+        BOOST_CHECK_EQUAL(buffer.size(), sizeof(v13_detail::ofp_header));
     }
     BOOST_AUTO_TEST_CASE(version_test)
     {
@@ -63,20 +63,20 @@ BOOST_FIXTURE_TEST_SUITE(buffer_test, buffer_fixture)
     BOOST_AUTO_TEST_CASE(type_test)
     {
         std::uint8_t type;
-        std::memcpy(&type, buffer.data() + offsetof(detail::ofp_header, type), sizeof(type));
+        std::memcpy(&type, buffer.data() + offsetof(v13_detail::ofp_header, type), sizeof(type));
         BOOST_CHECK_EQUAL(canard::ntoh(type), sut.type());
     }
     BOOST_AUTO_TEST_CASE(length_test)
     {
         std::uint16_t length;
-        std::memcpy(&length, buffer.data() + offsetof(detail::ofp_header, length), sizeof(length));
+        std::memcpy(&length, buffer.data() + offsetof(v13_detail::ofp_header, length), sizeof(length));
         BOOST_CHECK_EQUAL(canard::ntoh(length), buffer.size());
         BOOST_CHECK_EQUAL(canard::ntoh(length), sut.length());
     }
     BOOST_AUTO_TEST_CASE(xid_test)
     {
         std::uint32_t xid;
-        std::memcpy(&xid, buffer.data() + offsetof(detail::ofp_header, xid), sizeof(xid));
+        std::memcpy(&xid, buffer.data() + offsetof(v13_detail::ofp_header, xid), sizeof(xid));
         BOOST_CHECK_EQUAL(canard::ntoh(xid), sut.xid());
     }
 BOOST_AUTO_TEST_SUITE_END() // buffer_test
@@ -90,7 +90,7 @@ BOOST_FIXTURE_TEST_SUITE(has_data_echo_request_test, has_data_echo_request_fixtu
     {
         BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), OFPT_ECHO_REQUEST);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_header) + 7);
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header) + 7);
         // BOOST_CHECK_EQUAL(sut.xid(), 0);
     }
     BOOST_AUTO_TEST_CASE(lvalue_create_reply_test)
@@ -101,17 +101,17 @@ BOOST_FIXTURE_TEST_SUITE(has_data_echo_request_test, has_data_echo_request_fixtu
         BOOST_CHECK_EQUAL(reply.length(), sut.length());
         BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
         BOOST_CHECK_EQUAL(sut.data().size(), 7);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_header) + 7);
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header) + 7);
     }
     BOOST_AUTO_TEST_CASE(rvalue_create_reply_test)
     {
         auto reply = std::move(sut).reply();
         BOOST_CHECK_EQUAL(reply.version(), sut.version());
         BOOST_CHECK_EQUAL(reply.type(), OFPT_ECHO_REPLY);
-        BOOST_CHECK_EQUAL(reply.length(), sizeof(detail::ofp_header) + 7);
+        BOOST_CHECK_EQUAL(reply.length(), sizeof(v13_detail::ofp_header) + 7);
         BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
         BOOST_CHECK_EQUAL(sut.data().size(), 0);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_header));
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header));
     }
 
     BOOST_AUTO_TEST_CASE(encode_decode_test)
@@ -147,7 +147,7 @@ BOOST_FIXTURE_TEST_CASE(constructor_test, echo_reply_fixture)
 {
     BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
     BOOST_CHECK_EQUAL(sut.type(), OFPT_ECHO_REPLY);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_header));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header));
     // BOOST_CHECK_EQUAL(sut.xid(), 0);
 }
 

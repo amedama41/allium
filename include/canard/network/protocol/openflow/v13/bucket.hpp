@@ -62,23 +62,23 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> bucket
         {
-            auto const bkt = detail::decode<detail::ofp_bucket>(first, last);
-            if (std::distance(first, last) < bkt.len - sizeof(detail::ofp_bucket)) {
+            auto const bkt = detail::decode<v13_detail::ofp_bucket>(first, last);
+            if (std::distance(first, last) < bkt.len - sizeof(v13_detail::ofp_bucket)) {
                 throw 2;
             }
-            auto actions = action_set::decode(first, std::next(first, bkt.len - sizeof(detail::ofp_bucket)));
+            auto actions = action_set::decode(first, std::next(first, bkt.len - sizeof(v13_detail::ofp_bucket)));
             return bucket{bkt, std::move(actions)};
         }
 
     private:
-        bucket(detail::ofp_bucket const& bkt, action_set actions)
+        bucket(v13_detail::ofp_bucket const& bkt, action_set actions)
             : bucket_(bkt)
             , actions_(std::move(actions))
         {
         }
 
     private:
-        detail::ofp_bucket bucket_;
+        v13_detail::ofp_bucket bucket_;
         action_set actions_;
     };
 

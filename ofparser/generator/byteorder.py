@@ -29,7 +29,7 @@ namespace network {{
 namespace openflow {{
 namespace v{version} {{
 
-    namespace detail {{
+    namespace v{version}_detail {{
 
         using canard::hton;
         using canard::ntoh;
@@ -56,7 +56,7 @@ namespace v{version} {{
 
 {ntoh_funcs}
 
-    }} // namespace detail
+    }} // namespace v{version}_detail
 
 }} // namespace v{version}
 }} // namespace openflow

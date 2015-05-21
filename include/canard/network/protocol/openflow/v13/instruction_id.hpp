@@ -32,7 +32,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return sizeof(detail::ofp_instruction);
+            return sizeof(v13_detail::ofp_instruction);
         }
 
         template <class Container>
@@ -49,7 +49,7 @@ namespace v13 {
         {
             auto const type = detail::decode<std::uint16_t>(first, last);
             auto const length = detail::decode<std::uint16_t>(first, last);
-            if (length != sizeof(detail::ofp_instruction)) {
+            if (length != sizeof(v13_detail::ofp_instruction)) {
                 throw std::runtime_error{__func__};
             }
             return instruction_id{type};
@@ -84,7 +84,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return sizeof(detail::ofp_instruction_experimenter) + data_.size();
+            return sizeof(v13_detail::ofp_instruction_experimenter) + data_.size();
         }
 
         auto experimenter() const
@@ -108,7 +108,7 @@ namespace v13 {
             -> instruction_experimenter_id
         {
             auto const experimenter_header
-                = detail::decode<detail::ofp_instruction_experimenter>(first, last);
+                = detail::decode<v13_detail::ofp_instruction_experimenter>(first, last);
             if (experimenter_header.len > sizeof(experimenter_header) + std::distance(first, last)) {
                 throw std::runtime_error{__func__};
             }

@@ -18,7 +18,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class Timer = boost::asio::steady_timer>
         class transaction_base
@@ -209,15 +209,15 @@ namespace v13 {
             };
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
 
     template <class Message, class Timer = boost::asio::steady_timer>
     class transaction_impl
-        : public detail::transaction_base<Timer>
+        : public v13_detail::transaction_base<Timer>
         , public std::enable_shared_from_this<transaction_impl<Message, Timer>>
     {
-        using base_type = detail::transaction_base<Timer>;
+        using base_type = v13_detail::transaction_base<Timer>;
 
         template <class WaitForReplyHandler>
         using async_wait_for_reply_result_init = canard::async_result_init<
@@ -270,7 +270,7 @@ namespace v13 {
                 std::forward<WaitForReplyHandler>(handler)
             };
 
-            base_type::async_wait(detail::make_wait_handler_adaptor(
+            base_type::async_wait(v13_detail::make_wait_handler_adaptor(
                     this->shared_from_this(), std::move(result.handler())
             ));
 

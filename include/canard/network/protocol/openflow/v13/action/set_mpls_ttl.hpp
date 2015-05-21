@@ -20,7 +20,7 @@ namespace v13 {
             static ofp_action_type const action_type = OFPAT_SET_MPLS_TTL;
 
             explicit set_mpls_ttl(std::uint8_t const mpls_ttl)
-                : mpls_ttl_{action_type, sizeof(detail::ofp_action_mpls_ttl), mpls_ttl}
+                : mpls_ttl_{action_type, sizeof(v13_detail::ofp_action_mpls_ttl), mpls_ttl}
             {
             }
 
@@ -33,7 +33,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_action_mpls_ttl);
+                return sizeof(v13_detail::ofp_action_mpls_ttl);
             }
 
             auto ttl() const
@@ -50,7 +50,7 @@ namespace v13 {
             }
 
         private:
-            explicit set_mpls_ttl(detail::ofp_action_mpls_ttl const& action_mpls_ttl)
+            explicit set_mpls_ttl(v13_detail::ofp_action_mpls_ttl const& action_mpls_ttl)
                 : mpls_ttl_(action_mpls_ttl)
             {
                 if (mpls_ttl_.type != type()) {
@@ -66,12 +66,12 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> set_mpls_ttl
             {
-                auto const action_mpls_ttl = detail::decode<detail::ofp_action_mpls_ttl>(first, last);
+                auto const action_mpls_ttl = detail::decode<v13_detail::ofp_action_mpls_ttl>(first, last);
                 return set_mpls_ttl{action_mpls_ttl};
             }
 
         private:
-            detail::ofp_action_mpls_ttl mpls_ttl_;
+            v13_detail::ofp_action_mpls_ttl mpls_ttl_;
         };
 
     } // namespace actions

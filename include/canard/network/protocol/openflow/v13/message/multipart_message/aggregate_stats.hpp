@@ -17,14 +17,14 @@ namespace openflow {
 namespace v13 {
 
     class aggregate_stats_request
-        : public detail::basic_multipart_request<aggregate_stats_request>
+        : public v13_detail::basic_multipart_request<aggregate_stats_request>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_AGGREGATE;
 
         explicit aggregate_stats_request(oxm_match match)
             : basic_multipart_request{
-                detail::exact_length(sizeof(detail::ofp_aggregate_stats_request) + match.length())
+                detail::exact_length(sizeof(v13_detail::ofp_aggregate_stats_request) + match.length())
                 , 0
               }
             , aggregate_stats_request_{
@@ -46,19 +46,19 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_aggregate_stats_request aggregate_stats_request_;
+        v13_detail::ofp_aggregate_stats_request aggregate_stats_request_;
         oxm_match match_;
     };
 
 
     class aggregate_stats_reply
-        : public detail::basic_multipart_reply<aggregate_stats_reply>
+        : public v13_detail::basic_multipart_reply<aggregate_stats_reply>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_AGGREGATE;
 
         aggregate_stats_reply(v13::counters const& counters, std::uint32_t const flow_count)
-            : basic_multipart_reply{std::uint16_t(sizeof(detail::ofp_aggregate_stats_reply)), 0}
+            : basic_multipart_reply{std::uint16_t(sizeof(v13_detail::ofp_aggregate_stats_reply)), 0}
             , aggregate_stats_reply_{counters.packet_count_, counters.byte_count_, flow_count}
         {
         }
@@ -92,22 +92,22 @@ namespace v13 {
             -> aggregate_stats_reply
         {
             auto const reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(detail::ofp_multipart_reply)) {
+            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
-            auto const stats_reply = detail::decode<detail::ofp_aggregate_stats_reply>(first, last);
+            auto const stats_reply = detail::decode<v13_detail::ofp_aggregate_stats_reply>(first, last);
             return {reply, stats_reply};
         }
 
     private:
-        aggregate_stats_reply(detail::ofp_multipart_reply const& reply, detail::ofp_aggregate_stats_reply const& stats_reply)
+        aggregate_stats_reply(v13_detail::ofp_multipart_reply const& reply, v13_detail::ofp_aggregate_stats_reply const& stats_reply)
             : basic_multipart_reply{reply}
             , aggregate_stats_reply_(stats_reply)
         {
         }
 
     private:
-        detail::ofp_aggregate_stats_reply aggregate_stats_reply_;
+        v13_detail::ofp_aggregate_stats_reply aggregate_stats_reply_;
     };
 
 } // namespace v13

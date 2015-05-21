@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(move_constructor_test)
 
     // TODO
     auto buffer = std::vector<std::uint8_t>{};
-    BOOST_CHECK_EQUAL(sut.encode(buffer).size(), sizeof(detail::ofp_instruction_actions));
+    BOOST_CHECK_EQUAL(sut.encode(buffer).size(), sizeof(v13_detail::ofp_instruction_actions));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(move_assign_test)
 
     // TODO
     auto buffer = std::vector<std::uint8_t>{};
-    BOOST_CHECK_EQUAL(sut.encode(buffer).size(), sizeof(detail::ofp_instruction_actions));
+    BOOST_CHECK_EQUAL(sut.encode(buffer).size(), sizeof(v13_detail::ofp_instruction_actions));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // assignment_test

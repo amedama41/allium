@@ -22,7 +22,7 @@ namespace actions {
         explicit output(
                   std::uint16_t const port
                 , std::uint16_t const max_len = std::numeric_limits<std::uint16_t>::max())
-            : output_{action_type, sizeof(detail::ofp_action_output), port, max_len}
+            : output_{action_type, sizeof(v10_detail::ofp_action_output), port, max_len}
         {
         }
 
@@ -35,7 +35,7 @@ namespace actions {
         auto length() const
             -> std::uint16_t
         {
-            return sizeof(detail::ofp_action_output);
+            return sizeof(v10_detail::ofp_action_output);
         }
 
         auto port() const
@@ -54,14 +54,14 @@ namespace actions {
         auto encode(Container& container) const
             -> Container&
         {
-            return openflow::detail::encode(container, output_);
+            return detail::encode(container, output_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> output
         {
-            auto const output = openflow::detail::decode<detail::ofp_action_output>(first, last);
+            auto const output = detail::decode<v10_detail::ofp_action_output>(first, last);
             return actions::output{output};
         }
 
@@ -72,13 +72,13 @@ namespace actions {
         }
 
     private:
-        explicit output(detail::ofp_action_output const output)
+        explicit output(v10_detail::ofp_action_output const output)
             : output_(output)
         {
             if (output_.type != action_type) {
                 throw std::runtime_error{"invalid action type"};
             }
-            if (output_.len != sizeof(detail::ofp_action_output)) {
+            if (output_.len != sizeof(v10_detail::ofp_action_output)) {
                 throw std::runtime_error{"invalid length"};
             }
             if (output_.port == 0 || output_.port == OFPP_NONE) {
@@ -87,7 +87,7 @@ namespace actions {
         }
 
     private:
-        detail::ofp_action_output output_;
+        v10_detail::ofp_action_output output_;
     };
 
 } // namespace actions

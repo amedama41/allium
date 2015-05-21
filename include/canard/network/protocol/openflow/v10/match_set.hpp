@@ -29,7 +29,7 @@ namespace v10 {
         }
 
         auto ofp_match() const
-            -> detail::ofp_match const&
+            -> v10_detail::ofp_match const&
         {
             return match_;
         }
@@ -47,7 +47,7 @@ namespace v10 {
         }
 
     private:
-        detail::ofp_match match_;
+        v10_detail::ofp_match match_;
     };
 
 } // namespace v10

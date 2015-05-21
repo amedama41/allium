@@ -55,7 +55,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return detail::exact_length(sizeof(detail::ofp_flow_stats)
+            return detail::exact_length(sizeof(v13_detail::ofp_flow_stats)
                     + entry().match().length() + entry().instructions().length());
         }
 
@@ -63,7 +63,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, detail::ofp_flow_stats{
+            detail::encode(container, v13_detail::ofp_flow_stats{
                       length()
                     , table_id_
                     , 0
@@ -86,8 +86,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_stats
         {
-            auto const stats = detail::decode<detail::ofp_flow_stats>(first, last);
-            last = std::next(first, stats.length - sizeof(detail::ofp_flow_stats));
+            auto const stats = detail::decode<v13_detail::ofp_flow_stats>(first, last);
+            last = std::next(first, stats.length - sizeof(v13_detail::ofp_flow_stats));
             auto match = oxm_match::decode(first, last);
             auto instructions = instruction_set::decode(first, last);
 
@@ -95,7 +95,7 @@ namespace v13 {
         }
 
     private:
-        flow_stats(detail::ofp_flow_stats const& stats, oxm_match match, instruction_set instructions)
+        flow_stats(v13_detail::ofp_flow_stats const& stats, oxm_match match, instruction_set instructions)
             : entry_{
                   {std::move(match), stats.priority}
                 , std::move(instructions)
@@ -120,13 +120,13 @@ namespace v13 {
 
 
     class flow_stats_request
-        : public detail::basic_multipart_request<flow_stats_request>
+        : public v13_detail::basic_multipart_request<flow_stats_request>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_FLOW;
 
         explicit flow_stats_request(oxm_match match)
-            : basic_multipart_request{detail::exact_length(sizeof(detail::ofp_flow_stats_request) + match.length()), 0}
+            : basic_multipart_request{detail::exact_length(sizeof(v13_detail::ofp_flow_stats_request) + match.length()), 0}
             , flow_stats_request_{OFPTT_ALL, {0, 0, 0}, OFPP_ANY, OFPG_ANY, {0, 0, 0, 0}, 0, 0}
             , match_(std::move(match))
         {
@@ -148,14 +148,14 @@ namespace v13 {
             -> flow_stats_request
         {
             auto const request = basic_multipart_request::decode(first, last);
-            auto const stats_reqeust = detail::decode<detail::ofp_flow_stats_request>(first, last);
+            auto const stats_reqeust = detail::decode<v13_detail::ofp_flow_stats_request>(first, last);
             auto match = oxm_match::decode(first, last);
             return flow_stats_request{request, stats_reqeust, std::move(match)};
         }
 
     private:
-        flow_stats_request(detail::ofp_multipart_request const& request
-                , detail::ofp_flow_stats_request const& stats_request, oxm_match match)
+        flow_stats_request(v13_detail::ofp_multipart_request const& request
+                , v13_detail::ofp_flow_stats_request const& stats_request, oxm_match match)
             : basic_multipart_request{request}
             , flow_stats_request_(stats_request)
             , match_(std::move(match))
@@ -163,13 +163,13 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_flow_stats_request flow_stats_request_;
+        v13_detail::ofp_flow_stats_request flow_stats_request_;
         oxm_match match_;
     };
 
 
     class flow_stats_reply
-        : public detail::basic_multipart_reply<flow_stats_reply>
+        : public v13_detail::basic_multipart_reply<flow_stats_reply>
     {
         using flow_stats_list = std::vector<flow_stats>;
 
@@ -208,12 +208,12 @@ namespace v13 {
             -> flow_stats_reply
         {
             auto reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(detail::ofp_multipart_reply)) {
+            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
 
             auto stats_list = std::vector<flow_stats>{};
-            stats_list.reserve(std::distance(first, last) / (sizeof(detail::ofp_flow_stats) + sizeof(detail::ofp_match)));
+            stats_list.reserve(std::distance(first, last) / (sizeof(v13_detail::ofp_flow_stats) + sizeof(v13_detail::ofp_match)));
             while (first != last) {
                 stats_list.push_back(flow_stats::decode(first, last));
             }
@@ -222,7 +222,7 @@ namespace v13 {
         }
 
     private:
-        flow_stats_reply(detail::ofp_multipart_reply const& reply, flow_stats_list stats_list)
+        flow_stats_reply(v13_detail::ofp_multipart_reply const& reply, flow_stats_list stats_list)
             : basic_multipart_reply{reply}
             , flow_stats_list_(std::move(stats_list))
         {

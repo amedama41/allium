@@ -26,7 +26,7 @@ namespace v13 {
 
             write_metadata(std::uint64_t const metadata, std::uint64_t const metadata_mask)
                 : write_metadata_{
-                      instruction_type, sizeof(detail::ofp_instruction_write_metadata), {0}
+                      instruction_type, sizeof(v13_detail::ofp_instruction_write_metadata), {0}
                     , metadata, metadata_mask
                 }
             {
@@ -41,7 +41,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_instruction_write_metadata);
+                return sizeof(v13_detail::ofp_instruction_write_metadata);
             }
 
             auto metadata() const
@@ -67,18 +67,18 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> write_metadata
             {
-                auto const instruction_write_metadata = detail::decode<detail::ofp_instruction_write_metadata>(first, last);
+                auto const instruction_write_metadata = detail::decode<v13_detail::ofp_instruction_write_metadata>(first, last);
                 if (instruction_write_metadata.type != instruction_type) {
                     throw 1;
                 }
-                if (instruction_write_metadata.len != sizeof(detail::ofp_instruction_write_metadata)) {
+                if (instruction_write_metadata.len != sizeof(v13_detail::ofp_instruction_write_metadata)) {
                     throw 2;
                 }
                 return {instruction_write_metadata.metadata, instruction_write_metadata.metadata_mask};
             }
 
         private:
-            detail::ofp_instruction_write_metadata write_metadata_;
+            v13_detail::ofp_instruction_write_metadata write_metadata_;
         };
 
     } // namespace instructions

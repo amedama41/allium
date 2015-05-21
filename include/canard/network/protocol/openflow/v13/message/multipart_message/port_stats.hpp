@@ -119,21 +119,21 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> port_stats
         {
-            return port_stats{detail::decode<detail::ofp_port_stats>(first, last)};
+            return port_stats{detail::decode<v13_detail::ofp_port_stats>(first, last)};
         }
 
     private:
-        explicit port_stats(detail::ofp_port_stats const& stats)
+        explicit port_stats(v13_detail::ofp_port_stats const& stats)
             : port_stats_(stats)
         {
         }
 
     private:
-        detail::ofp_port_stats port_stats_;
+        v13_detail::ofp_port_stats port_stats_;
     };
 
     class port_stats_request
-        : public detail::basic_multipart_request<port_stats_request>
+        : public v13_detail::basic_multipart_request<port_stats_request>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_PORT_STATS;
@@ -144,7 +144,7 @@ namespace v13 {
         }
 
         explicit port_stats_request(std::uint32_t const port_no)
-            : basic_multipart_request{sizeof(detail::ofp_port_stats_request), 0}
+            : basic_multipart_request{sizeof(v13_detail::ofp_port_stats_request), 0}
             , port_stats_request_{port_no, {0, 0, 0, 0}}
         {
         }
@@ -166,12 +166,12 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_port_stats_request port_stats_request_;
+        v13_detail::ofp_port_stats_request port_stats_request_;
     };
 
 
     class port_stats_reply
-        : public detail::basic_multipart_reply<port_stats_reply>
+        : public v13_detail::basic_multipart_reply<port_stats_reply>
     {
         using port_stats_list = std::vector<port_stats>;
 
@@ -198,12 +198,12 @@ namespace v13 {
             -> port_stats_reply
         {
             auto const reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(detail::ofp_multipart_reply)) {
+            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
 
             auto stats_list = port_stats_list{};
-            stats_list.reserve(std::distance(first, last) / sizeof(detail::ofp_port_stats));
+            stats_list.reserve(std::distance(first, last) / sizeof(v13_detail::ofp_port_stats));
             while (first != last) {
                 stats_list.push_back(port_stats::decode(first, last));
             }
@@ -211,7 +211,7 @@ namespace v13 {
         }
 
     private:
-        port_stats_reply(detail::ofp_multipart_reply const& reply, port_stats_list stats_list)
+        port_stats_reply(v13_detail::ofp_multipart_reply const& reply, port_stats_list stats_list)
             : basic_multipart_reply{reply}
             , port_stats_list_(std::move(stats_list))
         {

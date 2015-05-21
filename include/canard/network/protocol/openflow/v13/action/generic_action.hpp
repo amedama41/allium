@@ -21,7 +21,7 @@ namespace v13 {
             {
             protected:
                 generic_action()
-                    : header_{T::action_type, sizeof(detail::ofp_action_header), {0}}
+                    : header_{T::action_type, sizeof(v13_detail::ofp_action_header), {0}}
                 {
                 }
 
@@ -35,7 +35,7 @@ namespace v13 {
                 auto length() const
                     -> std::uint16_t
                 {
-                    return sizeof(detail::ofp_action_header);
+                    return sizeof(v13_detail::ofp_action_header);
                 }
 
                 template <class Container>
@@ -49,18 +49,18 @@ namespace v13 {
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const header = detail::decode<detail::ofp_action_header>(first, last);
+                    auto const header = detail::decode<v13_detail::ofp_action_header>(first, last);
                     if (header.type != T::action_type) {
                         throw 1;
                     }
-                    if (header.len != sizeof(detail::ofp_action_header)) {
+                    if (header.len != sizeof(v13_detail::ofp_action_header)) {
                         throw 2;
                     }
                     return T{};
                 }
 
             private:
-                detail::ofp_action_header header_;
+                v13_detail::ofp_action_header header_;
             };
 
         } // namespace action_detail

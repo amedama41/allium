@@ -254,7 +254,7 @@ namespace v13 {
     protected:
         canard::ordered_send_socket<Socket> stream_;
         boost::asio::io_service::strand strand_;
-        std::unordered_map<std::uint32_t, detail::transaction_base<>*> reply_map_;
+        std::unordered_map<std::uint32_t, v13_detail::transaction_base<>*> reply_map_;
         boost::optional<endpoint_type> endpoint_;
         utils::thread_pool& thread_pool_;
         close_handler_type close_handler_;

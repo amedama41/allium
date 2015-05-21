@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const sut = actions::set_queue{0};
 
     BOOST_CHECK_EQUAL(sut.type(), OFPAT_SET_QUEUE);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_action_set_queue));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_set_queue));
     BOOST_CHECK_EQUAL(sut.queue_id(), 0);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }

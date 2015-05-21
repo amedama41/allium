@@ -51,13 +51,13 @@ namespace v13 {
     } // namespace hello_detail
 
     class hello
-        : public detail::basic_openflow_message<hello>
+        : public v13_detail::basic_openflow_message<hello>
     {
     public:
         static ofp_type const message_type = OFPT_HELLO;
 
         explicit hello(std::uint8_t const version = OFP_VERSION)
-            : hello_{{version, message_type, sizeof(detail::ofp_hello), get_xid()}}
+            : hello_{{version, message_type, sizeof(v13_detail::ofp_hello), get_xid()}}
         {
         }
 
@@ -101,7 +101,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return hello_.header;
         }
@@ -123,8 +123,8 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> hello
         {
-            auto const h = detail::decode<detail::ofp_hello>(first, last);
-            if (std::distance(first, last) != h.header.length - sizeof(detail::ofp_hello)) {
+            auto const h = detail::decode<v13_detail::ofp_hello>(first, last);
+            if (std::distance(first, last) != h.header.length - sizeof(v13_detail::ofp_hello)) {
                 throw 2;
             }
 
@@ -136,7 +136,7 @@ namespace v13 {
         }
 
     private:
-        hello(detail::ofp_hello const& hello, std::vector<any_hello_element> elements)
+        hello(v13_detail::ofp_hello const& hello, std::vector<any_hello_element> elements)
             : hello_(hello)
             , elements_(std::move(elements))
         {
@@ -152,7 +152,7 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_hello hello_;
+        v13_detail::ofp_hello hello_;
         std::vector<any_hello_element> elements_;
     };
 

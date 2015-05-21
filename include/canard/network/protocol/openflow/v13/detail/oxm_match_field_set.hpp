@@ -20,7 +20,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         class oxm_match_field_set
         {
@@ -132,7 +132,7 @@ namespace v13 {
             std::map<std::uint32_t, any_oxm_match_field> oxm_match_field_map_;
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

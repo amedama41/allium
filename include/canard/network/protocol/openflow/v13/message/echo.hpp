@@ -20,18 +20,18 @@ namespace v13 {
 
     template <class T>
     class basic_echo
-        : public detail::basic_openflow_message<T>
+        : public v13_detail::basic_openflow_message<T>
     {
-        using detail::basic_openflow_message<T>::get_xid;
+        using v13_detail::basic_openflow_message<T>::get_xid;
 
     protected:
         basic_echo()
-            : header_{OFP_VERSION, T::message_type, sizeof(detail::ofp_header), get_xid()}
+            : header_{OFP_VERSION, T::message_type, sizeof(v13_detail::ofp_header), get_xid()}
         {
         }
 
         explicit basic_echo(std::vector<unsigned char> data)
-            : header_{OFP_VERSION, T::message_type, std::uint16_t(sizeof(detail::ofp_header) + data.size()), get_xid()}
+            : header_{OFP_VERSION, T::message_type, std::uint16_t(sizeof(v13_detail::ofp_header) + data.size()), get_xid()}
             , data_(std::move(data))
         {
         }
@@ -51,10 +51,10 @@ namespace v13 {
             : header_{echo2.version(), T::message_type, echo2.length(), echo2.xid()}
             , data_(std::move(echo2.data_))
         {
-            echo2.header_.length = sizeof(detail::ofp_header) + echo2.data_.size();
+            echo2.header_.length = sizeof(v13_detail::ofp_header) + echo2.data_.size();
         }
 
-        basic_echo(detail::ofp_header const& header, std::vector<unsigned char> data)
+        basic_echo(v13_detail::ofp_header const& header, std::vector<unsigned char> data)
             : header_(header)
             , data_(std::move(data))
         {
@@ -71,12 +71,12 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return header_;
         }
 
-        using detail::basic_openflow_message<T>::encode;
+        using v13_detail::basic_openflow_message<T>::encode;
 
         template <class Container>
         auto encode(Container& container) const
@@ -89,10 +89,10 @@ namespace v13 {
     protected:
         template <class Iterator>
         static auto decode_impl(Iterator& first, Iterator last)
-            -> std::tuple<detail::ofp_header, std::vector<unsigned char>>
+            -> std::tuple<v13_detail::ofp_header, std::vector<unsigned char>>
         {
-            auto const header = detail::decode<detail::ofp_header>(first, last);
-            if (header.length != sizeof(detail::ofp_header) + std::distance(first, last)) {
+            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
+            if (header.length != sizeof(v13_detail::ofp_header) + std::distance(first, last)) {
                 throw 2;
             }
             auto data = std::vector<unsigned char>(first, last);
@@ -102,7 +102,7 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_header header_;
+        v13_detail::ofp_header header_;
         std::vector<unsigned char> data_;
     };
 
@@ -136,7 +136,7 @@ namespace v13 {
         }
 
     private:
-        echo_reply(detail::ofp_header const& header, std::vector<unsigned char> data)
+        echo_reply(v13_detail::ofp_header const& header, std::vector<unsigned char> data)
             : basic_echo(header, std::move(data))
         {
             if (type() != message_type) {
@@ -182,7 +182,7 @@ namespace v13 {
         }
 
     private:
-        echo_request(detail::ofp_header const& header, std::vector<unsigned char> data)
+        echo_request(v13_detail::ofp_header const& header, std::vector<unsigned char> data)
             : basic_echo(header, std::move(data))
         {
             if (type() != message_type) {

@@ -18,13 +18,13 @@ namespace openflow {
 namespace v13 {
 
     class port_status
-        : public detail::basic_openflow_message<port_status>
+        : public v13_detail::basic_openflow_message<port_status>
     {
     public:
         static ofp_type const message_type = OFPT_PORT_STATUS;
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return header_;
         }
@@ -42,7 +42,7 @@ namespace v13 {
         }
 
     private:
-        port_status(detail::ofp_header const& header, std::uint8_t reason, v13::port port)
+        port_status(v13_detail::ofp_header const& header, std::uint8_t reason, v13::port port)
             : header_(header)
             , reason_(reason)
             , port_{std::move(port)}
@@ -54,10 +54,10 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> port_status
         {
-            auto const header = detail::decode<detail::ofp_header>(first, last);
+            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
             auto const reason = detail::decode<std::uint8_t>(first, last);
 
-            std::advance(first, sizeof(decltype(detail::ofp_port_status::pad)));
+            std::advance(first, sizeof(decltype(v13_detail::ofp_port_status::pad)));
 
             auto port = v13::port::decode(first, last);
 
@@ -65,7 +65,7 @@ namespace v13 {
         }
 
     private:
-        detail::ofp_header header_;
+        v13_detail::ofp_header header_;
         std::uint8_t reason_;
         v13::port port_;
     };

@@ -20,7 +20,7 @@ namespace v13 {
             static ofp_action_type const action_type = OFPAT_POP_MPLS;
 
             explicit pop_mpls(std::uint16_t const ethertype)
-                : pop_mpls_{action_type, sizeof(detail::ofp_action_pop_mpls), ethertype, {0}}
+                : pop_mpls_{action_type, sizeof(v13_detail::ofp_action_pop_mpls), ethertype, {0}}
             {
             }
 
@@ -33,7 +33,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_action_pop_mpls);
+                return sizeof(v13_detail::ofp_action_pop_mpls);
             }
 
             auto ethertype() const
@@ -53,18 +53,18 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> pop_mpls
             {
-                auto const action_pop_mpls = detail::decode<detail::ofp_action_pop_mpls>(first, last);
+                auto const action_pop_mpls = detail::decode<v13_detail::ofp_action_pop_mpls>(first, last);
                 if (action_pop_mpls.type != action_type) {
                     throw 1;
                 }
-                if (action_pop_mpls.len != sizeof(detail::ofp_action_pop_mpls)) {
+                if (action_pop_mpls.len != sizeof(v13_detail::ofp_action_pop_mpls)) {
                     throw 2;
                 }
                 return pop_mpls{action_pop_mpls.ethertype};
             }
 
         private:
-            detail::ofp_action_pop_mpls pop_mpls_;
+            v13_detail::ofp_action_pop_mpls pop_mpls_;
         };
 
     } // namespace actions

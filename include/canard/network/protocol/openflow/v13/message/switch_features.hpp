@@ -14,18 +14,18 @@ namespace openflow {
 namespace v13 {
 
     class features_request
-        : public detail::basic_openflow_message<features_request>
+        : public v13_detail::basic_openflow_message<features_request>
     {
     public:
         static ofp_type const message_type = OFPT_FEATURES_REQUEST;
 
         features_request()
-            : header_{OFP_VERSION, message_type, sizeof(detail::ofp_header), get_xid()}
+            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), get_xid()}
         {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return header_;
         }
@@ -43,33 +43,33 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> features_request
         {
-            auto const header = detail::decode<detail::ofp_header>(first, last);
-            if (header.length != sizeof(detail::ofp_header) || std::distance(first, last) == 0) {
+            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
+            if (header.length != sizeof(v13_detail::ofp_header) || std::distance(first, last) == 0) {
                 throw 2;
             }
             return features_request{header};
         }
 
     private:
-        explicit features_request(detail::ofp_header const& header)
+        explicit features_request(v13_detail::ofp_header const& header)
             : header_(header)
         {
         }
 
     private:
-        detail::ofp_header header_;
+        v13_detail::ofp_header header_;
     };
 
 
     class features_reply
-        : public detail::basic_openflow_message<features_reply>
+        : public v13_detail::basic_openflow_message<features_reply>
     {
     public:
         static ofp_type const message_type = OFPT_FEATURES_REPLY;
 
         features_reply(features_request const& request, std::uint64_t const dpid)
             : switch_features_{
-                  {OFP_VERSION, message_type, sizeof(detail::ofp_switch_features), request.xid()}
+                  {OFP_VERSION, message_type, sizeof(v13_detail::ofp_switch_features), request.xid()}
                 , dpid
                 , 0 // n_buffers
                 , 0 // n_tables
@@ -82,7 +82,7 @@ namespace v13 {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return switch_features_.header;
         }
@@ -124,21 +124,21 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> features_reply
         {
-            auto const switch_features = detail::decode<detail::ofp_switch_features>(first, last);
-            if (switch_features.header.length != sizeof(detail::ofp_switch_features) || std::distance(first, last) != 0) {
+            auto const switch_features = detail::decode<v13_detail::ofp_switch_features>(first, last);
+            if (switch_features.header.length != sizeof(v13_detail::ofp_switch_features) || std::distance(first, last) != 0) {
                 throw 2;
             }
             return features_reply{switch_features};
         }
 
     private:
-        explicit features_reply(detail::ofp_switch_features const& switch_features)
+        explicit features_reply(v13_detail::ofp_switch_features const& switch_features)
             : switch_features_(switch_features)
         {
         }
 
     private:
-        detail::ofp_switch_features switch_features_;
+        v13_detail::ofp_switch_features switch_features_;
     };
 
 } // namespace v13

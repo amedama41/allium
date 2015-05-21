@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const sut = actions::pop_vlan{};
 
     BOOST_CHECK_EQUAL(sut.type(), OFPAT_POP_VLAN);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_action_header));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_header));
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }
 

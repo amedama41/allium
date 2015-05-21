@@ -17,7 +17,7 @@ namespace v10 {
 namespace messages {
 
     class flow_mod_add
-        : public detail::basic_openflow_message<flow_mod_add>
+        : public v10_detail::basic_openflow_message<flow_mod_add>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_MOD;
@@ -37,7 +37,7 @@ namespace messages {
         }
 
         auto header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             return flow_mod_.header;
         }
@@ -46,12 +46,12 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            openflow::detail::encode(container, flow_mod_);
+            detail::encode(container, flow_mod_);
             return entry_.actions().encode(container);
         }
 
     private:
-        detail::ofp_flow_mod flow_mod_;
+        v10_detail::ofp_flow_mod flow_mod_;
         flow_entry entry_;
     };
 

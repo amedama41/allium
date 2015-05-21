@@ -24,7 +24,7 @@ namespace v13 {
             static ofp_instruction_type const instruction_type = OFPIT_WRITE_ACTIONS;
 
             explicit write_actions(action_set act_set)
-                : actions_{instruction_type, std::uint16_t(sizeof(detail::ofp_instruction_actions) + act_set.length()), {0, 0, 0, 0}}
+                : actions_{instruction_type, std::uint16_t(sizeof(v13_detail::ofp_instruction_actions) + act_set.length()), {0, 0, 0, 0}}
                 , action_set_(std::move(act_set))
             {
             }
@@ -67,19 +67,19 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> write_actions
             {
-                auto const instruction_actions = detail::decode<detail::ofp_instruction_actions>(first, last);
-                if (instruction_actions.len < sizeof(detail::ofp_instruction_actions)) {
+                auto const instruction_actions = detail::decode<v13_detail::ofp_instruction_actions>(first, last);
+                if (instruction_actions.len < sizeof(v13_detail::ofp_instruction_actions)) {
                     throw 2;
                 }
-                if (std::distance(first, last) < instruction_actions.len - sizeof(detail::ofp_instruction_actions)) {
+                if (std::distance(first, last) < instruction_actions.len - sizeof(v13_detail::ofp_instruction_actions)) {
                     throw 2;
                 }
-                auto act_set = action_set::decode(first, std::next(first, instruction_actions.len - sizeof(detail::ofp_instruction_actions)));
+                auto act_set = action_set::decode(first, std::next(first, instruction_actions.len - sizeof(v13_detail::ofp_instruction_actions)));
                 return write_actions{std::move(act_set), instruction_actions.len};
             }
 
         private:
-            detail::ofp_instruction_actions actions_;
+            v13_detail::ofp_instruction_actions actions_;
             action_set action_set_;
         };
 

@@ -12,18 +12,18 @@ namespace openflow {
 namespace v13 {
 
     class barrier_request
-        : public detail::basic_openflow_message<barrier_request>
+        : public v13_detail::basic_openflow_message<barrier_request>
     {
     public:
         static ofp_type const message_type = OFPT_BARRIER_REQUEST;
 
         barrier_request()
-            : header_{OFP_VERSION, message_type, sizeof(detail::ofp_header), get_xid()}
+            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), get_xid()}
         {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return header_;
         }
@@ -41,36 +41,36 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> barrier_request
         {
-            auto header = detail::decode<detail::ofp_header>(first, last);
-            if (header.length != sizeof(detail::ofp_header) || std::distance(first, last) != 0) {
+            auto header = detail::decode<v13_detail::ofp_header>(first, last);
+            if (header.length != sizeof(v13_detail::ofp_header) || std::distance(first, last) != 0) {
                 throw 2;
             }
             return barrier_request{header};
         }
 
     private:
-        barrier_request(detail::ofp_header const& header)
+        barrier_request(v13_detail::ofp_header const& header)
             : header_(header)
         {
         }
 
     private:
-        detail::ofp_header header_;
+        v13_detail::ofp_header header_;
     };
 
     class barrier_reply
-        : public detail::basic_openflow_message<barrier_reply>
+        : public v13_detail::basic_openflow_message<barrier_reply>
     {
     public:
         static ofp_type const message_type = OFPT_BARRIER_REPLY;
 
         barrier_reply(barrier_request const& request)
-            : header_{OFP_VERSION, message_type, sizeof(detail::ofp_header), request.xid()}
+            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), request.xid()}
         {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return header_;
         }
@@ -89,21 +89,21 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> barrier_reply
         {
-            auto const header = detail::decode<detail::ofp_header>(first, last);
-            if (header.length != sizeof(detail::ofp_header) && std::distance(first, last) != 0) {
+            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
+            if (header.length != sizeof(v13_detail::ofp_header) && std::distance(first, last) != 0) {
                 throw 2;
             }
             return barrier_reply{header};
         }
 
     private:
-        explicit barrier_reply(detail::ofp_header const& header)
+        explicit barrier_reply(v13_detail::ofp_header const& header)
             : header_(header)
         {
         }
 
     private:
-        detail::ofp_header header_;
+        v13_detail::ofp_header header_;
     };
 
 } // namespace v13

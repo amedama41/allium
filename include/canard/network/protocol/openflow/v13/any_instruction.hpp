@@ -65,7 +65,7 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> any_instruction
         {
-            return detail::decode_instruction<any_instruction>(first, last, to_any_instruction{});
+            return v13_detail::decode_instruction<any_instruction>(first, last, to_any_instruction{});
         }
 
         friend auto instruction_order(any_instruction const& instruction)

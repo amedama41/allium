@@ -18,17 +18,17 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class ReturnType, class Iterator, class Function>
         auto decode_action(Iterator& first, Iterator last, Function function)
             -> ReturnType
         {
-            auto header = detail::ofp_action_header{};
+            auto header = v13_detail::ofp_action_header{};
             std::copy_n(first, sizeof(header), canard::as_byte_range(header).begin());
 
             static_assert(std::tuple_size<default_action_list>::value == 16, "");
-            switch (detail::ntoh(header.type)) {
+            switch (v13_detail::ntoh(header.type)) {
 #           define CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE(z, N, _) \
             case std::tuple_element<N, default_action_list>::type::action_type: \
                 return function(std::tuple_element<N, default_action_list>::type::decode(first, last));
@@ -36,14 +36,14 @@ namespace v13 {
 #           undef CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE
 
             default:
-                std::advance(first, detail::ntoh(header.len));
+                std::advance(first, v13_detail::ntoh(header.len));
                 throw std::runtime_error{(boost::format{"%1%: action_type(%2%) is unknwon"}
-                        % __func__ % (detail::ntoh(header.type))).str()
+                        % __func__ % (v13_detail::ntoh(header.type))).str()
                 };
             }
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

@@ -20,7 +20,7 @@ namespace v13 {
             static ofp_action_type const action_type = OFPAT_SET_QUEUE;
 
             explicit set_queue(std::uint32_t const queue_id)
-                : set_queue_{action_type, sizeof(detail::ofp_action_set_queue), queue_id}
+                : set_queue_{action_type, sizeof(v13_detail::ofp_action_set_queue), queue_id}
             {
                 if (queue_id == OFPQ_ALL) {
                     throw 3;
@@ -36,7 +36,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_action_set_queue);
+                return sizeof(v13_detail::ofp_action_set_queue);
             }
 
             auto queue_id() const
@@ -53,7 +53,7 @@ namespace v13 {
             }
 
         private:
-            explicit set_queue(detail::ofp_action_set_queue const& action_set_queue)
+            explicit set_queue(v13_detail::ofp_action_set_queue const& action_set_queue)
                 : set_queue_(action_set_queue)
             {
                 if (set_queue_.type != type()) {
@@ -72,12 +72,12 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> set_queue
             {
-                auto const action_set_queue = detail::decode<detail::ofp_action_set_queue>(first, last);
+                auto const action_set_queue = detail::decode<v13_detail::ofp_action_set_queue>(first, last);
                 return set_queue{action_set_queue};
             }
 
         private:
-            detail::ofp_action_set_queue set_queue_;
+            v13_detail::ofp_action_set_queue set_queue_;
         };
 
     } // namespace actions

@@ -93,7 +93,7 @@ namespace v13 {
         {
             auto insts_set = instruction_set{};
             while (first != last) {
-                detail::decode_instruction<void>(first, last, detail::add_helper<instruction_set>{insts_set});
+                v13_detail::decode_instruction<void>(first, last, detail::add_helper<instruction_set>{insts_set});
             }
             return insts_set;
         }

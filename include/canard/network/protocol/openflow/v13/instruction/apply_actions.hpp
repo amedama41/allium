@@ -24,7 +24,7 @@ namespace v13 {
             static ofp_instruction_type const instruction_type = OFPIT_APPLY_ACTIONS;
 
             explicit apply_actions(action_list act_list)
-                : actions_{instruction_type, std::uint16_t(sizeof(detail::ofp_instruction_actions) + act_list.length()), {0, 0, 0, 0}}
+                : actions_{instruction_type, std::uint16_t(sizeof(v13_detail::ofp_instruction_actions) + act_list.length()), {0, 0, 0, 0}}
                 , action_list_(std::move(act_list))
             {
             }
@@ -60,17 +60,17 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> apply_actions
             {
-                auto const instruction_actions = detail::decode<detail::ofp_instruction_actions>(first, last);
+                auto const instruction_actions = detail::decode<v13_detail::ofp_instruction_actions>(first, last);
                 if (instruction_actions.type != instruction_type) {
                     throw 1;
                 }
-                if (instruction_actions.len < sizeof(detail::ofp_instruction_actions)) {
+                if (instruction_actions.len < sizeof(v13_detail::ofp_instruction_actions)) {
                     throw 2;
                 }
-                if (std::distance(first, last) < instruction_actions.len - sizeof(detail::ofp_instruction_actions)) {
+                if (std::distance(first, last) < instruction_actions.len - sizeof(v13_detail::ofp_instruction_actions)) {
                     throw 2;
                 }
-                auto act_list = action_list::decode(first, std::next(first, instruction_actions.len - sizeof(detail::ofp_instruction_actions)));
+                auto act_list = action_list::decode(first, std::next(first, instruction_actions.len - sizeof(v13_detail::ofp_instruction_actions)));
                 return apply_actions{std::move(act_list)};
             }
 
@@ -78,7 +78,7 @@ namespace v13 {
             static auto actions_length()
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_instruction_actions);
+                return sizeof(v13_detail::ofp_instruction_actions);
             }
 
             template <class Action, class... Actions>
@@ -89,7 +89,7 @@ namespace v13 {
             }
 
         private:
-            detail::ofp_instruction_actions actions_;
+            v13_detail::ofp_instruction_actions actions_;
             action_list action_list_;
         };
 

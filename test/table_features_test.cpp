@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REQUEST);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_multipart_request));
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_request));
         BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REQUEST);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_multipart_request) + 496 * 8);
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_request) + 496 * 8);
         BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REPLY);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_multipart_reply));
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_reply));
         BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REPLY);
-        BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_multipart_reply) + 496 * 8);
+        BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_reply) + 496 * 8);
         BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }

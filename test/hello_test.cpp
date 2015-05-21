@@ -63,7 +63,7 @@ BOOST_FIXTURE_TEST_SUITE(no_elems_buffers_test, no_elems_buffers_fixture)
 
     BOOST_AUTO_TEST_CASE(buffer_size_test)
     {
-        BOOST_CHECK_EQUAL(buffer.size(), sizeof(detail::ofp_hello));
+        BOOST_CHECK_EQUAL(buffer.size(), sizeof(v13_detail::ofp_hello));
     }
 
     BOOST_AUTO_TEST_CASE(version_test)
@@ -76,21 +76,21 @@ BOOST_FIXTURE_TEST_SUITE(no_elems_buffers_test, no_elems_buffers_fixture)
     BOOST_AUTO_TEST_CASE(type_test)
     {
         auto type = std::uint8_t{};
-        std::memcpy(&type, buffer.data() + offsetof(detail::ofp_header, type), sizeof(type));
+        std::memcpy(&type, buffer.data() + offsetof(v13_detail::ofp_header, type), sizeof(type));
         BOOST_CHECK_EQUAL(canard::ntoh(type), OFPT_HELLO);
     }
 
     BOOST_AUTO_TEST_CASE(length_test)
     {
         auto length = std::uint16_t{};
-        std::memcpy(&length, buffer.data() + offsetof(detail::ofp_header, length), sizeof(length));
+        std::memcpy(&length, buffer.data() + offsetof(v13_detail::ofp_header, length), sizeof(length));
         BOOST_CHECK_EQUAL(canard::ntoh(length), buffer.size());
     }
 
     BOOST_AUTO_TEST_CASE(xid_test)
     {
         auto xid = std::uint32_t{};
-        std::memcpy(&xid, buffer.data() + offsetof(detail::ofp_header, xid), sizeof(xid));
+        std::memcpy(&xid, buffer.data() + offsetof(v13_detail::ofp_header, xid), sizeof(xid));
         BOOST_CHECK_EQUAL(canard::ntoh(xid), sut.xid());
     }
 
@@ -107,13 +107,13 @@ BOOST_FIXTURE_TEST_SUITE(versionbitmap_buffers_test, versionbitmap_buffers_fixtu
 
 BOOST_AUTO_TEST_CASE(buffer_size_test)
 {
-    BOOST_CHECK_EQUAL(buffer.size(), sizeof(detail::ofp_hello) + (sizeof(detail::ofp_hello_elem_versionbitmap) + bitmaps.size() * sizeof(bitmaps[0]) + 7) / 8 * 8);
+    BOOST_CHECK_EQUAL(buffer.size(), sizeof(v13_detail::ofp_hello) + (sizeof(v13_detail::ofp_hello_elem_versionbitmap) + bitmaps.size() * sizeof(bitmaps[0]) + 7) / 8 * 8);
 }
 
 BOOST_AUTO_TEST_CASE(hello_length_test)
 {
     auto length = std::uint16_t{};
-    std::memcpy(&length, buffer.data() + offsetof(detail::ofp_header, length), sizeof(length));
+    std::memcpy(&length, buffer.data() + offsetof(v13_detail::ofp_header, length), sizeof(length));
     BOOST_CHECK_EQUAL(canard::ntoh(length), buffer.size());
     BOOST_CHECK_EQUAL(canard::ntoh(length) % 8, 0);
 }

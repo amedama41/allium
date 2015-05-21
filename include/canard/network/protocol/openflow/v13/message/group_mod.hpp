@@ -19,7 +19,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class T>
         class basic_group_mod
@@ -38,7 +38,7 @@ namespace v13 {
             {
             }
 
-            basic_group_mod(detail::ofp_group_mod const& group_mod, std::vector<bucket> buckets)
+            basic_group_mod(v13_detail::ofp_group_mod const& group_mod, std::vector<bucket> buckets)
                 : group_mod_(group_mod)
                 , buckets_(std::move(buckets))
             {
@@ -46,7 +46,7 @@ namespace v13 {
 
         public:
             auto header() const
-                -> detail::ofp_header const&
+                -> v13_detail::ofp_header const&
             {
                 return group_mod_.header;
             }
@@ -92,12 +92,12 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> T
             {
-                auto const group_mod = detail::decode<detail::ofp_group_mod>(first, last);
-                if (std::distance(first, last) != group_mod.header.length - sizeof(detail::ofp_group_mod)) {
+                auto const group_mod = detail::decode<v13_detail::ofp_group_mod>(first, last);
+                if (std::distance(first, last) != group_mod.header.length - sizeof(v13_detail::ofp_group_mod)) {
                     throw 2;
                 }
                 auto buckets = std::vector<bucket>();
-                buckets.reserve(std::distance(first, last) / (sizeof(detail::ofp_bucket) + sizeof(detail::ofp_action_header)));
+                buckets.reserve(std::distance(first, last) / (sizeof(v13_detail::ofp_bucket) + sizeof(v13_detail::ofp_action_header)));
                 while (first != last) {
                     buckets.push_back(bucket::decode(first, last));
                 }
@@ -111,18 +111,18 @@ namespace v13 {
                 using boost::adaptors::transformed;
                 return boost::accumulate(
                           buckets | transformed([](bucket const& bkt) { return bkt.length(); })
-                        , std::uint16_t(sizeof(detail::ofp_group_mod)));
+                        , std::uint16_t(sizeof(v13_detail::ofp_group_mod)));
             }
 
         private:
-            detail::ofp_group_mod group_mod_;
+            v13_detail::ofp_group_mod group_mod_;
             std::vector<bucket> buckets_;
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
     class group_mod_add
-        : public detail::basic_group_mod<group_mod_add>
+        : public v13_detail::basic_group_mod<group_mod_add>
     {
     public:
         static ofp_group_mod_command const command_type = OFPGC_ADD;
@@ -135,14 +135,14 @@ namespace v13 {
     private:
         friend basic_group_mod;
 
-        group_mod_add(detail::ofp_group_mod const& group_mod, std::vector<bucket> buckets)
+        group_mod_add(v13_detail::ofp_group_mod const& group_mod, std::vector<bucket> buckets)
             : basic_group_mod{group_mod, std::move(buckets)}
         {
         }
     };
 
     class group_mod_modify
-        : public detail::basic_group_mod<group_mod_modify>
+        : public v13_detail::basic_group_mod<group_mod_modify>
     {
     public:
         static ofp_group_mod_command const command_type = OFPGC_MODIFY;
@@ -155,14 +155,14 @@ namespace v13 {
     private:
         friend basic_group_mod;
 
-        group_mod_modify(detail::ofp_group_mod const& group_mod, std::vector<bucket> buckets)
+        group_mod_modify(v13_detail::ofp_group_mod const& group_mod, std::vector<bucket> buckets)
             : basic_group_mod{group_mod, std::move(buckets)}
         {
         }
     };
 
     class group_mod_delete
-        : public detail::basic_openflow_message<group_mod_delete>
+        : public v13_detail::basic_openflow_message<group_mod_delete>
     {
     public:
         static ofp_type const message_type = OFPT_GROUP_MOD;
@@ -170,14 +170,14 @@ namespace v13 {
 
         explicit group_mod_delete(std::uint32_t const group_id)
             : group_mod_{
-                  {OFP_VERSION, message_type, sizeof(detail::ofp_group_mod), get_xid()}
+                  {OFP_VERSION, message_type, sizeof(v13_detail::ofp_group_mod), get_xid()}
                 , command_type, 0, 0, group_id
               }
         {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return group_mod_.header;
         }
@@ -207,18 +207,18 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> group_mod_delete
         {
-            auto const group_mod = detail::decode<detail::ofp_group_mod>(first, last);
+            auto const group_mod = detail::decode<v13_detail::ofp_group_mod>(first, last);
             return group_mod_delete{group_mod};
         }
 
     private:
-        explicit group_mod_delete(detail::ofp_group_mod const& group_mod)
+        explicit group_mod_delete(v13_detail::ofp_group_mod const& group_mod)
             : group_mod_(group_mod)
         {
         }
 
     private:
-        detail::ofp_group_mod group_mod_;
+        v13_detail::ofp_group_mod group_mod_;
     };
 
 } // namespace v13

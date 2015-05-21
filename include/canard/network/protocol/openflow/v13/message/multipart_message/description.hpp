@@ -14,7 +14,7 @@ namespace openflow {
 namespace v13 {
 
     class description_request
-        : public detail::basic_multipart_request<description_request>
+        : public v13_detail::basic_multipart_request<description_request>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_DESC;
@@ -32,14 +32,14 @@ namespace v13 {
         }
 
     private:
-        explicit description_request(detail::ofp_multipart_request const& request)
+        explicit description_request(v13_detail::ofp_multipart_request const& request)
             : basic_multipart_request{request}
         {
         }
     };
 
     class description_reply
-        : public detail::basic_multipart_reply<description_reply>
+        : public v13_detail::basic_multipart_reply<description_reply>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_DESC;
@@ -89,27 +89,27 @@ namespace v13 {
             -> description_reply
         {
             auto reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(detail::ofp_multipart_reply)) {
+            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
-            if (std::distance(first, last) != sizeof(detail::ofp_desc)) {
+            if (std::distance(first, last) != sizeof(v13_detail::ofp_desc)) {
                 throw 2;
             }
 
-            auto desc = detail::decode<detail::ofp_desc>(first, last);
+            auto desc = detail::decode<v13_detail::ofp_desc>(first, last);
 
             return description_reply{reply, desc};
         }
 
     private:
-        description_reply(detail::ofp_multipart_reply const& reply, detail::ofp_desc const& desc)
+        description_reply(v13_detail::ofp_multipart_reply const& reply, v13_detail::ofp_desc const& desc)
             : basic_multipart_reply{reply}
             , desc_(desc)
         {
         }
 
     private:
-        detail::ofp_desc desc_;
+        v13_detail::ofp_desc desc_;
     };
 
 } // namespace v13

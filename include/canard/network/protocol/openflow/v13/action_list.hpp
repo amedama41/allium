@@ -63,7 +63,7 @@ namespace v13 {
         {
             auto act_list = action_list{};
             while (first != last) {
-                detail::decode_action<void>(first, last, detail::add_helper<action_list>{act_list});
+                v13_detail::decode_action<void>(first, last, detail::add_helper<action_list>{act_list});
             }
             return act_list;
         }

@@ -74,7 +74,7 @@ namespace v13 {
         {
             auto act_set = action_set{};
             while (first != last) {
-                detail::decode_action<void>(first, last, detail::add_helper<action_set>{act_set});
+                v13_detail::decode_action<void>(first, last, detail::add_helper<action_set>{act_set});
             }
             return act_set;
         }

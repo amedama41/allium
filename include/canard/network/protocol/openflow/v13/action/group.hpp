@@ -20,7 +20,7 @@ namespace v13 {
             static ofp_action_type const action_type = OFPAT_GROUP;
 
             explicit group(std::uint32_t const group_id)
-                : group_{action_type, sizeof(detail::ofp_action_group), group_id}
+                : group_{action_type, sizeof(v13_detail::ofp_action_group), group_id}
             {
                 if (group_id > OFPG_MAX) {
                     throw 3;
@@ -36,7 +36,7 @@ namespace v13 {
             auto length() const
                 -> std::uint16_t
             {
-                return sizeof(detail::ofp_action_group);
+                return sizeof(v13_detail::ofp_action_group);
             }
 
             auto group_id() const
@@ -53,13 +53,13 @@ namespace v13 {
             }
 
         private:
-            explicit group(detail::ofp_action_group const& action_group)
+            explicit group(v13_detail::ofp_action_group const& action_group)
                 : group_(action_group)
             {
                 if (group_.type != action_type) {
                     throw 1;
                 }
-                if (group_.len != sizeof(detail::ofp_action_group)) {
+                if (group_.len != sizeof(v13_detail::ofp_action_group)) {
                     throw 2;
                 }
                 if (group_id() > OFPG_MAX) {
@@ -72,12 +72,12 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> group
             {
-                auto const action_group = detail::decode<detail::ofp_action_group>(first, last);
+                auto const action_group = detail::decode<v13_detail::ofp_action_group>(first, last);
                 return group{action_group};
             }
 
         private:
-            detail::ofp_action_group group_;
+            v13_detail::ofp_action_group group_;
         };
 
     } // namespace actions

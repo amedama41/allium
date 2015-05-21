@@ -13,18 +13,18 @@ namespace openflow {
 namespace v13 {
 
     class switch_config_request
-        : public detail::basic_openflow_message<switch_config_request>
+        : public v13_detail::basic_openflow_message<switch_config_request>
     {
     public:
         static ofp_type const message_type = OFPT_GET_CONFIG_REQUEST;
 
         switch_config_request()
-            : header_{OFP_VERSION, message_type, sizeof(detail::ofp_header), get_xid()}
+            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), get_xid()}
         {
         }
 
         auto header() const
-            -> detail::ofp_header const&
+            -> v13_detail::ofp_header const&
         {
             return header_;
         }
@@ -42,29 +42,29 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> switch_config_request
         {
-            return switch_config_request{detail::decode<detail::ofp_header>(first, last)};
+            return switch_config_request{detail::decode<v13_detail::ofp_header>(first, last)};
         }
 
     private:
-        explicit switch_config_request(detail::ofp_header const& header)
+        explicit switch_config_request(v13_detail::ofp_header const& header)
             : header_(header)
         {
         }
 
     private:
-        detail::ofp_header header_;
+        v13_detail::ofp_header header_;
     };
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class T>
         class basic_switch_config
-             : public detail::basic_openflow_message<T>
+             : public v13_detail::basic_openflow_message<T>
         {
         protected:
             basic_switch_config(std::uint16_t const flags, std::uint16_t const miss_send_len)
                 : switch_config_{
-                      {OFP_VERSION, T::message_type, sizeof(detail::ofp_switch_config), detail::basic_openflow_message<T>::get_xid()}
+                      {OFP_VERSION, T::message_type, sizeof(v13_detail::ofp_switch_config), v13_detail::basic_openflow_message<T>::get_xid()}
                     , flags, miss_send_len
                   }
             {
@@ -72,7 +72,7 @@ namespace v13 {
 
         public:
             auto header() const
-                -> detail::ofp_header const&
+                -> v13_detail::ofp_header const&
             {
                 return switch_config_.header;
             }
@@ -89,7 +89,7 @@ namespace v13 {
                 return switch_config_.miss_send_len;
             }
 
-            using detail::basic_openflow_message<T>::encode;
+            using v13_detail::basic_openflow_message<T>::encode;
 
             template <class Container>
             auto encode(Container& container) const
@@ -102,23 +102,23 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> T
             {
-                return T{detail::decode<detail::ofp_switch_config>(first, last)};
+                return T{detail::decode<v13_detail::ofp_switch_config>(first, last)};
             }
 
         protected:
-            explicit basic_switch_config(detail::ofp_switch_config const& config)
+            explicit basic_switch_config(v13_detail::ofp_switch_config const& config)
                 : switch_config_(config)
             {
             }
 
         private:
-            detail::ofp_switch_config switch_config_;
+            v13_detail::ofp_switch_config switch_config_;
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
     class switch_config_reply
-        : public detail::basic_switch_config<switch_config_reply>
+        : public v13_detail::basic_switch_config<switch_config_reply>
     {
     public:
         static ofp_type const message_type = OFPT_GET_CONFIG_REPLY;
@@ -131,14 +131,14 @@ namespace v13 {
     private:
         friend basic_switch_config;
 
-        explicit switch_config_reply(detail::ofp_switch_config const& config)
+        explicit switch_config_reply(v13_detail::ofp_switch_config const& config)
             : basic_switch_config{config}
         {
         }
     };
 
     class set_switch_config
-        : public detail::basic_switch_config<set_switch_config>
+        : public v13_detail::basic_switch_config<set_switch_config>
     {
     public:
         static ofp_type const message_type = OFPT_SET_CONFIG;
@@ -151,7 +151,7 @@ namespace v13 {
     private:
         friend basic_switch_config;
 
-        explicit set_switch_config(detail::ofp_switch_config const& config)
+        explicit set_switch_config(v13_detail::ofp_switch_config const& config)
             : basic_switch_config{config}
         {
         }

@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const sut = actions::output{port};
 
     BOOST_CHECK_EQUAL(sut.type(), OFPAT_OUTPUT);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_action_output));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_output));
     BOOST_CHECK_EQUAL(sut.port(), port);
     BOOST_CHECK_EQUAL(sut.max_length(), OFPCML_NO_BUFFER);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(to_controller_factory_test)
     auto const sut = actions::output::to_controller(OFPCML_MAX);
 
     BOOST_CHECK_EQUAL(sut.type(), OFPAT_OUTPUT);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_action_output));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_output));
     BOOST_CHECK_EQUAL(sut.port(), OFPP_CONTROLLER);
     BOOST_CHECK_EQUAL(sut.max_length(), OFPCML_MAX);
 }

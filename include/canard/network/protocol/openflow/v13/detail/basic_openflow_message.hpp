@@ -11,15 +11,15 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class T>
         class basic_openflow_message
-            : public transaction_id_assignor<std::uint32_t>
+            : public v13::detail::transaction_id_assignor<std::uint32_t>
         {
         private:
             auto header() const
-                -> detail::ofp_header const&
+                -> v13_detail::ofp_header const&
             {
                 return static_cast<T const*>(this)->header();
             }
@@ -58,7 +58,7 @@ namespace v13 {
             }
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

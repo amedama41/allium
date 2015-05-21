@@ -38,7 +38,7 @@ namespace v13 {
                 , std::uint32_t const config, std::uint32_t const max_entries
                 , table_feature_property_set properties)
             : table_features_{
-                  std::uint16_t(sizeof(detail::ofp_table_features) + properties.length())
+                  std::uint16_t(sizeof(v13_detail::ofp_table_features) + properties.length())
                 , table_id, {0, 0, 0, 0, 0}, ""
                 , metadata_match, metadata_write, config, max_entries
               }
@@ -113,30 +113,30 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> table_features
         {
-            auto const features = detail::decode<detail::ofp_table_features>(first, last);
-            if (std::distance(first, last) < features.length - sizeof(detail::ofp_table_features)) {
+            auto const features = detail::decode<v13_detail::ofp_table_features>(first, last);
+            if (std::distance(first, last) < features.length - sizeof(v13_detail::ofp_table_features)) {
                 throw 2;
             }
-            last = std::next(first, features.length - sizeof(detail::ofp_table_features));
+            last = std::next(first, features.length - sizeof(v13_detail::ofp_table_features));
             auto properties = table_feature_property_set::decode(first, last);
             return table_features{features, std::move(properties)};
         }
 
     private:
-        table_features(detail::ofp_table_features const& features, table_feature_property_set properties)
+        table_features(v13_detail::ofp_table_features const& features, table_feature_property_set properties)
             : table_features_(features)
             , properties_(std::move(properties))
         {
         }
 
     private:
-        detail::ofp_table_features table_features_;
+        v13_detail::ofp_table_features table_features_;
         table_feature_property_set properties_;
     };
 
 
     class table_features_request
-        : public detail::basic_multipart_request<table_features_request>
+        : public v13_detail::basic_multipart_request<table_features_request>
     {
         using table_features_list = std::vector<table_features>;
 
@@ -193,7 +193,7 @@ namespace v13 {
 
 
     class table_features_reply
-        : public detail::basic_multipart_reply<table_features_reply>
+        : public v13_detail::basic_multipart_reply<table_features_reply>
     {
         using table_features_list = std::vector<table_features>;
 
@@ -230,11 +230,11 @@ namespace v13 {
             -> table_features_reply
         {
             auto const reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(detail::ofp_multipart_reply)) {
+            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
             auto features = table_features_list{};
-            features.reserve(std::distance(first, last) / (sizeof(detail::ofp_table_features) * 4));
+            features.reserve(std::distance(first, last) / (sizeof(v13_detail::ofp_table_features) * 4));
             while (first != last) {
                 features.emplace_back(table_features::decode(first, last));
             }
@@ -242,7 +242,7 @@ namespace v13 {
         }
 
     private:
-        table_features_reply(detail::ofp_multipart_reply const& reply, table_features_list features)
+        table_features_reply(v13_detail::ofp_multipart_reply const& reply, table_features_list features)
             : basic_multipart_reply{reply}
             , features_(std::move(features))
         {

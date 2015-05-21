@@ -76,11 +76,11 @@ namespace network {{
 namespace openflow {{
 namespace v{version} {{
 
-    namespace detail {{
+    namespace v{version}_detail {{
 
 {struct_decls}
 
-    }} // namespace detail
+    }} // namespace v{version}_detail
 
 {enum_decls}
 

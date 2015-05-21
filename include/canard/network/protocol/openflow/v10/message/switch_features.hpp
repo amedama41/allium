@@ -19,7 +19,7 @@ namespace v10 {
 namespace messages {
 
     class features_request
-        : public detail::basic_openflow_message<features_request>
+        : public v10_detail::basic_openflow_message<features_request>
     {
     public:
         static ofp_type const message_type = OFPT_FEATURES_REQUEST;
@@ -30,7 +30,7 @@ namespace messages {
         }
 
         auto header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             return header_;
         }
@@ -39,19 +39,19 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return openflow::detail::encode(container, header_);
+            return detail::encode(container, header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> features_request
         {
-            auto const header = openflow::detail::decode<detail::ofp_header>(first, last);
+            auto const header = detail::decode<v10_detail::ofp_header>(first, last);
             return features_request{header};
         }
 
     private:
-        explicit features_request(detail::ofp_header const header)
+        explicit features_request(v10_detail::ofp_header const header)
             : header_(header)
         {
             if (version() != OFP_VERSION) {
@@ -63,11 +63,11 @@ namespace messages {
         }
 
     private:
-        detail::ofp_header header_;
+        v10_detail::ofp_header header_;
     };
 
     class features_reply
-        : public detail::basic_openflow_message<features_reply>
+        : public v10_detail::basic_openflow_message<features_reply>
     {
     public:
         static ofp_type const message_type = OFPT_FEATURES_REPLY;
@@ -76,7 +76,7 @@ namespace messages {
         using const_iterator = std::vector<v10::port>::const_iterator;
 
         auto header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             return features_.header;
         }
@@ -115,9 +115,9 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> features_reply
         {
-            auto const features = openflow::detail::decode<detail::ofp_switch_features>(first, last);
+            auto const features = detail::decode<v10_detail::ofp_switch_features>(first, last);
             auto ports = std::vector<port>{};
-            ports.reserve((features.header.length - sizeof(features)) / sizeof(detail::ofp_phy_port));
+            ports.reserve((features.header.length - sizeof(features)) / sizeof(v10_detail::ofp_phy_port));
             while (first != last) {
                 ports.emplace_back(port::decode(first, last));
             }
@@ -125,7 +125,7 @@ namespace messages {
         }
 
     private:
-        features_reply(detail::ofp_switch_features const& features, std::vector<port> ports)
+        features_reply(v10_detail::ofp_switch_features const& features, std::vector<port> ports)
             : features_(features)
             , ports_(std::move(ports))
         {
@@ -135,13 +135,13 @@ namespace messages {
             if (type() != message_type) {
                 throw std::runtime_error("invalid message type");
             }
-            if (length() != sizeof(detail::ofp_switch_features) + ports_.size() * sizeof(detail::ofp_phy_port)) {
+            if (length() != sizeof(v10_detail::ofp_switch_features) + ports_.size() * sizeof(v10_detail::ofp_phy_port)) {
                 throw std::runtime_error("invalid length");
             }
         }
 
     private:
-        detail::ofp_switch_features features_;
+        v10_detail::ofp_switch_features features_;
         std::vector<v10::port> ports_;
     };
 

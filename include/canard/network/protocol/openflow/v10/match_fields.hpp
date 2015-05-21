@@ -20,7 +20,7 @@ namespace network {
 namespace openflow {
 namespace v10 {
 
-    namespace detail {
+    namespace match_field_detail {
 
         template <std::uint32_t Field>
         using field_type = std::integral_constant<std::uint32_t, Field>;
@@ -51,7 +51,7 @@ namespace v10 {
             >::type;
 
             using type = typename boost::fusion::result_of::value_at<
-                detail::ofp_match, member_index
+                v10_detail::ofp_match, member_index
             >::type;
         };
 
@@ -88,7 +88,7 @@ namespace v10 {
             {
             }
 
-            void set_value(detail::ofp_match& match) const
+            void set_value(v10_detail::ofp_match& match) const
             {
                 boost::fusion::at<member_index>(match) = value_;
             }
@@ -104,13 +104,13 @@ namespace v10 {
         };
 
         template <>
-        inline void match_field<field_type<OFPFW_DL_DST>>::set_value(detail::ofp_match& match) const
+        inline void match_field<field_type<OFPFW_DL_DST>>::set_value(v10_detail::ofp_match& match) const
         {
             std::memcpy(&boost::fusion::at<member_index>(match), value_.data(), value_.size());
         }
 
         template <>
-        inline void match_field<field_type<OFPFW_DL_SRC>>::set_value(detail::ofp_match& match) const
+        inline void match_field<field_type<OFPFW_DL_SRC>>::set_value(v10_detail::ofp_match& match) const
         {
             std::memcpy(&boost::fusion::at<member_index>(match), value_.data(), value_.size());
         }
@@ -140,7 +140,7 @@ namespace v10 {
             >::type;
 
             using field_value_type = typename boost::fusion::result_of::value_at<
-                detail::ofp_match, member_index
+                v10_detail::ofp_match, member_index
             >::type;
 
         public:
@@ -156,7 +156,7 @@ namespace v10 {
             {
             }
 
-            void set_value(detail::ofp_match& match) const
+            void set_value(v10_detail::ofp_match& match) const
             {
                 boost::fusion::at<member_index>(match) = value_;
             }
@@ -186,28 +186,28 @@ namespace v10 {
             using ipaddr_match_field_base::ipaddr_match_field_base;
         };
 
-    } // namespace detail
+    } // namespace match_field_detail
 
     namespace match {
 
-        using in_port = detail::match_field<detail::field_type<OFPFW_IN_PORT>>;
-        using eth_src = detail::match_field<detail::field_type<OFPFW_DL_SRC>>;
-        using eth_dst = detail::match_field<detail::field_type<OFPFW_DL_DST>>;
-        using vlan_vid = detail::match_field<detail::field_type<OFPFW_DL_VLAN>>;
-        using vlan_pcp = detail::match_field<detail::field_type<OFPFW_DL_VLAN_PCP>>;
-        using eth_type = detail::match_field<detail::field_type<OFPFW_DL_TYPE>>;
-        using ipv4_tos = detail::match_field<detail::field_type<OFPFW_DL_TYPE>>;
-        using ip_proto = detail::match_field<detail::field_type<OFPFW_NW_PROTO>>;
-        using ipv4_src = detail::match_field<detail::field_type<OFPFW_NW_SRC_ALL>>;
-        using ipv4_dst = detail::match_field<detail::field_type<OFPFW_NW_DST_ALL>>;
-        using arp_spa = detail::match_field<detail::field_type<OFPFW_NW_SRC_ALL>>;
-        using arp_tpa = detail::match_field<detail::field_type<OFPFW_NW_DST_ALL>>;
-        using tcp_src = detail::match_field<detail::field_type<OFPFW_TP_SRC>>;
-        using tcp_dst = detail::match_field<detail::field_type<OFPFW_TP_DST>>;
-        using udp_src = detail::match_field<detail::field_type<OFPFW_TP_SRC>>;
-        using udp_dst = detail::match_field<detail::field_type<OFPFW_TP_DST>>;
-        using icmpv4_type = detail::match_field<detail::field_type<OFPFW_TP_SRC>>;
-        using icmpv4_code = detail::match_field<detail::field_type<OFPFW_TP_DST>>;
+        using in_port = match_field_detail::match_field<match_field_detail::field_type<OFPFW_IN_PORT>>;
+        using eth_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_SRC>>;
+        using eth_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_DST>>;
+        using vlan_vid = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_VLAN>>;
+        using vlan_pcp = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_VLAN_PCP>>;
+        using eth_type = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_TYPE>>;
+        using ipv4_tos = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_TYPE>>;
+        using ip_proto = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_PROTO>>;
+        using ipv4_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_SRC_ALL>>;
+        using ipv4_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_DST_ALL>>;
+        using arp_spa = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_SRC_ALL>>;
+        using arp_tpa = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_DST_ALL>>;
+        using tcp_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_SRC>>;
+        using tcp_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_DST>>;
+        using udp_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_SRC>>;
+        using udp_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_DST>>;
+        using icmpv4_type = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_SRC>>;
+        using icmpv4_code = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_DST>>;
 
     } // namespace match
 

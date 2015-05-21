@@ -21,7 +21,7 @@ namespace v13 {
             {
             protected:
                 explicit action_push(std::uint16_t const ethertype)
-                    : push_{T::action_type, sizeof(detail::ofp_action_push), ethertype, {0}}
+                    : push_{T::action_type, sizeof(v13_detail::ofp_action_push), ethertype, {0}}
                 {
                 }
 
@@ -35,7 +35,7 @@ namespace v13 {
                 auto length() const
                     -> std::uint16_t
                 {
-                    return sizeof(detail::ofp_action_push);
+                    return sizeof(v13_detail::ofp_action_push);
                 }
 
                 auto ethertype() const
@@ -55,18 +55,18 @@ namespace v13 {
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const action_push = detail::decode<detail::ofp_action_push>(first, last);
+                    auto const action_push = detail::decode<v13_detail::ofp_action_push>(first, last);
                     if (action_push.type != T::action_type) {
                         throw 1;
                     }
-                    if (action_push.len != sizeof(detail::ofp_action_push)) {
+                    if (action_push.len != sizeof(v13_detail::ofp_action_push)) {
                         throw 2;
                     }
                     return T{action_push.ethertype};
                 }
 
             private:
-                detail::ofp_action_push push_;
+                v13_detail::ofp_action_push push_;
             };
 
         } // namespace action_detail

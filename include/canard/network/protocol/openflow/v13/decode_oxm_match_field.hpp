@@ -26,7 +26,7 @@ namespace v13 {
 
         auto oxm_header = std::uint32_t{};
         std::copy_n(first, sizeof(oxm_header), canard::as_byte_range(oxm_header).begin());
-        oxm_header = detail::ntoh(oxm_header);
+        oxm_header = v13_detail::ntoh(oxm_header);
 
         switch (oxm_header >> 9) {
 #       define CANARD_NETWORK_OPENFLOW_V13_OXM_MATCH_FIELD_DECODE_CASE(z, N, _) \
@@ -44,7 +44,7 @@ namespace v13 {
         }
     }
 
-    namespace detail {
+    namespace v13_detail {
 
         struct to_any_oxm_match_field
         {
@@ -56,13 +56,13 @@ namespace v13 {
             }
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
     template <class Iterator>
     auto decode_oxm_match_field(Iterator& first, Iterator last)
         -> any_oxm_match_field
     {
-        return decode_oxm_match_field<any_oxm_match_field>(first, last, detail::to_any_oxm_match_field{});
+        return decode_oxm_match_field<any_oxm_match_field>(first, last, v13_detail::to_any_oxm_match_field{});
     }
 
 } // namespace v13

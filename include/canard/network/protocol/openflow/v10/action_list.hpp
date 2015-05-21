@@ -60,8 +60,8 @@ namespace v10 {
         {
             auto actions = action_list{};
             while (first != last) {
-                detail::decode_action<void>(first, last
-                        , openflow::detail::add_helper<action_list>{actions});
+                v10_detail::decode_action<void>(
+                        first, last, detail::add_helper<action_list>{actions});
             }
             return actions;
         }

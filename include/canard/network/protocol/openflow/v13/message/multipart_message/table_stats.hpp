@@ -66,21 +66,21 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> table_stats
         {
-            return table_stats{detail::decode<detail::ofp_table_stats>(first, last)};
+            return table_stats{detail::decode<v13_detail::ofp_table_stats>(first, last)};
         }
 
     private:
-        explicit table_stats(detail::ofp_table_stats const& table_stats)
+        explicit table_stats(v13_detail::ofp_table_stats const& table_stats)
             : table_stats_(table_stats)
         {
         }
 
     private:
-        detail::ofp_table_stats table_stats_;
+        v13_detail::ofp_table_stats table_stats_;
     };
 
     class table_stats_request
-        : public detail::basic_multipart_request<table_stats_request>
+        : public v13_detail::basic_multipart_request<table_stats_request>
     {
     public:
         static ofp_multipart_type const multipart_type_value = OFPMP_TABLE;
@@ -93,7 +93,7 @@ namespace v13 {
 
 
     class table_stats_reply
-        : public detail::basic_multipart_reply<table_stats_reply>
+        : public v13_detail::basic_multipart_reply<table_stats_reply>
     {
         using table_stats_list = std::vector<table_stats>;
     public:
@@ -119,12 +119,12 @@ namespace v13 {
             -> table_stats_reply
         {
             auto const reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(detail::ofp_multipart_reply)) {
+            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
 
             auto stats_list = table_stats_list{};
-            stats_list.reserve(std::distance(first, last) / sizeof(detail::ofp_table_stats));
+            stats_list.reserve(std::distance(first, last) / sizeof(v13_detail::ofp_table_stats));
             while (first != last) {
                 stats_list.push_back(table_stats::decode(first, last));
             }
@@ -132,7 +132,7 @@ namespace v13 {
         }
 
     private:
-        table_stats_reply(detail::ofp_multipart_reply const& reply, table_stats_list stats_list)
+        table_stats_reply(v13_detail::ofp_multipart_reply const& reply, table_stats_list stats_list)
             : basic_multipart_reply{reply}
             , table_stats_list_(std::move(stats_list))
         {

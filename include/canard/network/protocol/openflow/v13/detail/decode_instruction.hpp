@@ -17,17 +17,17 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class ReturnType, class Iterator, class Function>
         auto decode_instruction(Iterator& first, Iterator last, Function func)
             -> ReturnType
         {
-            auto instruction = detail::ofp_instruction{};
+            auto instruction = v13_detail::ofp_instruction{};
             std::copy_n(first, sizeof(instruction), canard::as_byte_range(instruction).begin());
 
             static_assert(std::tuple_size<default_instruction_list>::value == 6, "");
-            switch (detail::ntoh(instruction.type)) {
+            switch (v13_detail::ntoh(instruction.type)) {
 #           define CANARD_NETWORK_OPENFLOW_V13_DECODE_INSTRUCTION_CASE(z, N, _) \
             case std::tuple_element<N, default_instruction_list>::type::instruction_type: \
                 return func(std::tuple_element<N, default_instruction_list>::type::decode(first, last));
@@ -35,14 +35,14 @@ namespace v13 {
 #           undef CANARD_NETWORK_OPENFLOW_V13_DECODE_INSTRUCTION_CASE
 
             default:
-                std::advance(first, detail::ntoh(instruction.len));
+                std::advance(first, v13_detail::ntoh(instruction.len));
                 throw std::runtime_error{(boost::format{"%1%: unknown instruction type %2%"}
-                        % __func__ % (detail::ntoh(instruction.type))).str()
+                        % __func__ % (v13_detail::ntoh(instruction.type))).str()
                 };
             }
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

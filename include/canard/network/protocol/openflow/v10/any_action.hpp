@@ -49,14 +49,14 @@ namespace v10 {
         auto type() const
             -> ofp_action_type
         {
-            auto visitor = openflow::detail::type_visitor<ofp_action_type>{};
+            auto visitor = detail::type_visitor<ofp_action_type>{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto length() const
             -> std::uint16_t
         {
-            auto visitor = openflow::detail::length_visitor{};
+            auto visitor = detail::length_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
@@ -64,7 +64,7 @@ namespace v10 {
         auto encode(Container& container) const
             -> Container&
         {
-            auto visitor = openflow::detail::encoding_visitor<Container>{container};
+            auto visitor = detail::encoding_visitor<Container>{container};
             return boost::apply_visitor(visitor, variant_);
         }
 
@@ -72,7 +72,7 @@ namespace v10 {
         static auto decode(Iterator& first, Iterator last)
             -> any_action
         {
-            return detail::decode_action<any_action>(first, last, to_any_action{});
+            return v10_detail::decode_action<any_action>(first, last, to_any_action{});
         }
 
         template <class T>

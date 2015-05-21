@@ -17,7 +17,7 @@ namespace v13 {
         auto encode_impl(T const& value, std::true_type)
             -> T
         {
-            return detail::hton(value);
+            return v13_detail::hton(value);
         }
 
         template <class T>

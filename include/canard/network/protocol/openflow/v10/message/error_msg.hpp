@@ -9,6 +9,7 @@
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v10/detail/basic_openflow_message.hpp>
+#include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
@@ -18,13 +19,13 @@ namespace v10 {
 namespace messages {
 
     class error_msg
-        : public detail::basic_openflow_message<error_msg>
+        : public v10_detail::basic_openflow_message<error_msg>
     {
     public:
         static ofp_type const message_type = OFPT_ERROR;
 
         auto header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             return error_.header;
         }
@@ -42,17 +43,17 @@ namespace messages {
         }
 
         auto failed_request_header() const
-            -> detail::ofp_header
+            -> v10_detail::ofp_header
         {
             auto it = data_.begin();
-            return openflow::detail::decode<detail::ofp_header>(it, data_.end());
+            return detail::decode<v10_detail::ofp_header>(it, data_.end());
         }
 
         template <class Container>
         auto encode(Container& container) const
             -> Container&
         {
-            openflow::detail::encode(container, error_);
+            detail::encode(container, error_);
             return boost::push_back(container, data_);
         }
 
@@ -60,13 +61,13 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> error_msg
         {
-            auto const error = openflow::detail::decode<detail::ofp_error_msg>(first, last);
+            auto const error = detail::decode<v10_detail::ofp_error_msg>(first, last);
             auto data = std::vector<std::uint8_t>(first, last);
             return error_msg{error, std::move(data)};
         }
 
     private:
-        error_msg(detail::ofp_error_msg const& error, std::vector<std::uint8_t> data)
+        error_msg(v10_detail::ofp_error_msg const& error, std::vector<std::uint8_t> data)
             : error_(error)
             , data_(std::move(data))
         {
@@ -76,13 +77,13 @@ namespace messages {
             if (type() != message_type) {
                 throw std::runtime_error{"invalid message type"};
             }
-            if (data_.size() < sizeof(detail::ofp_header)) {
+            if (data_.size() < sizeof(v10_detail::ofp_header)) {
                 throw std::runtime_error{"too short failed request size"};
             }
         }
 
     private:
-        detail::ofp_error_msg error_;
+        v10_detail::ofp_error_msg error_;
         std::vector<std::uint8_t> data_;
     };
 

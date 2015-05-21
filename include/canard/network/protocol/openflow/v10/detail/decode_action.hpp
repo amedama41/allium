@@ -13,7 +13,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v10 {
-namespace detail {
+namespace v10_detail {
 
     template <class ReturnType, class Iterator, class Function>
     auto decode_action(Iterator& first, Iterator last, Function&& func)
@@ -21,7 +21,7 @@ namespace detail {
     {
         auto first_copy = first;
         auto const action_header
-            = openflow::detail::decode<detail::ofp_action_header>(first_copy, last);
+            = detail::decode<v10_detail::ofp_action_header>(first_copy, last);
 
         switch (action_header.type) {
 #       define CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE(z, N, _) \
@@ -36,7 +36,7 @@ namespace detail {
         }
     }
 
-} // namespace detail
+} // namespace v10_detail
 } // namespace v10
 } // namespace openflow
 } // namespace network

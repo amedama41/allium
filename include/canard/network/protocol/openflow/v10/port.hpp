@@ -24,25 +24,25 @@ namespace v10 {
         auto encode(Container& container)
             -> Container&
         {
-            return openflow::detail::encode(container, port_);
+            return detail::encode(container, port_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> port
         {
-            auto const phy_port = openflow::detail::decode<detail::ofp_phy_port>(first, last);
+            auto const phy_port = detail::decode<v10_detail::ofp_phy_port>(first, last);
             return port{phy_port};
         }
 
     private:
-        explicit port(detail::ofp_phy_port const& phy_port)
+        explicit port(v10_detail::ofp_phy_port const& phy_port)
             : port_(phy_port)
         {
         }
 
     private:
-        detail::ofp_phy_port port_;
+        v10_detail::ofp_phy_port port_;
     };
 
 } // namespace v10

@@ -10,14 +10,14 @@ namespace network {
 namespace openflow {
 namespace v10 {
 
-    namespace detail {
+    namespace v10_detail {
 
         template <class T>
         class basic_openflow_message
         {
         private:
             auto header() const
-                -> detail::ofp_header
+                -> v10_detail::ofp_header
             {
                 return static_cast<T const*>(this)->header();
             }
@@ -56,7 +56,7 @@ namespace v10 {
             }
         };
 
-    } // namespace detail
+    } // namespace v10_detail
 
 } // namespace v10
 } // namespace openflow

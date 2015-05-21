@@ -15,25 +15,25 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class Iterator>
         inline auto parse_hello_elem_header(Iterator first, Iterator last)
-            -> detail::ofp_hello_elem_header
+            -> v13_detail::ofp_hello_elem_header
         {
-            if (std::distance(first, last) < sizeof(detail::ofp_hello_elem_header)) {
+            if (std::distance(first, last) < sizeof(v13_detail::ofp_hello_elem_header)) {
                 throw std::runtime_error{"too short message"};
             }
-            auto header = detail::ofp_hello_elem_header{};
+            auto header = v13_detail::ofp_hello_elem_header{};
             std::copy_n(first, sizeof(header), canard::as_byte_range(header).begin());
-            return detail::ntoh(header);
+            return v13_detail::ntoh(header);
         }
 
         template <class ReturnType, class Iterator, class Func>
         auto decode_hello_element(Iterator& first, Iterator last, Func&& func)
             -> ReturnType
         {
-            auto const header = detail::parse_hello_elem_header(first, last);
+            auto const header = v13_detail::parse_hello_elem_header(first, last);
             if (header.length > std::distance(first, last)) {
                 throw std::runtime_error{"invalid length"};
             }
@@ -49,7 +49,7 @@ namespace v13 {
             }
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

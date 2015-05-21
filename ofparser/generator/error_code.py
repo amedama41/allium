@@ -40,17 +40,17 @@ def _generate_error_category_classes(version, error_type_enum, ignore_types):
 """.format(version=version, name=_strip_OFPET(error.displayname), value=error.displayname)),
         filter(lambda enum: enum.displayname not in ignore_types, error_type_enum.get_children())))
 
-def _generate_error_category_funcs(error_type_enum, ignore_types):
+def _generate_error_category_funcs(version, error_type_enum, ignore_types):
     return '\n\n'.join(map(
         lambda error: (
 """\
     inline auto {name}_category()
         -> boost::system::error_category&
     {{
-        static detail::{name}_category instance{{}};
+        static v{version}_detail::{name}_category instance{{}};
         return instance;
     }}\
-""".format(name=_strip_OFPET(error.displayname))),
+""".format(version=version, name=_strip_OFPET(error.displayname))),
         filter(lambda enum: enum.displayname not in ignore_types, error_type_enum.get_children())))
 
 def _generate_make_error_code_funcs(version, error_type_enum, ignore_types):
@@ -95,11 +95,11 @@ namespace network {{
 namespace openflow {{
 namespace v{version} {{
 
-    namespace detail {{
+    namespace v{version}_detail {{
 
 {error_category_classes}
 
-    }} // namespace detail
+    }} // namespace v{version}_detail
 
 {error_category_funcs}
 
@@ -122,7 +122,7 @@ namespace system {{
 """.format(
     version=collector.version,
     error_category_classes=_generate_error_category_classes(collector.version, error_type, ignore_types),
-    error_category_funcs=_generate_error_category_funcs(error_type, ignore_types),
+    error_category_funcs=_generate_error_category_funcs(collector.version, error_type, ignore_types),
     make_error_code_funcs=_generate_make_error_code_funcs(collector.version, error_type, ignore_types),
     is_error_code_enum_specialization=_generate_is_error_code_enum_specialization(collector.version, error_type, ignore_types)))
 

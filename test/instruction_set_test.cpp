@@ -236,39 +236,39 @@ BOOST_AUTO_TEST_CASE(encode_test)
     auto index = std::size_t{0};
 
     {
-        auto header = detail::ofp_instruction_actions{};
-        auto expected_header = detail::ofp_instruction_actions{
+        auto header = v13_detail::ofp_instruction_actions{};
+        auto expected_header = v13_detail::ofp_instruction_actions{
             OFPIT_APPLY_ACTIONS, 40, {0, 0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
-        header = detail::ntoh(header);
+        header = v13_detail::ntoh(header);
         index += sizeof(header);
         BOOST_CHECK_EQUAL(header.type, expected_header.type);
         BOOST_CHECK_EQUAL(header.len, expected_header.len);
         CANARD_CHECK_EQUAL_COLLECTIONS(header.pad, expected_header.pad);
 
         {
-            auto set_field_header = detail::ofp_action_set_field{};
-            auto expected_set_field_header = detail::ofp_action_set_field{
+            auto set_field_header = v13_detail::ofp_action_set_field{};
+            auto expected_set_field_header = v13_detail::ofp_action_set_field{
                 OFPAT_SET_FIELD, 16, {0}
             };
             std::memcpy(&set_field_header, &buffer[index], sizeof(set_field_header));
-            set_field_header = detail::ntoh(set_field_header);
-            index += offsetof(detail::ofp_action_set_field, field);
+            set_field_header = v13_detail::ntoh(set_field_header);
+            index += offsetof(v13_detail::ofp_action_set_field, field);
             BOOST_CHECK_EQUAL(set_field_header.type, expected_set_field_header.type);
             BOOST_CHECK_EQUAL(set_field_header.len, expected_set_field_header.len);
 
             auto oxm_header = std::uint32_t{};
             auto expected_oxm_header = (oxm_eth_type::oxm_type() << 9) | 2U;
             std::memcpy(&oxm_header, &buffer[index], sizeof(oxm_header));
-            oxm_header = detail::ntoh(oxm_header);
+            oxm_header = v13_detail::ntoh(oxm_header);
             index += sizeof(oxm_header);
             BOOST_CHECK_EQUAL(oxm_header, expected_oxm_header);
 
             auto oxm_value = std::uint16_t{};
             auto expected_oxm_value = std::uint16_t{0x0800};
             std::memcpy(&oxm_value, &buffer[index], sizeof(oxm_value));
-            oxm_value = detail::ntoh(oxm_value);
+            oxm_value = v13_detail::ntoh(oxm_value);
             index += sizeof(oxm_value);
             BOOST_CHECK_EQUAL(oxm_value, expected_oxm_value);
 
@@ -277,20 +277,20 @@ BOOST_AUTO_TEST_CASE(encode_test)
             index += expected_pad_value.size();
         }
         {
-            auto set_field_header = detail::ofp_action_set_field{};
-            auto expected_set_field_header = detail::ofp_action_set_field{
+            auto set_field_header = v13_detail::ofp_action_set_field{};
+            auto expected_set_field_header = v13_detail::ofp_action_set_field{
                 OFPAT_SET_FIELD, 16, {0}
             };
             std::memcpy(&set_field_header, &buffer[index], sizeof(set_field_header));
-            set_field_header = detail::ntoh(set_field_header);
-            index += offsetof(detail::ofp_action_set_field, field);
+            set_field_header = v13_detail::ntoh(set_field_header);
+            index += offsetof(v13_detail::ofp_action_set_field, field);
             BOOST_CHECK_EQUAL(set_field_header.type, expected_set_field_header.type);
             BOOST_CHECK_EQUAL(set_field_header.len, expected_set_field_header.len);
 
             auto oxm_header = std::uint32_t{};
             auto expected_oxm_header = (oxm_eth_src::oxm_type() << 9) | 6U;
             std::memcpy(&oxm_header, &buffer[index], sizeof(oxm_header));
-            oxm_header = detail::ntoh(oxm_header);
+            oxm_header = v13_detail::ntoh(oxm_header);
             index += sizeof(oxm_header);
             BOOST_CHECK_EQUAL(oxm_header, expected_oxm_header);
 
@@ -306,51 +306,51 @@ BOOST_AUTO_TEST_CASE(encode_test)
         }
     }
     {
-        auto header = detail::ofp_instruction_actions{};
-        auto expected_header = detail::ofp_instruction_actions{
+        auto header = v13_detail::ofp_instruction_actions{};
+        auto expected_header = v13_detail::ofp_instruction_actions{
             OFPIT_CLEAR_ACTIONS, 8, {0, 0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
-        header = detail::ntoh(header);
+        header = v13_detail::ntoh(header);
         index += sizeof(header);
         BOOST_CHECK_EQUAL(header.type, expected_header.type);
         BOOST_CHECK_EQUAL(header.len, expected_header.len);
         CANARD_CHECK_EQUAL_COLLECTIONS(header.pad, expected_header.pad);
     }
     {
-        auto header = detail::ofp_instruction_actions{};
-        auto expected_header = detail::ofp_instruction_actions{
+        auto header = v13_detail::ofp_instruction_actions{};
+        auto expected_header = v13_detail::ofp_instruction_actions{
             OFPIT_WRITE_ACTIONS, 32, {0, 0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
-        header = detail::ntoh(header);
+        header = v13_detail::ntoh(header);
         index += sizeof(header);
         BOOST_CHECK_EQUAL(header.type, expected_header.type);
         BOOST_CHECK_EQUAL(header.len, expected_header.len);
         CANARD_CHECK_EQUAL_COLLECTIONS(header.pad, expected_header.pad);
 
         {
-            auto set_field_header = detail::ofp_action_set_field{};
-            auto expected_set_field_header = detail::ofp_action_set_field{
+            auto set_field_header = v13_detail::ofp_action_set_field{};
+            auto expected_set_field_header = v13_detail::ofp_action_set_field{
                 OFPAT_SET_FIELD, 16, {0}
             };
             std::memcpy(&set_field_header, &buffer[index], sizeof(set_field_header));
-            set_field_header = detail::ntoh(set_field_header);
-            index += offsetof(detail::ofp_action_set_field, field);
+            set_field_header = v13_detail::ntoh(set_field_header);
+            index += offsetof(v13_detail::ofp_action_set_field, field);
             BOOST_CHECK_EQUAL(set_field_header.type, expected_set_field_header.type);
             BOOST_CHECK_EQUAL(set_field_header.len, expected_set_field_header.len);
 
             auto oxm_header = std::uint32_t{};
             auto expected_oxm_header = (oxm_ipv4_src::oxm_type() << 9) | 4U;
             std::memcpy(&oxm_header, &buffer[index], sizeof(oxm_header));
-            oxm_header = detail::ntoh(oxm_header);
+            oxm_header = v13_detail::ntoh(oxm_header);
             index += sizeof(oxm_header);
             BOOST_CHECK_EQUAL(oxm_header, expected_oxm_header);
 
             auto oxm_value = std::uint32_t{};
             auto expected_oxm_value = std::uint32_t{0x7f000003};
             std::memcpy(&oxm_value, &buffer[index], sizeof(oxm_value));
-            oxm_value = detail::ntoh(oxm_value);
+            oxm_value = v13_detail::ntoh(oxm_value);
             index += sizeof(oxm_value);
             BOOST_CHECK_EQUAL(oxm_value, expected_oxm_value);
 
@@ -359,25 +359,25 @@ BOOST_AUTO_TEST_CASE(encode_test)
             index += expected_pad_value.size();
         }
         {
-            auto set_queue_header = detail::ofp_action_set_queue{};
-            auto expected_set_queue_header = detail::ofp_action_set_queue{
+            auto set_queue_header = v13_detail::ofp_action_set_queue{};
+            auto expected_set_queue_header = v13_detail::ofp_action_set_queue{
                 OFPAT_SET_QUEUE, 8, 4
             };
             std::memcpy(&set_queue_header, &buffer[index], sizeof(set_queue_header));
-            set_queue_header = detail::ntoh(set_queue_header);
-            index += sizeof(detail::ofp_action_set_queue);
+            set_queue_header = v13_detail::ntoh(set_queue_header);
+            index += sizeof(v13_detail::ofp_action_set_queue);
             BOOST_CHECK_EQUAL(set_queue_header.type, expected_set_queue_header.type);
             BOOST_CHECK_EQUAL(set_queue_header.len, expected_set_queue_header.len);
             BOOST_CHECK_EQUAL(set_queue_header.queue_id, expected_set_queue_header.queue_id);
         }
     }
     {
-        auto header = detail::ofp_instruction_goto_table{};
-        auto expected_header = detail::ofp_instruction_goto_table{
+        auto header = v13_detail::ofp_instruction_goto_table{};
+        auto expected_header = v13_detail::ofp_instruction_goto_table{
             OFPIT_GOTO_TABLE, 8, 4, {0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
-        header = detail::ntoh(header);
+        header = v13_detail::ntoh(header);
         index += sizeof(header);
         BOOST_CHECK_EQUAL(header.type, expected_header.type);
         BOOST_CHECK_EQUAL(header.len, expected_header.len);

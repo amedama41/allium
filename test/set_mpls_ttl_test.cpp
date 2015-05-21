@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const sut = actions::set_mpls_ttl{5};
 
     BOOST_CHECK_EQUAL(sut.type(), OFPAT_SET_MPLS_TTL);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(detail::ofp_action_mpls_ttl));
+    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_mpls_ttl));
     BOOST_CHECK_EQUAL(sut.ttl(), 5);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }
