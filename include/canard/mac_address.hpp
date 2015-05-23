@@ -3,10 +3,8 @@
 
 #include <cstring>
 #include <array>
-#include <net/ethernet.h>
 #include <boost/format.hpp>
 #include <boost/operators.hpp>
-#include <boost/range/algorithm/copy.hpp>
 
 namespace canard {
 
@@ -14,7 +12,7 @@ namespace canard {
         : boost::less_than_comparable<mac_address, boost::equality_comparable<mac_address>>
     {
     public:
-        using bytes_type = std::array<unsigned char, 6>;
+        using bytes_type = std::array<std::uint8_t, 6>;
 
         mac_address()
             : addr_{}
@@ -22,62 +20,53 @@ namespace canard {
         }
 
         explicit mac_address(bytes_type const& bytes)
+            : addr_(bytes)
         {
-            std::memcpy(addr_.octet, bytes.data(), bytes.size());
         }
 
-        explicit mac_address(unsigned char (&array)[6])
+        explicit mac_address(std::uint8_t const (&array)[6])
+            : addr_{{array[0], array[1], array[2], array[3], array[4], array[5]}}
         {
-            std::memcpy(addr_.octet, array, sizeof(array));
-        }
-
-        template <class ByteRange>
-        explicit mac_address(ByteRange const& range)
-        {
-            boost::copy(range, addr_.octet);
         }
 
         auto to_bytes() const
-            -> bytes_type
+            -> bytes_type const&
         {
-            auto bytes = bytes_type{};
-            std::memcpy(bytes.data(), addr_.octet, bytes.size());
-            return bytes;
+            return addr_;
         }
 
         auto to_string() const
             -> std::string
         {
-            return (boost::format{"%x:%x:%x:%x:%x:%x"}
-                % std::uint16_t{addr_.octet[0]}
-                % std::uint16_t{addr_.octet[1]}
-                % std::uint16_t{addr_.octet[2]}
-                % std::uint16_t{addr_.octet[3]}
-                % std::uint16_t{addr_.octet[4]}
-                % std::uint16_t{addr_.octet[5]})
-                .str();
+            return boost::str(boost::format{"%02x:%02x:%02x:%02x:%02x:%02x"}
+                % std::uint16_t{addr_[0]}
+                % std::uint16_t{addr_[1]}
+                % std::uint16_t{addr_[2]}
+                % std::uint16_t{addr_[3]}
+                % std::uint16_t{addr_[4]}
+                % std::uint16_t{addr_[5]});
         }
 
         static auto broadcast()
             -> mac_address
         {
-            return mac_address(bytes_type{{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}});
+            return mac_address({{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}});
         }
 
         friend auto operator==(mac_address const& lhs, mac_address const& rhs)
             -> bool
         {
-            return std::memcmp(&lhs.addr_, &rhs.addr_, sizeof(ether_addr)) == 0;
+            return lhs.addr_ == rhs.addr_;
         }
 
         friend auto operator<(mac_address const& lhs, mac_address const& rhs)
             -> bool
         {
-            return std::memcmp(&lhs.addr_, &rhs.addr_, sizeof(ether_addr)) < 0;
+            return lhs.addr_ < rhs.addr_;
         }
 
     private:
-        ether_addr addr_;
+        bytes_type addr_;
     };
 
     template <class OStream>

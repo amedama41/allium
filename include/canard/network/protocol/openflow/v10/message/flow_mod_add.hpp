@@ -28,7 +28,7 @@ namespace messages {
                 , std::uint32_t const xid = get_xid())
             : flow_mod_{
                   {OFP_VERSION, message_type, std::uint16_t(sizeof(flow_mod_) + entry.actions().length()), xid}
-                , entry.match().ofp_match(), entry.cookie(), command_type
+                , entry.ofp_match(), entry.cookie(), command_type
                 , entry.idle_timeout(), entry.hard_timeout()
                 , entry.priority(), buffer_id, 0, flags
               }

@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <utility>
+#include <canard/network/protocol/openflow/v10/detail/match_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/type_traits.hpp>
 
@@ -12,19 +13,28 @@ namespace openflow {
 namespace v10 {
 
     struct match_set
+        : public v10_detail::match_adaptor<match_set>
     {
     public:
-        template <class... MatchFields, typename std::enable_if<!canard::is_related<match_set, MatchFields...>::value>::type* = nullptr>
+        template <class... MatchFields
+            , typename std::enable_if<
+                       !canard::is_related<match_set, MatchFields...>::value
+                    && !canard::is_related<v10_detail::ofp_match, MatchFields...>::value
+              >::type* = nullptr>
         match_set(MatchFields&&... fields)
             : match_{OFPFW_ALL, 0}
         {
             add_impl(std::forward<MatchFields>(fields)...);
         }
 
+        explicit match_set(v10_detail::ofp_match const& match)
+            : match_(match)
+        {
+        }
+
         template <class MatchField>
         void add(MatchField&& field)
         {
-            match_.wildcards &= field.wildcards();
             field.set_value(match_);
         }
 

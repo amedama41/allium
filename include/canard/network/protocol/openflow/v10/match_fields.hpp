@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <cstring>
-#include <array>
+#include <algorithm>
 #include <type_traits>
 #include <utility>
 #include <boost/asio/ip/address_v4.hpp>
@@ -12,6 +12,7 @@
 #include <boost/fusion/sequence/intrinsic/value_at.hpp>
 #include <boost/fusion/sequence/intrinsic/value_at_key.hpp>
 #include <boost/mpl/int.hpp>
+#include <canard/mac_address.hpp>
 #include <canard/network/protocol/openflow/v10/detail/fusion_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
@@ -43,8 +44,9 @@ namespace v10 {
           //+---------------------------------------------------+------------------------+
         >;
 
-        template <class FieldType>
-        struct get_field_value_type
+
+        template <class FieldType, class Enable = void>
+        struct field_value_type
         {
             using member_index = typename boost::fusion::result_of::value_at_key<
                 match_field_table, FieldType
@@ -55,72 +57,114 @@ namespace v10 {
             >::type;
         };
 
-        template <>
-        struct get_field_value_type<field_type<OFPFW_DL_DST>>
+        template <class FieldType>
+        struct field_value_type<
+                  FieldType
+                , typename std::enable_if<
+                           FieldType::value == OFPFW_DL_SRC
+                        || FieldType::value == OFPFW_DL_DST
+                  >::type>
         {
-            using type = std::array<std::uint8_t, 6>;
-        };
-
-        template <>
-        struct get_field_value_type<field_type<OFPFW_DL_SRC>>
-        {
-            using type = std::array<std::uint8_t, 6>;
+            using type = canard::mac_address;
         };
 
         template <class FieldType>
-        class match_field
+        struct field_value_type<
+                  FieldType
+                , typename std::enable_if<
+                           FieldType::value == OFPFW_NW_SRC_ALL
+                        || FieldType::value == OFPFW_NW_DST_ALL
+                  >::type>
+        {
+            using type = boost::asio::ip::address_v4;
+        };
+
+
+        template <
+              class FieldType
+            , typename std::enable_if<
+                       FieldType::value != OFPFW_NW_SRC_ALL
+                    && FieldType::value != OFPFW_NW_DST_ALL
+              >::type* = nullptr>
+        void copy_to_match(
+                  v10_detail::ofp_match& match
+                , typename field_value_type<FieldType>::type const& value
+                , FieldType)
+        {
+            using member_index = typename boost::fusion::result_of::value_at_key<
+                match_field_table, FieldType
+            >::type;
+            boost::fusion::at<member_index>(match) = value;
+        }
+
+        void copy_to_match(
+                  v10_detail::ofp_match& match
+                , canard::mac_address const& macaddr
+                , field_type<OFPFW_DL_DST>)
+        {
+            std::memcpy(match.dl_dst, macaddr.to_bytes().data(), macaddr.to_bytes().size());
+        }
+
+        void copy_to_match(
+                  v10_detail::ofp_match& match
+                , canard::mac_address const& macaddr
+                , field_type<OFPFW_DL_SRC>)
+        {
+            std::memcpy(match.dl_src, macaddr.to_bytes().data(), macaddr.to_bytes().size());
+        }
+
+        template <
+              class FieldType
+            , typename std::enable_if<
+                       FieldType::value == OFPFW_NW_SRC_ALL
+                    || FieldType::value == OFPFW_NW_DST_ALL
+              >::type* = nullptr>
+        void copy_to_match(
+                  v10_detail::ofp_match& match
+                , typename field_value_type<FieldType>::type const& value
+                , FieldType)
+        {
+            using member_index = typename boost::fusion::result_of::value_at_key<
+                match_field_table, FieldType
+            >::type;
+            boost::fusion::at<member_index>(match) = value.to_ulong();
+        }
+
+
+        template <class FieldType>
+        auto field_value(v10_detail::ofp_match const& match, FieldType)
+            -> typename field_value_type<FieldType>::type
         {
             using member_index = typename boost::fusion::result_of::value_at_key<
                 match_field_table, FieldType
             >::type;
 
-            using field_value_type = typename get_field_value_type<FieldType>::type;
-
-        public:
-            explicit match_field(field_value_type const& value)
-                : value_(value)
-            {
-            }
-
-            template <class T, typename std::enable_if<!std::is_scalar<T>::value>::type* = nullptr>
-            explicit match_field(T&& t)
-                : value_(std::forward<T>(t).to_bytes())
-            {
-            }
-
-            void set_value(v10_detail::ofp_match& match) const
-            {
-                boost::fusion::at<member_index>(match) = value_;
-            }
-
-            auto wildcards() const
-                -> std::uint32_t
-            {
-                return ~FieldType::value;
-            }
-
-        private:
-            field_value_type value_;
-        };
-
-        template <>
-        inline void match_field<field_type<OFPFW_DL_DST>>::set_value(v10_detail::ofp_match& match) const
-        {
-            std::memcpy(&boost::fusion::at<member_index>(match), value_.data(), value_.size());
+            return boost::fusion::at<member_index>(match);
         }
 
-        template <>
-        inline void match_field<field_type<OFPFW_DL_SRC>>::set_value(v10_detail::ofp_match& match) const
+        auto field_value(v10_detail::ofp_match const& match, field_type<OFPFW_DL_DST>)
+            -> canard::mac_address
         {
-            std::memcpy(&boost::fusion::at<member_index>(match), value_.data(), value_.size());
+            return canard::mac_address{match.dl_dst};
         }
+
+        auto field_value(v10_detail::ofp_match const& match, field_type<OFPFW_DL_SRC>)
+            -> canard::mac_address
+        {
+            return canard::mac_address{match.dl_src};
+        }
+
 
         template <class FieldType>
-        struct mask_info;
+        struct mask_info
+        {
+            static bool const has_mask = false;
+        };
 
         template <>
         struct mask_info<field_type<OFPFW_NW_SRC_ALL>>
         {
+            static bool const has_mask = true;
             static std::uint32_t const shift = OFPFW_NW_SRC_SHIFT;
             static std::uint32_t const mask = OFPFW_NW_SRC_MASK;
         };
@@ -128,62 +172,110 @@ namespace v10 {
         template <>
         struct mask_info<field_type<OFPFW_NW_DST_ALL>>
         {
+            static bool const has_mask = true;
             static std::uint32_t const shift = OFPFW_NW_DST_SHIFT;
             static std::uint32_t const mask = OFPFW_NW_DST_MASK;
         };
 
-        template <class FieldType>
-        class ipaddr_match_field_base
-        {
-            using member_index = typename boost::fusion::result_of::value_at_key<
-                match_field_table, FieldType
-            >::type;
 
-            using field_value_type = typename boost::fusion::result_of::value_at<
-                v10_detail::ofp_match, member_index
-            >::type;
+        template <class FieldType, bool = match_field_detail::mask_info<FieldType>::has_mask>
+        class match_field
+        {
+            using value_type = typename match_field_detail::field_value_type<FieldType>::type;
 
         public:
-            ipaddr_match_field_base(field_value_type const& value)
+            match_field(value_type const& value)
                 : value_(value)
-                , cidr_suffix_(32)
             {
             }
 
-            ipaddr_match_field_base(field_value_type const& value, std::uint8_t const cidr_suffix)
+            auto value() const
+                -> value_type const&
+            {
+                return value_;
+            }
+
+            void set_value(v10_detail::ofp_match& match) const
+            {
+                match_field_detail::copy_to_match(match, value(), FieldType{});
+                match.wildcards &= ~FieldType::value;
+            }
+
+            static auto is_wildcard(v10_detail::ofp_match const& match)
+                -> bool
+            {
+                return match.wildcards & FieldType::value;
+            }
+
+            static auto from_match(v10_detail::ofp_match const& match)
+                -> match_field
+            {
+                return match_field{match_field_detail::field_value(match, FieldType{})};
+            }
+
+        private:
+            value_type value_;
+        };
+
+        template <class FieldType>
+        class match_field<FieldType, true>
+        {
+            using value_type = typename match_field_detail::field_value_type<FieldType>::type;
+            using mask_info = match_field_detail::mask_info<FieldType>;
+
+        public:
+            explicit match_field(value_type const value, std::uint8_t const cidr_suffix = 32)
                 : value_(value)
                 , cidr_suffix_(cidr_suffix)
             {
             }
 
-            void set_value(v10_detail::ofp_match& match) const
+            auto value() const
+                -> value_type const&
             {
-                boost::fusion::at<member_index>(match) = value_;
+                return value_;
             }
 
-            auto wildcards() const
-                -> std::uint32_t
+            auto cidr_suffix() const
+                -> std::uint8_t
             {
-                return ~mask_info<FieldType>::mask | ((32 - cidr_suffix_) << mask_info<FieldType>::shift);
+                return cidr_suffix_;
+            }
+
+            void set_value(v10_detail::ofp_match& match) const
+            {
+                match_field_detail::copy_to_match(match, value(), FieldType{});
+                match.wildcards &= ~mask_info::mask;
+                match.wildcards |= (std::uint32_t{32} - cidr_suffix_) << mask_info::shift;
+            }
+
+            static auto is_wildcard(v10_detail::ofp_match const& match)
+                -> bool
+            {
+                return cidr_suffix(match) == 0;
+            }
+
+            static auto from_match(v10_detail::ofp_match const& match)
+                -> match_field
+            {
+                return match_field{
+                      match_field_detail::field_value(match, FieldType{})
+                    , cidr_suffix(match)
+                };
             }
 
         private:
-            field_value_type value_;
-            std::uint32_t cidr_suffix_;
-        };
+            static auto cidr_suffix(v10_detail::ofp_match const& match)
+                -> std::uint8_t
+            {
+                auto const mask_value
+                    = (mask_info::mask & match.wildcards) >> mask_info::shift;
+                return 32 - std::min<std::uint8_t>(mask_value, 32);
+            }
 
-        template <>
-        class match_field<field_type<OFPFW_NW_SRC_ALL>>
-            : public ipaddr_match_field_base<field_type<OFPFW_NW_SRC_ALL>>
-        {
-            using ipaddr_match_field_base::ipaddr_match_field_base;
-        };
-
-        template <>
-        class match_field<field_type<OFPFW_NW_DST_ALL>>
-            : public ipaddr_match_field_base<field_type<OFPFW_NW_DST_ALL>>
-        {
-            using ipaddr_match_field_base::ipaddr_match_field_base;
+        private:
+            value_type value_;
+            std::uint8_t cidr_suffix_;
         };
 
     } // namespace match_field_detail
