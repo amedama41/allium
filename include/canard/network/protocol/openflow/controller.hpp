@@ -150,9 +150,8 @@ namespace openflow {
                 }
                 auto channel = std::make_shared<v10::secure_channel_impl<ControllerHandler>>(
                         std::move(*socket), controller_handler_, *thread_pool_);
-                // auto it = buffer->begin();
-                // handle_hello(hello::decode(it, buffer->end()));
-                channel->run();
+                auto it = buffer->begin();
+                channel->run(hello::decode(it, buffer->end()));
             });
         }
 

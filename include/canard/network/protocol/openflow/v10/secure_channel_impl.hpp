@@ -16,6 +16,7 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <boost/system/error_code.hpp>
+#include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/io/enum_to_string.hpp>
 #include <canard/network/protocol/openflow/v10/messages.hpp>
@@ -63,12 +64,16 @@ namespace v10 {
             std::cout << __func__ << std::endl;
         }
 
-        void run()
+        void run(openflow::hello&& hello)
         {
-            auto loop = message_loop{
-                std::static_pointer_cast<secure_channel_impl>(base_type::shared_from_this())
-            };
-            loop.run();
+            auto channel = base_type::shared_from_this();
+            this->thread_pool().post([=]() mutable {
+                handle(std::move(hello));
+                auto loop = message_loop{
+                    std::static_pointer_cast<secure_channel_impl>(channel)
+                };
+                loop.run();
+            });
         }
 
     private:
@@ -121,14 +126,14 @@ namespace v10 {
         {
             void run(std::size_t const least_size = sizeof(v10_detail::ofp_header))
             {
-                (*this)(least_size);
+                auto const channel = channel_.get();
+                channel->strand_.post(std::bind(std::move(*this), least_size));
             }
 
             void operator()()
             {
                 auto const least_size = channel_->handle_read();
-                auto const channel = channel_.get();
-                channel->strand_.dispatch(std::bind(std::move(*this), least_size));
+                run(least_size);
             }
 
             void operator()(std::size_t const least_size)
