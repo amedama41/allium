@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v10/detail/port_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
@@ -12,12 +13,13 @@ namespace openflow {
 namespace v10 {
 
     class port
+        : public v10_detail::port_adaptor<port>
     {
     public:
-        auto port_no() const
-            -> std::uint16_t
+        auto ofp_phy_port() const
+            -> v10_detail::ofp_phy_port const&
         {
-            return port_.port_no;
+            return port_;
         }
 
         template <class Container>
