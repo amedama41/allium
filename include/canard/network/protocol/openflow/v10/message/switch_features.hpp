@@ -87,13 +87,13 @@ namespace messages {
             return features_.datapath_id;
         }
 
-        auto n_buffers() const
+        auto num_buffers() const
             -> std::uint32_t
         {
             return features_.n_buffers;
         }
 
-        auto n_tables() const
+        auto num_tables() const
             -> std::uint8_t
         {
             return features_.n_tables;
