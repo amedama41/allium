@@ -15,7 +15,10 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/preprocessor/repeat.hpp>
+#include <boost/range/algorithm_ext/copy_n.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <boost/system/error_code.hpp>
+#include <canard/as_byte_range.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/io/enum_to_string.hpp>
@@ -39,6 +42,18 @@ namespace v10 {
             auto header = v10_detail::ofp_header{};
             std::memcpy(&header, boost::asio::buffer_cast<std::uint8_t const*>(streambuf.data()), sizeof(header));
             return v10_detail::ntoh(header);
+        }
+
+        template <class Data, class Iterator>
+        auto read(Iterator first, Iterator last)
+            -> Data
+        {
+            auto data = Data{};
+            boost::copy_n(
+                      boost::make_iterator_range(first, last)
+                    , sizeof(data)
+                    , canard::as_byte_range(data).begin());
+            return v10_detail::ntoh(data);
         }
 
     } // namespace secure_channel_detail
@@ -107,8 +122,12 @@ namespace v10 {
             case msg ## N::message_type: \
                 handle(msg ## N::decode(first, last)); \
                 break;
-            BOOST_PP_REPEAT(4, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
+            static_assert(std::tuple_size<default_switch_message_list>::value == 7, "");
+            BOOST_PP_REPEAT(7, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
+            case OFPT_STATS_REPLY:
+                handle_stats_reply(first, last);
+                break;
             default:
                 break;
             }
@@ -119,6 +138,24 @@ namespace v10 {
         {
             controller_handler_.handle(
                     base_type::shared_from_this(), std::forward<Message>(msg));
+        }
+
+        template <class Iterator>
+        void handle_stats_reply(Iterator first, Iterator last)
+        {
+            auto const stats_reply = secure_channel_detail::read<v10_detail::ofp_stats_reply>(first, last);
+            switch (stats_reply.type) {
+#           define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
+            using msg ## N = std::tuple_element<N, default_stats_reply_list>::type; \
+            case msg ## N::stats_type_value: \
+                handle(msg ## N::decode(first, last)); \
+                break;
+            static_assert(std::tuple_size<default_stats_reply_list>::value == 1, "");
+            BOOST_PP_REPEAT(1, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
+#           undef  CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE
+            default:
+                break;
+            }
         }
 
     private:
