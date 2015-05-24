@@ -53,7 +53,7 @@ namespace messages {
         }
 
         auto flags() const
-            -> ofp_config_flags
+            -> std::uint16_t
         {
             return ofp_config_flags(config_.flags);
         }
