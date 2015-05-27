@@ -181,9 +181,9 @@ namespace v10 {
         template <class FieldType, bool = match_field_detail::mask_info<FieldType>::has_mask>
         class match_field
         {
+        public:
             using value_type = typename match_field_detail::field_value_type<FieldType>::type;
 
-        public:
             match_field(value_type const& value)
                 : value_(value)
             {
@@ -220,10 +220,11 @@ namespace v10 {
         template <class FieldType>
         class match_field<FieldType, true>
         {
-            using value_type = typename match_field_detail::field_value_type<FieldType>::type;
             using mask_info = match_field_detail::mask_info<FieldType>;
 
         public:
+            using value_type = typename match_field_detail::field_value_type<FieldType>::type;
+
             explicit match_field(value_type const value, std::uint8_t const cidr_suffix = 32)
                 : value_(value)
                 , cidr_suffix_(cidr_suffix)
