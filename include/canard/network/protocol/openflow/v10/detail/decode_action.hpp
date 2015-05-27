@@ -27,8 +27,8 @@ namespace v10_detail {
 #       define CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE(z, N, _) \
         case std::tuple_element<N, default_action_list>::type::action_type: \
             return func(std::tuple_element<N, default_action_list>::type::decode(first, last));
-        static_assert(std::tuple_size<default_action_list>::value == 11, "");
-        BOOST_PP_REPEAT(11, CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE, _)
+        static_assert(std::tuple_size<default_action_list>::value == 12, "");
+        BOOST_PP_REPEAT(12, CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE, _)
 #       undef CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE
         default:
             throw std::runtime_error{

@@ -5,6 +5,7 @@
 #include <canard/network/protocol/openflow/v10/action/enqueue.hpp>
 #include <canard/network/protocol/openflow/v10/action/output.hpp>
 #include <canard/network/protocol/openflow/v10/action/set_field.hpp>
+#include <canard/network/protocol/openflow/v10/action/strip_vlan.hpp>
 
 namespace canard {
 namespace network {
@@ -15,6 +16,7 @@ namespace v10 {
           actions::output
         , actions::set_vlan_vid
         , actions::set_vlan_pcp
+        , actions::strip_vlan
         , actions::set_eth_src
         , actions::set_eth_dst
         , actions::set_ipv4_tos
