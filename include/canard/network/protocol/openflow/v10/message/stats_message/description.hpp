@@ -3,10 +3,8 @@
 
 #include <cstdint>
 #include <boost/utility/string_ref.hpp>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/get_xid.hpp>
-#include <canard/network/protocol/openflow/v10/message/stats_message/basic_stats_message.hpp>
+#include <canard/network/protocol/openflow/v10/detail/stats_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
@@ -16,29 +14,31 @@ namespace v10 {
 namespace messages {
 
     class description_request
-        : public messages_detail::basic_stats_request<description_request>
+        : public v10_detail::stats_request_adaptor<
+                description_request, void
+          >
     {
     public:
         static ofp_stats_types const stats_type_value = OFPST_DESC;
 
         explicit description_request(std::uint32_t const xid = get_xid())
-            : basic_stats_request{xid}
+            : stats_request_adaptor{xid}
         {
         }
 
-        using basic_stats_request::encode;
-        using basic_stats_request::decode;
-
     private:
-        friend basic_stats_request;
+        friend stats_request_adaptor;
         explicit description_request(v10_detail::ofp_stats_request const& stats_request)
-            : basic_stats_request{stats_request, 0}
+            : stats_request_adaptor{stats_request}
         {
         }
     };
 
+
     class description_reply
-        : public messages_detail::basic_stats_reply<description_reply, v10_detail::ofp_stats_reply>
+        : public v10_detail::stats_reply_adaptor<
+                description_reply, v10_detail::ofp_desc_stats, false
+          >
     {
     public:
         static ofp_stats_types const stats_type_value = OFPST_DESC;
@@ -73,25 +73,19 @@ namespace messages {
             return desc_stats_.dp_desc;
         }
 
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
-        {
-            return detail::encode(basic_stats_reply::encode(container), desc_stats_);
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> description_reply
-        {
-            auto const stats_reply = basic_stats_reply::decode(first, last);
-            auto const desc_stats = detail::decode<v10_detail::ofp_desc_stats>(first, last);
-            return description_reply{stats_reply, desc_stats};
-        }
-
     private:
-        description_reply(v10_detail::ofp_stats_reply const& stats_reply, v10_detail::ofp_desc_stats const& desc_stats)
-            : basic_stats_reply{stats_reply, sizeof(desc_stats_)}
+        friend stats_reply_adaptor;
+
+        auto body() const
+            -> v10_detail::ofp_desc_stats const&
+        {
+            return desc_stats_;
+        }
+
+        description_reply(
+                  v10_detail::ofp_stats_reply const& stats_reply
+                , v10_detail::ofp_desc_stats const& desc_stats)
+            : stats_reply_adaptor{stats_reply}
             , desc_stats_(desc_stats)
         {
         }

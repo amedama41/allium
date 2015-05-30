@@ -4,15 +4,15 @@
 #include <cstdint>
 #include <chrono>
 #include <iterator>
+#include <stdexcept>
 #include <utility>
 #include <vector>
-#include <boost/range/algorithm/for_each.hpp>
-#include <boost/range/numeric.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/get_xid.hpp>
 #include <canard/network/protocol/openflow/v10/action_list.hpp>
+#include <canard/network/protocol/openflow/v10/detail/stats_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/match_set.hpp>
-#include <canard/network/protocol/openflow/v10/message/stats_message/basic_stats_message.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
@@ -24,10 +24,12 @@ namespace stats {
 
     class flow_stats
         : public v10_detail::flow_entry_adaptor<
-              flow_stats, v10_detail::ofp_flow_stats
+                flow_stats, v10_detail::ofp_flow_stats
           >
     {
     public:
+        static std::size_t const base_size = sizeof(v10_detail::ofp_flow_stats);
+
         auto length() const
             -> std::uint16_t
         {
@@ -101,8 +103,8 @@ namespace stats {
 namespace messages {
 
     class flow_stats_request
-        : public messages_detail::basic_stats_request<
-                flow_stats_request, v10_detail::ofp_stats_request
+        : public v10_detail::stats_request_adaptor<
+                flow_stats_request, v10_detail::ofp_flow_stats_request
           >
     {
     public:
@@ -119,69 +121,37 @@ namespace messages {
                   match_set const& match
                 , std::uint8_t const table_id, std::uint16_t const out_port
                 , std::uint32_t const xid = get_xid())
-            : basic_stats_request{xid, sizeof(flow_stats_request_)}
-            , flow_stats_request_{match.ofp_match(), table_id, 0, out_port}
+            : stats_request_adaptor{xid}
+            , flow_stats_{match.ofp_match(), table_id, 0, out_port}
         {
-        }
-
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
-        {
-            basic_stats_request::encode(container);
-            return detail::encode(container, flow_stats_request_);
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> flow_stats_request
-        {
-            auto const stats_request = basic_stats_request::decode(first, last);
-            auto const flow_stats
-                = detail::decode<v10_detail::ofp_flow_stats_request>(first, last);
-            return flow_stats_request{stats_request, flow_stats};
         }
 
     private:
+        friend stats_request_adaptor;
+
+        auto body() const
+            -> v10_detail::ofp_flow_stats_request const&
+        {
+            return flow_stats_;
+        }
+
         flow_stats_request(
                   v10_detail::ofp_stats_request const& stats_request
                 , v10_detail::ofp_flow_stats_request const& flow_stats)
-            : basic_stats_request{stats_request, sizeof(flow_stats_request_)}
-            , flow_stats_request_(flow_stats)
+            : stats_request_adaptor{stats_request}
+            , flow_stats_(flow_stats)
         {
         }
 
     private:
-        v10_detail::ofp_flow_stats_request flow_stats_request_;
+        v10_detail::ofp_flow_stats_request flow_stats_;
     };
 
 
-    namespace flow_stats_detail {
-
-        static inline auto num_of_flow_stats(
-                std::uint16_t const flow_stats_reply_length)
-            -> std::size_t
-        {
-            return flow_stats_reply_length / sizeof(v10_detail::ofp_flow_stats);
-        }
-
-        static inline auto flow_stats_length(
-                std::vector<stats::flow_stats> const& stats_list)
-            -> std::uint16_t
-        {
-            return boost::accumulate(
-                      stats_list, std::uint16_t{0}
-                    , [](std::uint16_t const len, stats::flow_stats const& st) {
-                            return len + st.length();
-                      });
-        }
-
-    } // namespace flow_stats_detail
-
     class flow_stats_reply
 
-        : public messages_detail::basic_stats_reply<
-                flow_stats_reply, v10_detail::ofp_stats_reply
+        : public v10_detail::stats_reply_adaptor<
+                flow_stats_reply, stats::flow_stats, true
           >
     {
     public:
@@ -208,40 +178,19 @@ namespace messages {
             return flow_stats_.end();
         }
 
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
-        {
-            basic_stats_reply::encode(container);
-            boost::for_each(flow_stats_, [&](stats::flow_stats const& stats) {
-                stats.encode(container);
-            });
-            return container;
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> flow_stats_reply
-        {
-            auto const stats_reply = basic_stats_reply::decode(first, last);
-
-            auto flow_stats = std::vector<stats::flow_stats>{};
-            flow_stats.reserve(
-                    flow_stats_detail::num_of_flow_stats(stats_reply.header.length));
-            while (first != last) {
-                flow_stats.emplace_back(stats::flow_stats::decode(first, last));
-            }
-
-            return flow_stats_reply{stats_reply, std::move(flow_stats)};
-        }
-
     private:
+        friend stats_reply_adaptor;
+
+        auto body() const
+            -> std::vector<stats::flow_stats> const&
+        {
+            return flow_stats_;
+        }
+
         flow_stats_reply(
                   v10_detail::ofp_stats_reply const& stats_reply
                 , std::vector<stats::flow_stats> flow_stats)
-            : basic_stats_reply{
-                stats_reply, flow_stats_detail::flow_stats_length(flow_stats)
-              }
+            : stats_reply_adaptor{stats_reply}
             , flow_stats_(std::move(flow_stats))
         {
         }
