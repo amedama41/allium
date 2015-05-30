@@ -1,6 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V10_MESSAGES_STATS_ADAPTOR_HPP
 #define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_STATS_ADAPTOR_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <type_traits>

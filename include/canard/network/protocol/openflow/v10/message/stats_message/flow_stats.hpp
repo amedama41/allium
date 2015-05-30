@@ -1,6 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_STATS_HPP
 #define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_STATS_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <chrono>
 #include <iterator>
