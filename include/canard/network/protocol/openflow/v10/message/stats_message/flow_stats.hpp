@@ -29,7 +29,7 @@ namespace stats {
           >
     {
     public:
-        static std::size_t const base_size = sizeof(v10_detail::ofp_flow_stats);
+        static std::uint16_t const base_size = sizeof(v10_detail::ofp_flow_stats);
 
         auto length() const
             -> std::uint16_t
