@@ -36,7 +36,7 @@ namespace actions {
             , std::tuple<match::ipv4_tos , action_type<OFPAT_SET_NW_TOS>   , v10_detail::ofp_action_nw_tos   >
             , std::tuple<match::ipv4_src , action_type<OFPAT_SET_NW_SRC>   , v10_detail::ofp_action_nw_addr  >
             , std::tuple<match::ipv4_dst , action_type<OFPAT_SET_NW_DST>   , v10_detail::ofp_action_nw_addr  >
-            , std::tuple<match::tcp_dst  , action_type<OFPAT_SET_TP_SRC>   , v10_detail::ofp_action_tp_port  >
+            , std::tuple<match::tcp_src  , action_type<OFPAT_SET_TP_SRC>   , v10_detail::ofp_action_tp_port  >
             , std::tuple<match::tcp_dst  , action_type<OFPAT_SET_TP_DST>   , v10_detail::ofp_action_tp_port  >
           //+----------------------------+---------------------------------+---------------------------------+
         >;
@@ -175,9 +175,9 @@ namespace actions {
     using set_ipv4_src = set_field<match::ipv4_src>;
     using set_ipv4_dst = set_field<match::ipv4_dst>;
     using set_tcp_dst = set_field<match::tcp_dst>;
-    using set_tcp_src = set_field<match::tcp_dst>;
+    using set_tcp_src = set_field<match::tcp_src>;
     using set_udp_dst = set_field<match::udp_dst>;
-    using set_udp_src = set_field<match::udp_dst>;
+    using set_udp_src = set_field<match::udp_src>;
 
 } // namespace actions
 } // namespace v10
