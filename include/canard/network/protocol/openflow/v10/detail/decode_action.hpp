@@ -25,14 +25,15 @@ namespace v10_detail {
 
         switch (action_header.type) {
 #       define CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE(z, N, _) \
-        case std::tuple_element<N, default_action_list>::type::action_type: \
-            return func(std::tuple_element<N, default_action_list>::type::decode(first, last));
+        using action ## N = std::tuple_element<N, default_action_list>::type; \
+        case action ## N::action_type: \
+            return func(action ## N::decode(first, last));
         static_assert(std::tuple_size<default_action_list>::value == 12, "");
         BOOST_PP_REPEAT(12, CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE, _)
 #       undef CANARD_NETWORK_OPENFLOW_V10_DECODE_ACTION_CASE
         default:
             throw std::runtime_error{
-                (boost::format{"unknwon action type(%1%)"} % action_header.type).str()
+                boost::str(boost::format{"unknwon action type(%1%)"} % action_header.type)
             };
         }
     }
