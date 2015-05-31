@@ -13,6 +13,7 @@
 #include <canard/network/protocol/openflow/v10/message/stats_message/description.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/flow_stats.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/port_stats.hpp>
+#include <canard/network/protocol/openflow/v10/message/stats_message/queue_stats.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/table_stats.hpp>
 #include <canard/network/protocol/openflow/v10/message/switch_config.hpp>
 #include <canard/network/protocol/openflow/v10/message/switch_features.hpp>
@@ -51,6 +52,7 @@ namespace v10 {
         , messages::aggregate_stats_reply
         , messages::table_stats_reply
         , messages::port_stats_reply
+        , messages::queue_stats_reply
     >;
 
 } // namespace v10
