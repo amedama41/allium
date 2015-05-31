@@ -151,9 +151,6 @@ namespace messages {
             : switch_config_base{config}
         {
         }
-
-    private:
-        v10_detail::ofp_switch_config config_;
     };
 
 
