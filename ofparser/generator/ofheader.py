@@ -57,10 +57,13 @@ def _generate_enum_decls(enum_decls):
             enum_decls.items()))
 
 def _generate_constant_defs(macro_defs, macro_type_map):
-    return '\n'.join(map(
+    constants = '\n'.join(map(
         lambda (name, macro): '    constexpr {type} const {name} = {value};'.format(
             type=macro_type_map[name], name=name, value=list(macro.get_tokens())[1].spelling),
         filter(lambda (name, _): name in macro_type_map, macro_defs.items())))
+    if 'OFP_NO_BUFFER' not in macro_defs:
+        return '\n'.join([constants, '    constexpr std::uint32_t const OFP_NO_BUFFER = 0xffffffff;'])
+    return constants
 
 def generate(collector, macro_type_map):
     return (

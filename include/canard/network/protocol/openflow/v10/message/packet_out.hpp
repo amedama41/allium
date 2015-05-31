@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <iterator>
-#include <limits>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -62,7 +61,7 @@ namespace messages {
         packet_out(std::vector<std::uint8_t> data, std::uint16_t const in_port
                 , action_list actions, std::uint32_t const xid = get_xid())
             : packet_out{
-                  std::numeric_limits<std::uint32_t>::max(), in_port
+                  OFP_NO_BUFFER, in_port
                 , std::move(actions), std::move(data), xid
               }
         {
