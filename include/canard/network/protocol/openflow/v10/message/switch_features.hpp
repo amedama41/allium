@@ -99,6 +99,18 @@ namespace messages {
             return features_.n_tables;
         }
 
+        auto capabilities() const
+            -> std::uint32_t
+        {
+            return features_.capabilities;
+        }
+
+        auto actions() const
+            -> std::uint32_t
+        {
+            return features_.actions;
+        }
+
         auto begin() const
             -> const_iterator
         {
