@@ -1,5 +1,5 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_MOD_ADD_HPP
-#define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_MOD_ADD_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_ADD_HPP
+#define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_ADD_HPP
 
 #include <cstdint>
 #include <utility>
@@ -16,23 +16,28 @@ namespace openflow {
 namespace v10 {
 namespace messages {
 
-    class flow_mod_add
-        : public v10_detail::basic_openflow_message<flow_mod_add>
+    class flow_add
+        : public v10_detail::basic_openflow_message<flow_add>
     {
     public:
         static ofp_type const message_type = OFPT_FLOW_MOD;
         static ofp_flow_mod_command const command_type = OFPFC_ADD;
 
-        flow_mod_add(flow_entry entry
-                , std::uint16_t const flags, std::uint32_t const buffer_id
+        explicit flow_add(flow_entry entry
+                , std::uint16_t const flags
+                , std::uint32_t const buffer_id = OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
             : flow_mod_{
-                  {OFP_VERSION, message_type, std::uint16_t(sizeof(flow_mod_) + entry.actions().length()), xid}
+                  v10_detail::ofp_header{
+                      OFP_VERSION, message_type
+                    , std::uint16_t(sizeof(flow_mod_) + entry.actions().length())
+                    , xid
+                  }
                 , entry.ofp_match(), entry.cookie(), command_type
                 , entry.idle_timeout(), entry.hard_timeout()
                 , entry.priority(), buffer_id, 0, flags
               }
-            , entry_(std::move(entry))
+            , actions_(std::move(entry).actions())
         {
         }
 
@@ -47,12 +52,29 @@ namespace messages {
             -> Container&
         {
             detail::encode(container, flow_mod_);
-            return entry_.actions().encode(container);
+            return actions_.encode(container);
+        }
+
+        template <class Iterator>
+        static auto decode(Iterator& first, Iterator last)
+            -> flow_add
+        {
+            auto const flow_mod
+                = detail::decode<v10_detail::ofp_flow_mod>(first, last);
+            auto actions = action_list::decode(first, last);
+            return flow_add{flow_mod, std::move(actions)};
+        }
+
+    private:
+        flow_add(v10_detail::ofp_flow_mod const& flow_mod, action_list actions)
+            : flow_mod_(flow_mod)
+            , actions_(std::move(actions))
+        {
         }
 
     private:
         v10_detail::ofp_flow_mod flow_mod_;
-        flow_entry entry_;
+        action_list actions_;
     };
 
 } // namespace messages
@@ -61,4 +83,4 @@ namespace messages {
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_MOD_ADD_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V10_MESSAGES_FLOW_ADD_HPP

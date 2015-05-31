@@ -102,10 +102,16 @@ namespace v10 {
         {
         }
 
-        auto actions() const
+        auto actions() const&
             -> action_list const&
         {
             return actions_;
+        }
+
+        auto actions() &&
+            -> action_list&&
+        {
+            return std::move(actions_);
         }
 
         auto ofp_flow_entry() const
