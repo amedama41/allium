@@ -5,6 +5,8 @@
 #include <canard/network/protocol/openflow/v10/message/barrier.hpp>
 #include <canard/network/protocol/openflow/v10/message/error_msg.hpp>
 #include <canard/network/protocol/openflow/v10/message/flow_add.hpp>
+#include <canard/network/protocol/openflow/v10/message/flow_modify.hpp>
+#include <canard/network/protocol/openflow/v10/message/flow_delete.hpp>
 #include <canard/network/protocol/openflow/v10/message/flow_removed.hpp>
 #include <canard/network/protocol/openflow/v10/message/packet_in.hpp>
 #include <canard/network/protocol/openflow/v10/message/packet_out.hpp>
