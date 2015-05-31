@@ -150,8 +150,8 @@ namespace v10 {
             case msg ## N::stats_type_value: \
                 handle(msg ## N::decode(first, last)); \
                 break;
-            static_assert(std::tuple_size<default_stats_reply_list>::value == 4, "");
-            BOOST_PP_REPEAT(4, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
+            static_assert(std::tuple_size<default_stats_reply_list>::value == 5, "");
+            BOOST_PP_REPEAT(5, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE
             default:
                 break;
