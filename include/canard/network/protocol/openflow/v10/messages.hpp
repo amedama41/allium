@@ -10,6 +10,7 @@
 #include <canard/network/protocol/openflow/v10/message/flow_removed.hpp>
 #include <canard/network/protocol/openflow/v10/message/packet_in.hpp>
 #include <canard/network/protocol/openflow/v10/message/packet_out.hpp>
+#include <canard/network/protocol/openflow/v10/message/port_mod.hpp>
 #include <canard/network/protocol/openflow/v10/message/port_status.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/aggregate_stats.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/description.hpp>
