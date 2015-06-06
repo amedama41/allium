@@ -122,8 +122,8 @@ namespace v10 {
             case msg ## N::message_type: \
                 handle(msg ## N::decode(first, last)); \
                 break;
-            static_assert(std::tuple_size<default_switch_message_list>::value == 7, "");
-            BOOST_PP_REPEAT(7, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
+            static_assert(std::tuple_size<default_switch_message_list>::value == 9, "");
+            BOOST_PP_REPEAT(9, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
             case OFPT_STATS_REPLY:
                 handle_stats_reply(first, last);

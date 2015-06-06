@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include <canard/network/protocol/openflow/v10/message/barrier.hpp>
+#include <canard/network/protocol/openflow/v10/message/echo.hpp>
 #include <canard/network/protocol/openflow/v10/message/error_msg.hpp>
 #include <canard/network/protocol/openflow/v10/message/flow_add.hpp>
 #include <canard/network/protocol/openflow/v10/message/flow_modify.hpp>
@@ -27,26 +28,29 @@ namespace openflow {
 namespace v10 {
 
     using default_reply_list = std::tuple<
-          messages::get_config_reply
+          messages::echo_reply
         , messages::features_reply
+        , messages::get_config_reply
         , messages::barrier_reply
     >;
 
     using default_async_list = std::tuple<
-          messages::packet_in
-        , messages::flow_removed
-        , messages::port_status
-        , messages::error_msg
-    >;
-
-    using default_switch_message_list = std::tuple<
-          messages::get_config_reply
-        , messages::features_reply
-        , messages::barrier_reply
+          messages::error_msg
         , messages::packet_in
         , messages::flow_removed
         , messages::port_status
-        , messages::error_msg
+    >;
+
+    using default_switch_message_list = std::tuple<
+          messages::error_msg
+        , messages::echo_request
+        , messages::echo_reply
+        , messages::features_reply
+        , messages::get_config_reply
+        , messages::packet_in
+        , messages::flow_removed
+        , messages::port_status
+        , messages::barrier_reply
     >;
 
     using default_stats_reply_list = std::tuple<
