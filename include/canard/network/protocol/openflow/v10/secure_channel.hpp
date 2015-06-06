@@ -15,6 +15,7 @@
 #include <canard/asio/queueing_write_stream.hpp>
 #include <canard/asio/shared_buffer.hpp>
 #include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
+#include <canard/network/protocol/openflow/detail/null_handler.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/network/utils/thread_pool.hpp>
 #include <canard/type_traits.hpp>
@@ -71,6 +72,13 @@ namespace v10 {
         {
             auto buffer = canard::shared_buffer{msg.length()};
             return send(msg, std::forward<WriteHandler>(handler), std::move(buffer));
+        }
+
+        template <class Message>
+        auto send(Message const& msg)
+            -> typename async_write_result_init<detail::null_handler>::result_type
+        {
+            return send(msg, detail::null_handler{});
         }
 
     protected:
