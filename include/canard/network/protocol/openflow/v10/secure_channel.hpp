@@ -13,6 +13,8 @@
 #include <canard/asio/detail/bind_handler.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/queueing_write_stream.hpp>
+#include <canard/asio/shared_buffer.hpp>
+#include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/network/utils/thread_pool.hpp>
 #include <canard/type_traits.hpp>
@@ -46,36 +48,49 @@ namespace v10 {
             return thread_pool_;
         }
 
-        template <class Message, class WriteHandler, class Container>
-        auto send(Message const& msg, WriteHandler&& handler, Container& buffer)
+        template <class Message, class WriteHandler, class MutableBufferSequence>
+        auto send(Message const& msg, WriteHandler&& handler, MutableBufferSequence buffers)
             -> typename async_write_result_init<WriteHandler>::result_type
         {
             auto init = async_write_result_init<WriteHandler>{
                 std::forward<WriteHandler>(handler)
             };
 
-            buffer.reserve(msg.length());
-            msg.encode(buffer);
-            strand_.dispatch(make_write_op(this->shared_from_this(), std::move(init.handler()), buffer));
-
+            auto mutable_buffers = detail::make_buffer_sequence_adaptor(buffers);
+            msg.encode(mutable_buffers);
+            strand_.post(
+                    make_write_op(
+                          this->shared_from_this(), std::move(init.handler())
+                        , std::forward<MutableBufferSequence>(buffers)));
             return init.get();
+        }
+
+        template <class Message, class WriteHandler>
+        auto send(Message const& msg, WriteHandler&& handler)
+            -> typename async_write_result_init<WriteHandler>::result_type
+        {
+            auto buffer = canard::shared_buffer{msg.length()};
+            return send(msg, std::forward<WriteHandler>(handler), std::move(buffer));
         }
 
     protected:
         template <class ConstBufferSequence, class WriteHandler>
-        void async_send(ConstBufferSequence const& buffers, WriteHandler&& handler)
+        void async_send(ConstBufferSequence&& buffers, WriteHandler&& handler)
         {
-            return stream_.async_write_some(buffers, strand_.wrap(std::forward<WriteHandler>(handler)));
+            return stream_.async_write_some(
+                      std::forward<ConstBufferSequence>(buffers)
+                    , strand_.wrap(std::forward<WriteHandler>(handler)));
         }
 
     private:
-        template <class WriteHandler, class Container>
+        template <class WriteHandler, class MutableBufferSequence>
         struct write_op
         {
             void operator()()
             {
                 auto const channel = channel_.get();
-                channel->async_send(boost::asio::buffer(buffer_), std::move(*this));
+                auto buffers = std::move(buffers_);
+                channel->async_send(std::move(buffers), std::move(*this));
             }
 
             void operator()(boost::system::error_code const& ec, std::size_t const bytes_transferred)
@@ -86,15 +101,24 @@ namespace v10 {
 
             std::shared_ptr<secure_channel> channel_;
             WriteHandler handler_;
-            Container& buffer_;
+            MutableBufferSequence buffers_;
         };
 
-        template <class WriteHandler, class Container>
-        static auto make_write_op(std::shared_ptr<secure_channel> c, WriteHandler&& h, Container& buf)
-            -> write_op<canard::remove_cv_and_reference_t<WriteHandler>, Container>
+        template <class WriteHandler, class MutableBufferSequence>
+        static auto make_write_op(
+                  std::shared_ptr<secure_channel> c, WriteHandler&& h
+                , MutableBufferSequence&& buf)
+            -> write_op<
+                      canard::remove_cv_and_reference_t<WriteHandler>
+                    , canard::remove_cv_and_reference_t<MutableBufferSequence>
+               >
         {
-            return write_op<canard::remove_cv_and_reference_t<WriteHandler>, Container>{
-                std::move(c), std::forward<WriteHandler>(h), buf
+            return write_op<
+                  canard::remove_cv_and_reference_t<WriteHandler>
+                , canard::remove_cv_and_reference_t<MutableBufferSequence>
+            >{
+                  std::move(c), std::forward<WriteHandler>(h)
+                , std::forward<MutableBufferSequence>(buf)
             };
         }
 

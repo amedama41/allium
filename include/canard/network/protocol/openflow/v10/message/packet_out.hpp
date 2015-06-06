@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/get_xid.hpp>
@@ -115,7 +114,7 @@ namespace messages {
         {
             detail::encode(container, packet_out_);
             actions_.encode(container);
-            return boost::push_back(container, data_);
+            return container.push_back(data_.data(), data_.size());
         }
 
         template <class Iterator>

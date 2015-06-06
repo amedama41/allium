@@ -2,9 +2,8 @@
 #define CANARD_NETWORK_OPENFLOW_ENCODE_HPP
 
 #include <type_traits>
-#include <boost/range/algorithm_ext/push_back.hpp>
-#include <canard/as_byte_range.hpp>
 #include <canard/byteorder.hpp>
+#include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
 
 namespace canard {
 namespace network {
@@ -26,12 +25,11 @@ namespace openflow {
             return value;
         }
 
-        template <class T, class Container, class IsBigEndian = std::true_type>
-        auto encode(Container& container, T const& value, IsBigEndian = IsBigEndian{})
-            -> Container&
+        template <class T, class Buffers, class IsBigEndian = std::true_type>
+        auto encode(Buffers& buffers, T const& value, IsBigEndian = IsBigEndian{})
+            -> Buffers&
         {
-            return boost::push_back(container
-                    , canard::as_byte_range(encode_impl(value, IsBigEndian{})));
+            return buffers.push_back(encode_impl(value, IsBigEndian{}));
         }
 
     } // namespace detail

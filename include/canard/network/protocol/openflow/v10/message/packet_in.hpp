@@ -8,7 +8,6 @@
 #include <utility>
 #include <vector>
 #include <boost/range/algorithm_ext/overwrite.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <canard/network/protocol/openflow/v10/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
@@ -31,22 +30,6 @@ namespace messages {
             return boost::make_iterator_range(
                       reinterpret_cast<unsigned char*>(&pkt_in)
                     , reinterpret_cast<unsigned char*>(&pkt_in) + pkt_in_size);
-        }
-
-        auto packet_in_byte_range(v10_detail::ofp_packet_in const& pkt_in)
-            -> boost::iterator_range<unsigned char const*>
-        {
-            return boost::make_iterator_range(
-                      reinterpret_cast<unsigned char const*>(&pkt_in)
-                    , reinterpret_cast<unsigned char const*>(&pkt_in) + pkt_in_size);
-        }
-
-        template <class Container>
-        auto encode_packet_in(Container& container, v10_detail::ofp_packet_in const& pkt_in)
-            -> Container&
-        {
-            return boost::push_back(
-                    container, packet_in_byte_range(v10_detail::hton(pkt_in)));
         }
 
         template <class Iterator>
@@ -110,8 +93,9 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            packet_in_detail::encode_packet_in(container, packet_in_);
-            return boost::push_back(container, data_);
+            container.push_back(
+                    v10_detail::hton(packet_in_), packet_in_detail::pkt_in_size);
+            return container.push_back(data_.data(), data_.size());
         }
 
         template <class Iterator>

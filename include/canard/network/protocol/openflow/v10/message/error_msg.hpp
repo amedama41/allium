@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v10/detail/basic_openflow_message.hpp>
@@ -54,7 +53,7 @@ namespace messages {
             -> Container&
         {
             detail::encode(container, error_);
-            return boost::push_back(container, data_);
+            return container.push_back(data_.data(), data_.size());
         }
 
         template <class Iterator>
