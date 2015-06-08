@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -19,6 +18,8 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/as_byte_range.hpp>
+#include <canard/asio/detail/bind_handler.hpp>
+#include <canard/network/protocol/openflow/goodbye.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/io/enum_to_string.hpp>
@@ -164,13 +165,22 @@ namespace v10 {
             void run(std::size_t const least_size = sizeof(v10_detail::ofp_header))
             {
                 auto const channel = channel_.get();
-                channel->strand_.post(std::bind(std::move(*this), least_size));
+                channel->strand_.post(
+                        canard::detail::bind(std::move(*this), least_size));
             }
 
             void operator()()
             {
                 auto const least_size = channel_->handle_read();
                 run(least_size);
+            }
+
+            void operator()(boost::system::error_code const ec)
+            {
+                channel_->handle_read();
+                channel_->handle(openflow::goodbye{ec});
+                channel_->close();
+                std::cout << "connection closed: " << ec.message() << " " << channel_.use_count() << std::endl;
             }
 
             void operator()(std::size_t const least_size)
@@ -183,11 +193,12 @@ namespace v10 {
 
             void operator()(boost::system::error_code const& ec, std::size_t)
             {
+                auto const channel = channel_.get();
                 if (ec) {
-                    std::cout << "connection closed: " << ec.message() << " " << channel_.use_count() << std::endl;
+                    channel->thread_pool().post(
+                            canard::detail::bind(std::move(*this), ec));
                     return;
                 }
-                auto const channel = channel_.get();
                 channel->thread_pool().post(std::move(*this));
             }
 

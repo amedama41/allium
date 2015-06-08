@@ -49,6 +49,17 @@ namespace v10 {
             return thread_pool_;
         }
 
+        void close()
+        {
+            auto channel = this->shared_from_this();
+            strand_.post([channel]{
+                if (channel->stream_.lowest_layer().is_open()) {
+                    auto ignore = boost::system::error_code{};
+                    channel->stream_.lowest_layer().close(ignore);
+                }
+            });
+        }
+
         template <class Message, class WriteHandler, class MutableBufferSequence>
         auto send(Message const& msg, WriteHandler&& handler, MutableBufferSequence buffers)
             -> typename async_write_result_init<WriteHandler>::result_type
