@@ -75,13 +75,10 @@ namespace v13 {
         auto support(std::uint8_t const version) const
             -> bool
         {
-            if (this->version() == version) {
-                return true;
-            }
             if (auto const versionbitmap = find<hello_elements::versionbitmap>()) {
                 return versionbitmap->support(version);
             }
-            return false;
+            return this->version() >= version;
         }
 
         auto max_support_version() const
