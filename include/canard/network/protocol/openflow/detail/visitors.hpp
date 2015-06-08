@@ -56,6 +56,18 @@ namespace openflow {
             }
         };
 
+        class property_visitor
+            : public boost::static_visitor<std::uint16_t>
+        {
+        public:
+            template <class T>
+            auto operator()(T const& t) const
+                -> std::uint16_t
+            {
+                return t.property();
+            }
+        };
+
     } // namespace detail
 
 } // namespace openflow

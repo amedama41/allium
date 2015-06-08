@@ -13,6 +13,7 @@
 #include <canard/network/protocol/openflow/v10/message/packet_out.hpp>
 #include <canard/network/protocol/openflow/v10/message/port_mod.hpp>
 #include <canard/network/protocol/openflow/v10/message/port_status.hpp>
+#include <canard/network/protocol/openflow/v10/message/queue_config.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/aggregate_stats.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/description.hpp>
 #include <canard/network/protocol/openflow/v10/message/stats_message/flow_stats.hpp>
@@ -32,6 +33,7 @@ namespace v10 {
         , messages::features_reply
         , messages::get_config_reply
         , messages::barrier_reply
+        , messages::queue_get_config_reply
     >;
 
     using default_async_list = std::tuple<
@@ -51,6 +53,7 @@ namespace v10 {
         , messages::flow_removed
         , messages::port_status
         , messages::barrier_reply
+        , messages::queue_get_config_reply
     >;
 
     using default_stats_reply_list = std::tuple<
