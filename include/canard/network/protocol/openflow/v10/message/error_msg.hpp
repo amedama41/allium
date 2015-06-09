@@ -41,6 +41,12 @@ namespace messages {
             return error_.code;
         }
 
+        auto data() const
+            -> std::vector<std::uint8_t> const&
+        {
+            return data_;
+        }
+
         auto failed_request_header() const
             -> v10_detail::ofp_header
         {
@@ -76,7 +82,8 @@ namespace messages {
             if (type() != message_type) {
                 throw std::runtime_error{"invalid message type"};
             }
-            if (data_.size() < sizeof(v10_detail::ofp_header)) {
+            if (error_type() != OFPET_HELLO_FAILED
+                    && data_.size() < sizeof(v10_detail::ofp_header)) {
                 throw std::runtime_error{"too short failed request size"};
             }
         }
