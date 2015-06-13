@@ -183,7 +183,7 @@ namespace detail {
                     }
                 }
                 if (!ready_queue_.empty()) {
-                    handler_.io_service_.post_deferred_completions(ready_queue_);
+                    io_service_.post_deferred_completions(ready_queue_);
                 }
             }
 
@@ -198,6 +198,7 @@ namespace detail {
 
             queueing_write_handler& handler_;
             operation_queue& ready_queue_;
+            boost::asio::detail::io_service_impl& io_service_;
         };
 
     public:
@@ -205,9 +206,6 @@ namespace detail {
             : stream_(stream)
             , waiting_queue_(stream_.waiting_queue_)
             , context_(context)
-            , io_service_(boost::asio::use_service<
-                    boost::asio::detail::io_service_impl
-              >(stream_.get_io_service()))
         {
         }
 
@@ -233,11 +231,15 @@ namespace detail {
                 }
             }
 
-            on_do_complete_exit on_exit{*this, ready_queue};
+            auto& io_service = boost::asio::use_service<
+                boost::asio::detail::io_service_impl
+            >(stream_.get_io_service());
+
+            on_do_complete_exit on_exit{*this, ready_queue, io_service};
 
             while (auto const op = ready_queue.front()) {
                 ready_queue.pop();
-                op->complete(io_service_, ec, 0);
+                op->complete(io_service, ec, 0);
             }
         }
 
@@ -279,7 +281,6 @@ namespace detail {
         Stream& stream_;
         std::shared_ptr<write_op_queue> waiting_queue_;
         Context* context_;
-        boost::asio::detail::io_service_impl& io_service_;
     };
 
     template <class Stream, class WriteHandler, class ConstBufferSequence>
