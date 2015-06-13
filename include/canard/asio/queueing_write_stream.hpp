@@ -16,7 +16,6 @@
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/operation.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
-#include <boost/scope_exit.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 #include <canard/asio/async_result_init.hpp>
@@ -292,8 +291,7 @@ namespace detail {
             };
 
             auto function = detail::bind(
-                      std::move(op->handler_)
-                    , op->error_code(), op->bytes_transferred());
+                    op->handler_, op->error_code(), op->bytes_transferred());
 
             holder.handler(function.handler());
             holder.reset();
@@ -357,6 +355,18 @@ private:
     using write_result_init = async_result_init<
         canard::remove_cv_and_reference_t<WriteHandler>, write_handler_type
     >;
+
+    struct queue_cleanup
+    {
+        ~queue_cleanup()
+        {
+            if (!commit) {
+                queue_->pop();
+            }
+        }
+        write_op_queue* queue_;
+        bool commit;
+    };
 
 public:
     using next_layer_type = typename std::remove_reference<Stream>::type;
@@ -433,14 +443,9 @@ public:
         auto const enable_to_send = waiting_queue_->empty();
         waiting_queue_->push(write_op);
         if (enable_to_send) {
-            auto commit = false;
-            BOOST_SCOPE_EXIT_ALL(&) {
-                if (!commit) {
-                    waiting_queue_->pop();
-                }
-            };
+            queue_cleanup on_exit{waiting_queue_.get(), false};
             write_op->perform(*this, detail::gather_buffers(*waiting_queue_));
-            commit = true;
+            on_exit.commit = true;
         }
 
         holder.release();
