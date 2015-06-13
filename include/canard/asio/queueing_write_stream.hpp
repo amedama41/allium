@@ -27,6 +27,46 @@
 namespace canard {
 namespace detail {
 
+    class gather_buffers
+    {
+    public:
+        using value_type = boost::asio::const_buffer;
+        using const_iterator = std::vector<value_type>::const_iterator;
+
+        gather_buffers()
+            : buffers_(std::make_shared<std::vector<value_type>>())
+        {
+        }
+
+        auto begin() const
+            -> const_iterator
+        {
+            return buffers_->begin();
+        }
+
+        auto end() const
+            -> const_iterator
+        {
+            return buffers_->end();
+        }
+
+        template <class Queue>
+        auto gather(Queue& waiting_queue)
+            -> gather_buffers&
+        {
+            buffers_->clear();
+            for (auto op = waiting_queue.front();
+                    op;
+                    op = boost::asio::detail::op_queue_access::next(op)) {
+                op->buffers(*buffers_);
+            }
+            return *this;
+        }
+
+    private:
+        std::shared_ptr<std::vector<value_type>> buffers_;
+    };
+
     template <class Stream>
     class write_op_base
         : public boost::asio::detail::operation
@@ -34,7 +74,7 @@ namespace detail {
     protected:
         using complete_func_type = boost::asio::detail::operation::func_type;
         using perform_func_type
-            = void(*)(write_op_base*, Stream&, std::vector<boost::asio::const_buffer>);
+            = void(*)(write_op_base*, Stream&, gather_buffers);
         using consume_func_type = void(*)(write_op_base*, std::size_t);
         using buffers_func_type
             = void(*)(write_op_base*, std::vector<boost::asio::const_buffer>&);
@@ -56,7 +96,7 @@ namespace detail {
         }
 
     public:
-        void perform(Stream& stream, std::vector<boost::asio::const_buffer> buffers)
+        void perform(Stream& stream, gather_buffers buffers)
         {
             perform_func_(this, stream, std::move(buffers));
         }
@@ -108,20 +148,6 @@ namespace detail {
         std::size_t total_transferred_;
     };
 
-    template <class Stream>
-    inline auto gather_buffers(
-            boost::asio::detail::op_queue<write_op_base<Stream>>& waiting_queue)
-        -> std::vector<boost::asio::const_buffer>
-    {
-        auto buffers = std::vector<boost::asio::const_buffer>{};
-        for (auto op = waiting_queue.front();
-             op;
-             op = boost::asio::detail::op_queue_access::next(op)) {
-            op->buffers(buffers);
-        }
-        return buffers;
-    }
-
     template <class Stream, class Context>
     class queueing_write_handler
     {
@@ -138,7 +164,7 @@ namespace detail {
                     try {
                         write_op->perform(
                                   handler_.stream_
-                                , gather_buffers(*handler_.waiting_queue_));
+                                , handler_.stream_.buffers_.gather(*handler_.waiting_queue_));
                     }
                     catch (boost::system::system_error const& e) {
                         set_error_code(e.code());
@@ -305,7 +331,7 @@ namespace detail {
 
         static void do_perform(
                   write_op_base<Stream>* base, Stream& stream
-                , std::vector<boost::asio::const_buffer> buffers)
+                , gather_buffers buffers)
         {
             auto const op = static_cast<waiting_op*>(base);
             stream.next_layer().async_write_some(
@@ -444,7 +470,7 @@ public:
         waiting_queue_->push(write_op);
         if (enable_to_send) {
             queue_cleanup on_exit{waiting_queue_.get(), false};
-            write_op->perform(*this, detail::gather_buffers(*waiting_queue_));
+            write_op->perform(*this, buffers_.gather(*waiting_queue_));
             on_exit.commit = true;
         }
 
@@ -457,6 +483,7 @@ private:
     template <class, class> friend class detail::queueing_write_handler;
     Stream stream_;
     std::shared_ptr<write_op_queue> waiting_queue_;
+    detail::gather_buffers buffers_;
 };
 
 } // namespace canard
