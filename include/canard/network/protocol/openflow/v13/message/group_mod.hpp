@@ -202,7 +202,7 @@ namespace v13 {
         }
 
         auto command() const
-            -> ofp_group_mod_command
+            -> protocol::ofp_group_mod_command
         {
             return command_type;
         }

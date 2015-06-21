@@ -75,7 +75,7 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_action_type
+            -> protocol::ofp_action_type
         {
             return protocol::OFPAT_EXPERIMENTER;
         }
