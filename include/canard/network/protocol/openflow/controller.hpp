@@ -114,7 +114,7 @@ namespace openflow {
         void send_hello(std::shared_ptr<tcp::socket> socket)
         {
             auto buffer = std::make_shared<std::vector<std::uint8_t>>();
-            boost::asio::async_write(*socket, boost::asio::buffer(hello{v10::OFP_VERSION}.encode(*buffer))
+            boost::asio::async_write(*socket, boost::asio::buffer(hello{v10::protocol::OFP_VERSION}.encode(*buffer))
                     , [=](boost::system::error_code const& ec, std::size_t const) mutable {
                 if (ec) {
                     std::cout << "send error: " << ec.message() << std::endl;

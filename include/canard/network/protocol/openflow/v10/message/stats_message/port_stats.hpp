@@ -138,10 +138,11 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_PORT;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_PORT;
 
         explicit port_stats_request(
-                  std::uint16_t const port_no = OFPP_NONE
+                  std::uint16_t const port_no = protocol::OFPP_NONE
                 , std::uint32_t const xid = get_xid())
             : stats_request_adaptor{xid}
             , port_stats_{port_no, {0}}
@@ -176,7 +177,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_PORT;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_PORT;
 
         using iterator = std::vector<stats::port_stats>::const_iterator;
         using const_iterator = std::vector<stats::port_stats>::const_iterator;

@@ -18,7 +18,8 @@ namespace actions {
         using ofp_action_t = v10_detail::ofp_action_enqueue;
 
     public:
-        static ofp_action_type const action_type = OFPAT_ENQUEUE;
+        static protocol::ofp_action_type const action_type
+            = protocol::OFPAT_ENQUEUE;
 
         enqueue(std::uint16_t const port, std::uint32_t const queue_id)
             : enqueue_{action_type, sizeof(ofp_action_t), port, {0}, queue_id}
@@ -55,7 +56,7 @@ namespace actions {
 
         static void validate_port(std::uint16_t const port)
         {
-            if (port > OFPP_MAX && port != OFPP_IN_PORT) {
+            if (port > protocol::OFPP_MAX && port != protocol::OFPP_IN_PORT) {
                 throw std::runtime_error{"invalid port"};
             }
         }

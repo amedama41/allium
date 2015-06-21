@@ -19,10 +19,11 @@ namespace messages {
         : public v10_detail::basic_openflow_message<barrier_request>
     {
     public:
-        static ofp_type const message_type = OFPT_BARRIER_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_BARRIER_REQUEST;
 
         explicit barrier_request(std::uint32_t const xid = get_xid())
-            : header_{v10::OFP_VERSION, message_type, sizeof(header_), xid}
+            : header_{protocol::OFP_VERSION, message_type, sizeof(header_), xid}
         {
         }
 
@@ -51,7 +52,7 @@ namespace messages {
         explicit barrier_request(v10_detail::ofp_header const header)
             : header_(header)
         {
-            if (version() != v10::OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
             if (type() != message_type) {
@@ -68,10 +69,11 @@ namespace messages {
         : public v10_detail::basic_openflow_message<barrier_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_BARRIER_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_BARRIER_REPLY;
 
         explicit barrier_reply(barrier_request const& request)
-            : header_{v10::OFP_VERSION, message_type, sizeof(header_), request.xid()}
+            : header_{protocol::OFP_VERSION, message_type, sizeof(header_), request.xid()}
         {
         }
 
@@ -100,7 +102,7 @@ namespace messages {
         explicit barrier_reply(v10_detail::ofp_header const header)
             : header_(header)
         {
-            if (version() != v10::OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
             if (type() != message_type) {

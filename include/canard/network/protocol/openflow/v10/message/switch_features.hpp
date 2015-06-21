@@ -22,10 +22,11 @@ namespace messages {
         : public v10_detail::basic_openflow_message<features_request>
     {
     public:
-        static ofp_type const message_type = OFPT_FEATURES_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_FEATURES_REQUEST;
 
         explicit features_request(std::uint32_t const xid = get_xid())
-            : header_{OFP_VERSION, message_type, sizeof(header_), xid}
+            : header_{protocol::OFP_VERSION, message_type, sizeof(header_), xid}
         {
         }
 
@@ -54,7 +55,7 @@ namespace messages {
         explicit features_request(v10_detail::ofp_header const header)
             : header_(header)
         {
-            if (version() != OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error("invalid version");
             }
             if (type() != message_type) {
@@ -70,7 +71,8 @@ namespace messages {
         : public v10_detail::basic_openflow_message<features_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_FEATURES_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_FEATURES_REPLY;
 
         using iterator = std::vector<v10::port>::const_iterator;
         using const_iterator = std::vector<v10::port>::const_iterator;
@@ -141,7 +143,7 @@ namespace messages {
             : features_(features)
             , ports_(std::move(ports))
         {
-            if (version() != OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error("invalid version");
             }
             if (type() != message_type) {

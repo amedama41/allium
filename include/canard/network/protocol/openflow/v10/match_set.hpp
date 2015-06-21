@@ -22,7 +22,7 @@ namespace v10 {
                     && !canard::is_related<v10_detail::ofp_match, MatchFields...>::value
               >::type* = nullptr>
         match_set(MatchFields&&... fields)
-            : match_{OFPFW_ALL, 0}
+            : match_{protocol::OFPFW_ALL, 0}
         {
             add_impl(std::forward<MatchFields>(fields)...);
         }

@@ -24,7 +24,7 @@ namespace messages {
         protected:
             echo_base(std::vector<std::uint8_t> data, std::uint32_t const xid)
                 : header_{
-                      OFP_VERSION, T::message_type
+                      protocol::OFP_VERSION, T::message_type
                     , std::uint16_t(sizeof(header_) + data.size())
                     , xid
                   }
@@ -90,7 +90,8 @@ namespace messages {
         : public echo_detail::echo_base<echo_request>
     {
     public:
-        static ofp_type const message_type = OFPT_ECHO_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_ECHO_REQUEST;
 
         explicit echo_request(std::uint32_t const xid = get_xid())
             : echo_base{{}, xid}
@@ -120,7 +121,8 @@ namespace messages {
         : public echo_detail::echo_base<echo_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_ECHO_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_ECHO_REPLY;
 
         explicit echo_reply(echo_request request)
             : echo_base{std::move(request).data(), request.xid()}

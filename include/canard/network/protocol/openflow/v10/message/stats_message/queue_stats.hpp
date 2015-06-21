@@ -89,11 +89,12 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_QUEUE;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_QUEUE;
 
         explicit queue_stats_request(
-                  std::uint16_t const port_no = OFPP_ALL
-                , std::uint32_t const queue_id = OFPQ_ALL
+                  std::uint16_t const port_no = protocol::OFPP_ALL
+                , std::uint32_t const queue_id = protocol::OFPQ_ALL
                 , std::uint32_t const xid = get_xid())
             : stats_request_adaptor{xid}
             , queue_stats_{port_no, {0}, queue_id}
@@ -128,7 +129,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_QUEUE;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_QUEUE;
 
         using iterator = std::vector<stats::queue_stats>::const_iterator;
         using const_iterator = std::vector<stats::queue_stats>::const_iterator;

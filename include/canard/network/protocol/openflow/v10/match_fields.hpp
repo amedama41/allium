@@ -27,21 +27,21 @@ namespace v10 {
         using field_type = std::integral_constant<std::uint32_t, Field>;
 
         using match_field_table = boost::fusion::map<
-          //  ofp_match field type                                ofp_match member index
-          //+---------------------------------------------------+------------------------+
-              boost::fusion::pair<field_type<OFPFW_IN_PORT>     , boost::mpl::int_<1>>
-            , boost::fusion::pair<field_type<OFPFW_DL_SRC>      , boost::mpl::int_<2>>
-            , boost::fusion::pair<field_type<OFPFW_DL_DST>      , boost::mpl::int_<8>>
-            , boost::fusion::pair<field_type<OFPFW_DL_VLAN>     , boost::mpl::int_<14>>
-            , boost::fusion::pair<field_type<OFPFW_DL_VLAN_PCP> , boost::mpl::int_<15>>
-            , boost::fusion::pair<field_type<OFPFW_DL_TYPE>     , boost::mpl::int_<17>>
-            , boost::fusion::pair<field_type<OFPFW_NW_TOS>      , boost::mpl::int_<18>>
-            , boost::fusion::pair<field_type<OFPFW_NW_PROTO>    , boost::mpl::int_<19>>
-            , boost::fusion::pair<field_type<OFPFW_NW_SRC_ALL>  , boost::mpl::int_<22>>
-            , boost::fusion::pair<field_type<OFPFW_NW_DST_ALL>  , boost::mpl::int_<23>>
-            , boost::fusion::pair<field_type<OFPFW_TP_SRC>      , boost::mpl::int_<24>>
-            , boost::fusion::pair<field_type<OFPFW_TP_DST>      , boost::mpl::int_<25>>
-          //+---------------------------------------------------+------------------------+
+          //  ofp_match field type                                          ofp_match member index
+          //+-------------------------------------------------------------+------------------------+
+              boost::fusion::pair<field_type<protocol::OFPFW_IN_PORT>     , boost::mpl::int_<1>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_DL_SRC>      , boost::mpl::int_<2>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_DL_DST>      , boost::mpl::int_<8>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_DL_VLAN>     , boost::mpl::int_<14>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_DL_VLAN_PCP> , boost::mpl::int_<15>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_DL_TYPE>     , boost::mpl::int_<17>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_NW_TOS>      , boost::mpl::int_<18>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_NW_PROTO>    , boost::mpl::int_<19>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_NW_SRC_ALL>  , boost::mpl::int_<22>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_NW_DST_ALL>  , boost::mpl::int_<23>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_TP_SRC>      , boost::mpl::int_<24>>
+            , boost::fusion::pair<field_type<protocol::OFPFW_TP_DST>      , boost::mpl::int_<25>>
+          //+-------------------------------------------------------------+------------------------+
         >;
 
 
@@ -61,8 +61,8 @@ namespace v10 {
         struct field_value_type<
                   FieldType
                 , typename std::enable_if<
-                           FieldType::value == OFPFW_DL_SRC
-                        || FieldType::value == OFPFW_DL_DST
+                           FieldType::value == protocol::OFPFW_DL_SRC
+                        || FieldType::value == protocol::OFPFW_DL_DST
                   >::type>
         {
             using type = canard::mac_address;
@@ -72,8 +72,8 @@ namespace v10 {
         struct field_value_type<
                   FieldType
                 , typename std::enable_if<
-                           FieldType::value == OFPFW_NW_SRC_ALL
-                        || FieldType::value == OFPFW_NW_DST_ALL
+                           FieldType::value == protocol::OFPFW_NW_SRC_ALL
+                        || FieldType::value == protocol::OFPFW_NW_DST_ALL
                   >::type>
         {
             using type = boost::asio::ip::address_v4;
@@ -83,8 +83,8 @@ namespace v10 {
         template <
               class FieldType
             , typename std::enable_if<
-                       FieldType::value != OFPFW_NW_SRC_ALL
-                    && FieldType::value != OFPFW_NW_DST_ALL
+                       FieldType::value != protocol::OFPFW_NW_SRC_ALL
+                    && FieldType::value != protocol::OFPFW_NW_DST_ALL
               >::type* = nullptr>
         void copy_to_match(
                   v10_detail::ofp_match& match
@@ -100,7 +100,7 @@ namespace v10 {
         void copy_to_match(
                   v10_detail::ofp_match& match
                 , canard::mac_address const& macaddr
-                , field_type<OFPFW_DL_DST>)
+                , field_type<protocol::OFPFW_DL_DST>)
         {
             std::memcpy(match.dl_dst, macaddr.to_bytes().data(), macaddr.to_bytes().size());
         }
@@ -108,7 +108,7 @@ namespace v10 {
         void copy_to_match(
                   v10_detail::ofp_match& match
                 , canard::mac_address const& macaddr
-                , field_type<OFPFW_DL_SRC>)
+                , field_type<protocol::OFPFW_DL_SRC>)
         {
             std::memcpy(match.dl_src, macaddr.to_bytes().data(), macaddr.to_bytes().size());
         }
@@ -116,8 +116,8 @@ namespace v10 {
         template <
               class FieldType
             , typename std::enable_if<
-                       FieldType::value == OFPFW_NW_SRC_ALL
-                    || FieldType::value == OFPFW_NW_DST_ALL
+                       FieldType::value == protocol::OFPFW_NW_SRC_ALL
+                    || FieldType::value == protocol::OFPFW_NW_DST_ALL
               >::type* = nullptr>
         void copy_to_match(
                   v10_detail::ofp_match& match
@@ -142,13 +142,13 @@ namespace v10 {
             return boost::fusion::at<member_index>(match);
         }
 
-        auto field_value(v10_detail::ofp_match const& match, field_type<OFPFW_DL_DST>)
+        auto field_value(v10_detail::ofp_match const& match, field_type<protocol::OFPFW_DL_DST>)
             -> canard::mac_address
         {
             return canard::mac_address{match.dl_dst};
         }
 
-        auto field_value(v10_detail::ofp_match const& match, field_type<OFPFW_DL_SRC>)
+        auto field_value(v10_detail::ofp_match const& match, field_type<protocol::OFPFW_DL_SRC>)
             -> canard::mac_address
         {
             return canard::mac_address{match.dl_src};
@@ -162,19 +162,19 @@ namespace v10 {
         };
 
         template <>
-        struct mask_info<field_type<OFPFW_NW_SRC_ALL>>
+        struct mask_info<field_type<protocol::OFPFW_NW_SRC_ALL>>
         {
             static bool const has_mask = true;
-            static std::uint32_t const shift = OFPFW_NW_SRC_SHIFT;
-            static std::uint32_t const mask = OFPFW_NW_SRC_MASK;
+            static std::uint32_t const shift = protocol::OFPFW_NW_SRC_SHIFT;
+            static std::uint32_t const mask = protocol::OFPFW_NW_SRC_MASK;
         };
 
         template <>
-        struct mask_info<field_type<OFPFW_NW_DST_ALL>>
+        struct mask_info<field_type<protocol::OFPFW_NW_DST_ALL>>
         {
             static bool const has_mask = true;
-            static std::uint32_t const shift = OFPFW_NW_DST_SHIFT;
-            static std::uint32_t const mask = OFPFW_NW_DST_MASK;
+            static std::uint32_t const shift = protocol::OFPFW_NW_DST_SHIFT;
+            static std::uint32_t const mask = protocol::OFPFW_NW_DST_MASK;
         };
 
 
@@ -283,24 +283,24 @@ namespace v10 {
 
     namespace match {
 
-        using in_port = match_field_detail::match_field<match_field_detail::field_type<OFPFW_IN_PORT>>;
-        using eth_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_SRC>>;
-        using eth_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_DST>>;
-        using vlan_vid = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_VLAN>>;
-        using vlan_pcp = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_VLAN_PCP>>;
-        using eth_type = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_TYPE>>;
-        using ipv4_tos = match_field_detail::match_field<match_field_detail::field_type<OFPFW_DL_TYPE>>;
-        using ip_proto = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_PROTO>>;
-        using ipv4_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_SRC_ALL>>;
-        using ipv4_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_DST_ALL>>;
-        using arp_spa = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_SRC_ALL>>;
-        using arp_tpa = match_field_detail::match_field<match_field_detail::field_type<OFPFW_NW_DST_ALL>>;
-        using tcp_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_SRC>>;
-        using tcp_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_DST>>;
-        using udp_src = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_SRC>>;
-        using udp_dst = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_DST>>;
-        using icmpv4_type = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_SRC>>;
-        using icmpv4_code = match_field_detail::match_field<match_field_detail::field_type<OFPFW_TP_DST>>;
+        using in_port = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_IN_PORT>>;
+        using eth_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_SRC>>;
+        using eth_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_DST>>;
+        using vlan_vid = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_VLAN>>;
+        using vlan_pcp = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_VLAN_PCP>>;
+        using eth_type = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_TYPE>>;
+        using ipv4_tos = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_TYPE>>;
+        using ip_proto = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_PROTO>>;
+        using ipv4_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_SRC_ALL>>;
+        using ipv4_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_DST_ALL>>;
+        using arp_spa = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_SRC_ALL>>;
+        using arp_tpa = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_DST_ALL>>;
+        using tcp_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_SRC>>;
+        using tcp_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_DST>>;
+        using udp_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_SRC>>;
+        using udp_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_DST>>;
+        using icmpv4_type = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_SRC>>;
+        using icmpv4_code = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_DST>>;
 
     } // namespace match
 

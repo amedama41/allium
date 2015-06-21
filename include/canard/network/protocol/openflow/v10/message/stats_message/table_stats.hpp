@@ -102,7 +102,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_TABLE;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_TABLE;
 
         explicit table_stats_request(std::uint32_t const xid = get_xid())
             : stats_request_adaptor{xid}
@@ -126,7 +127,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_TABLE;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_TABLE;
 
         using iterator = std::vector<stats::table_stats>::const_iterator;
         using const_iterator = std::vector<stats::table_stats>::const_iterator;

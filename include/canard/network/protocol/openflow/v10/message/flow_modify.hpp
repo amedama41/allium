@@ -22,22 +22,23 @@ namespace messages {
         : public v10_detail::basic_openflow_message<flow_modify>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_MODIFY;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_MODIFY;
 
         flow_modify(
                   match_set const& match, action_list actions
                 , std::uint64_t const cookie = 0
-                , std::uint32_t const buffer_id = OFP_NO_BUFFER
+                , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
             : flow_mod_{
                   v10_detail::ofp_header{
-                      OFP_VERSION, message_type
+                      protocol::OFP_VERSION, message_type
                     , std::uint16_t(sizeof(flow_mod_) + actions.length())
                     , xid
                   }
                 , match.ofp_match(), cookie, command_type
-                , 0, 0, 0, buffer_id, OFPP_NONE, 0
+                , 0, 0, 0, buffer_id, protocol::OFPP_NONE, 0
               }
             , actions_(std::move(actions))
         {
@@ -83,23 +84,24 @@ namespace messages {
         : public v10_detail::basic_openflow_message<flow_modify_strict>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_MODIFY_STRICT;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_MODIFY_STRICT;
 
         flow_modify_strict(
                   match_set const& match, std::uint16_t const priority
                 , action_list actions
                 , std::uint64_t const cookie = 0
-                , std::uint32_t const buffer_id = OFP_NO_BUFFER
+                , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
             : flow_mod_{
                   v10_detail::ofp_header{
-                      OFP_VERSION, message_type
+                      protocol::OFP_VERSION, message_type
                     , std::uint16_t(sizeof(flow_mod_) + actions.length())
                     , xid
                   }
                 , match.ofp_match(), cookie, command_type
-                , 0, 0, priority, buffer_id, OFPP_NONE, 0
+                , 0, 0, priority, buffer_id, protocol::OFPP_NONE, 0
               }
             , actions_(std::move(actions))
         {
@@ -107,16 +109,16 @@ namespace messages {
 
         flow_modify_strict(
                   flow_entry const& entry, action_list actions
-                , std::uint32_t const buffer_id = OFP_NO_BUFFER
+                , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
             : flow_mod_{
                   v10_detail::ofp_header{
-                      OFP_VERSION, message_type
+                      protocol::OFP_VERSION, message_type
                     , std::uint16_t(sizeof(flow_mod_) + actions.length())
                     , xid
                   }
                 , entry.ofp_match(), entry.cookie(), command_type, 0, 0
-                , entry.priority(), buffer_id, OFPP_NONE, 0
+                , entry.priority(), buffer_id, protocol::OFPP_NONE, 0
               }
             , actions_(std::move(actions))
         {

@@ -21,7 +21,7 @@ namespace messages {
         : public v10_detail::basic_openflow_message<error_msg>
     {
     public:
-        static ofp_type const message_type = OFPT_ERROR;
+        static protocol::ofp_type const message_type = protocol::OFPT_ERROR;
 
         auto header() const
             -> v10_detail::ofp_header
@@ -30,9 +30,9 @@ namespace messages {
         }
 
         auto error_type() const
-            -> ofp_error_type
+            -> protocol::ofp_error_type
         {
-            return ofp_error_type(error_.type);
+            return protocol::ofp_error_type(error_.type);
         }
 
         auto error_code() const
@@ -76,13 +76,13 @@ namespace messages {
             : error_(error)
             , data_(std::move(data))
         {
-            if (version() != OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
             if (type() != message_type) {
                 throw std::runtime_error{"invalid message type"};
             }
-            if (error_type() != OFPET_HELLO_FAILED
+            if (error_type() != protocol::OFPET_HELLO_FAILED
                     && data_.size() < sizeof(v10_detail::ofp_header)) {
                 throw std::runtime_error{"too short failed request size"};
             }

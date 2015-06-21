@@ -22,7 +22,8 @@ namespace messages {
         , public v10_detail::flow_entry_adaptor<flow_removed, v10_detail::ofp_flow_removed>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_REMOVED;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_FLOW_REMOVED;
 
         auto header() const
             -> v10_detail::ofp_header
@@ -31,9 +32,9 @@ namespace messages {
         }
 
         auto reason() const
-            -> ofp_flow_removed_reason
+            -> protocol::ofp_flow_removed_reason
         {
-            return ofp_flow_removed_reason(flow_removed_.reason);
+            return protocol::ofp_flow_removed_reason(flow_removed_.reason);
         }
 
         auto duration_sec() const
@@ -57,19 +58,19 @@ namespace messages {
         auto is_idle_timeout() const
             -> bool
         {
-            return reason() == OFPRR_IDLE_TIMEOUT;
+            return reason() == protocol::OFPRR_IDLE_TIMEOUT;
         }
 
         auto is_hard_timeout() const
             -> bool
         {
-            return reason() == OFPRR_HARD_TIMEOUT;
+            return reason() == protocol::OFPRR_HARD_TIMEOUT;
         }
 
         auto is_deleted() const
             -> bool
         {
-            return reason() == OFPRR_DELETE;
+            return reason() == protocol::OFPRR_DELETE;
         }
 
         template <class Container>
@@ -92,7 +93,7 @@ namespace messages {
         explicit flow_removed(v10_detail::ofp_flow_removed const& removed)
             : flow_removed_(removed)
         {
-            if (version() != v10::OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
             if (type() != message_type) {

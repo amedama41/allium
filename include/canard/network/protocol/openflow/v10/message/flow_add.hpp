@@ -20,16 +20,17 @@ namespace messages {
         : public v10_detail::basic_openflow_message<flow_add>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_ADD;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_ADD;
 
         explicit flow_add(flow_entry entry
                 , std::uint16_t const flags
-                , std::uint32_t const buffer_id = OFP_NO_BUFFER
+                , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
             : flow_mod_{
                   v10_detail::ofp_header{
-                      OFP_VERSION, message_type
+                      protocol::OFP_VERSION, message_type
                     , std::uint16_t(sizeof(flow_mod_) + entry.actions().length())
                     , xid
                   }

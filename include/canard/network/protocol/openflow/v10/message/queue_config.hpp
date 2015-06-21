@@ -33,16 +33,20 @@ namespace messages {
         : public v10_detail::basic_openflow_message<queue_get_config_request>
     {
     public:
-        static ofp_type const message_type = OFPT_QUEUE_GET_CONFIG_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_QUEUE_GET_CONFIG_REQUEST;
 
         explicit queue_get_config_request(
                 std::uint16_t const port, std::uint32_t const xid = get_xid())
             : queue_get_config_{
-                  {OFP_VERSION, message_type, sizeof(queue_get_config_), xid}
+                  v10_detail::ofp_header{
+                        protocol::OFP_VERSION, message_type
+                      , sizeof(queue_get_config_), xid
+                  }
                 , port, {0}
               }
         {
-            if (this->port() > OFPP_MAX) {
+            if (this->port() > protocol::OFPP_MAX) {
                 throw std::runtime_error{"invalid port number"};
             }
         }
@@ -93,7 +97,8 @@ namespace messages {
         using queue_container = std::vector<packet_queue>;
 
     public:
-        static ofp_type const message_type = OFPT_QUEUE_GET_CONFIG_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_QUEUE_GET_CONFIG_REPLY;
 
         using value_type = queue_container::value_type;
         using reference = queue_container::const_reference;
@@ -159,7 +164,7 @@ namespace messages {
             : queue_get_config_(queue_get_config)
             , queues_(std::move(queues))
         {
-            if (port() > OFPP_MAX) {
+            if (port() > protocol::OFPP_MAX) {
                 std::runtime_error{"invalid port number"};
             }
         }

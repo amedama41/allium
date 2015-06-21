@@ -19,11 +19,12 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_AGGREGATE;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_AGGREGATE;
 
         explicit aggregate_stats_request(
                 match_set const& match, std::uint32_t const xid = get_xid())
-            : aggregate_stats_request{match, 0xff, OFPP_NONE, xid}
+            : aggregate_stats_request{match, 0xff, protocol::OFPP_NONE, xid}
         {
         }
 
@@ -64,7 +65,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_AGGREGATE;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_AGGREGATE;
 
         auto packet_count() const
             -> std::uint64_t

@@ -23,22 +23,23 @@ namespace actions {
 
     namespace set_field_detail {
 
-        template <ofp_action_type ActionType>
-        using action_type = std::integral_constant<ofp_action_type, ActionType>;
+        template <protocol::ofp_action_type ActionType>
+        using action_type
+            = std::integral_constant<protocol::ofp_action_type, ActionType>;
 
         using set_field_table = std::tuple<
-          //  ofp_match field type         action_type                       set_field type
-          //+----------------------------+---------------------------------+---------------------------------+
-              std::tuple<match::eth_src  , action_type<OFPAT_SET_DL_SRC>   , v10_detail::ofp_action_dl_addr  >
-            , std::tuple<match::eth_dst  , action_type<OFPAT_SET_DL_DST>   , v10_detail::ofp_action_dl_addr  >
-            , std::tuple<match::vlan_vid , action_type<OFPAT_SET_VLAN_VID> , v10_detail::ofp_action_vlan_vid >
-            , std::tuple<match::vlan_pcp , action_type<OFPAT_SET_VLAN_PCP> , v10_detail::ofp_action_vlan_pcp >
-            , std::tuple<match::ipv4_tos , action_type<OFPAT_SET_NW_TOS>   , v10_detail::ofp_action_nw_tos   >
-            , std::tuple<match::ipv4_src , action_type<OFPAT_SET_NW_SRC>   , v10_detail::ofp_action_nw_addr  >
-            , std::tuple<match::ipv4_dst , action_type<OFPAT_SET_NW_DST>   , v10_detail::ofp_action_nw_addr  >
-            , std::tuple<match::tcp_src  , action_type<OFPAT_SET_TP_SRC>   , v10_detail::ofp_action_tp_port  >
-            , std::tuple<match::tcp_dst  , action_type<OFPAT_SET_TP_DST>   , v10_detail::ofp_action_tp_port  >
-          //+----------------------------+---------------------------------+---------------------------------+
+          //  ofp_match field type         action_type                                 set_field type
+          //+----------------------------+-------------------------------------------+---------------------------------+
+              std::tuple<match::eth_src  , action_type<protocol::OFPAT_SET_DL_SRC>   , v10_detail::ofp_action_dl_addr  >
+            , std::tuple<match::eth_dst  , action_type<protocol::OFPAT_SET_DL_DST>   , v10_detail::ofp_action_dl_addr  >
+            , std::tuple<match::vlan_vid , action_type<protocol::OFPAT_SET_VLAN_VID> , v10_detail::ofp_action_vlan_vid >
+            , std::tuple<match::vlan_pcp , action_type<protocol::OFPAT_SET_VLAN_PCP> , v10_detail::ofp_action_vlan_pcp >
+            , std::tuple<match::ipv4_tos , action_type<protocol::OFPAT_SET_NW_TOS>   , v10_detail::ofp_action_nw_tos   >
+            , std::tuple<match::ipv4_src , action_type<protocol::OFPAT_SET_NW_SRC>   , v10_detail::ofp_action_nw_addr  >
+            , std::tuple<match::ipv4_dst , action_type<protocol::OFPAT_SET_NW_DST>   , v10_detail::ofp_action_nw_addr  >
+            , std::tuple<match::tcp_src  , action_type<protocol::OFPAT_SET_TP_SRC>   , v10_detail::ofp_action_tp_port  >
+            , std::tuple<match::tcp_dst  , action_type<protocol::OFPAT_SET_TP_DST>   , v10_detail::ofp_action_tp_port  >
+          //+----------------------------+-------------------------------------------+---------------------------------+
         >;
 
         template <class MatchField>
@@ -58,7 +59,7 @@ namespace actions {
                 >::type
             >::type;
 
-            static ofp_action_type const value
+            static protocol::ofp_action_type const value
                 = std::tuple_element<1, info_tuple>::type::value;
             using type = typename std::tuple_element<2, info_tuple>::type;
         };
@@ -125,7 +126,8 @@ namespace actions {
         using value_type = typename match_field_t::value_type;
 
     public:
-        static ofp_action_type const action_type = set_field_info::value;
+        static protocol::ofp_action_type const action_type
+            = set_field_info::value;
 
         explicit set_field(value_type const& value)
             : set_field_(set_field_detail::to_ofp_action(value, set_field_info{}))

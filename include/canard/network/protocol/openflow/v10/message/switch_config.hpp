@@ -22,10 +22,12 @@ namespace messages {
         using base_type = v10_detail::basic_openflow_message<T>;
 
     protected:
-        switch_config_base(ofp_config_flags const flags, std::uint16_t const miss_send_len
+        switch_config_base(
+                  protocol::ofp_config_flags const flags
+                , std::uint16_t const miss_send_len
                 , std::uint32_t const xid = get_xid())
             : config_{
-                  {OFP_VERSION, T::message_type, sizeof(config_), xid}
+                  {protocol::OFP_VERSION, T::message_type, sizeof(config_), xid}
                 , std::uint16_t(flags), miss_send_len
               }
         {
@@ -34,7 +36,7 @@ namespace messages {
         explicit switch_config_base(v10_detail::ofp_switch_config const& config)
             : config_(config)
         {
-            if (base_type::version() != OFP_VERSION) {
+            if (base_type::version() != protocol::OFP_VERSION) {
                 throw std::runtime_error("invalid version");
             }
             if (base_type::type() != T::message_type) {
@@ -55,7 +57,7 @@ namespace messages {
         auto flags() const
             -> std::uint16_t
         {
-            return ofp_config_flags(config_.flags);
+            return protocol::ofp_config_flags(config_.flags);
         }
 
         auto miss_send_length() const
@@ -89,10 +91,11 @@ namespace messages {
         : public v10_detail::basic_openflow_message<get_config_request>
     {
     public:
-        static ofp_type const message_type = OFPT_GET_CONFIG_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_GET_CONFIG_REQUEST;
 
         explicit get_config_request(std::uint32_t const xid = get_xid())
-            : header_{OFP_VERSION, message_type, sizeof(header_), xid}
+            : header_{protocol::OFP_VERSION, message_type, sizeof(header_), xid}
         {
         }
 
@@ -122,7 +125,7 @@ namespace messages {
         explicit get_config_request(v10_detail::ofp_header const header)
             : header_(header)
         {
-            if (version() != OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error("invalid version");
             }
             if (type() != message_type) {
@@ -142,7 +145,8 @@ namespace messages {
         : public switch_config_base<get_config_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_GET_CONFIG_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_GET_CONFIG_REPLY;
 
     private:
         friend switch_config_base;
@@ -158,16 +162,18 @@ namespace messages {
         : public switch_config_base<set_config>
     {
     public:
-        static ofp_type const message_type = OFPT_SET_CONFIG;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_SET_CONFIG;
 
-        set_config(ofp_config_flags const flags, std::uint16_t const miss_send_len
-                , std::uint32_t const xid = get_xid())
+        set_config(protocol::ofp_config_flags const flags
+                 , std::uint16_t const miss_send_len
+                 , std::uint32_t const xid = get_xid())
             : switch_config_base{flags, miss_send_len, xid}
         {
         }
 
         explicit set_config(std::uint16_t const miss_send_len, std::uint32_t const xid = get_xid())
-            : set_config{OFPC_FRAG_NORMAL, miss_send_len, xid}
+            : set_config{protocol::OFPC_FRAG_NORMAL, miss_send_len, xid}
         {
         }
 

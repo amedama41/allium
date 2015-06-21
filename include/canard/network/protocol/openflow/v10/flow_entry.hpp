@@ -82,7 +82,7 @@ namespace v10 {
                   id
                 , std::move(actions)
                 , {0, 0}
-                , {OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT}
+                , {protocol::OFP_FLOW_PERMANENT, protocol::OFP_FLOW_PERMANENT}
                 , 0
               }
         {

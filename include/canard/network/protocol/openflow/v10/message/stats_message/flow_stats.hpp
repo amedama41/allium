@@ -109,12 +109,13 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_FLOW;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_FLOW;
 
         explicit flow_stats_request(
                   match_set const& match
                 , std::uint32_t const xid = get_xid())
-            : flow_stats_request{match, 0xff, OFPP_NONE, xid}
+            : flow_stats_request{match, 0xff, protocol::OFPP_NONE, xid}
         {
         }
 
@@ -156,7 +157,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_FLOW;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_FLOW;
 
         using iterator = std::vector<stats::flow_stats>::const_iterator;
         using const_iterator = std::vector<stats::flow_stats>::const_iterator;

@@ -19,7 +19,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_DESC;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_DESC;
 
         explicit description_request(std::uint32_t const xid = get_xid())
             : stats_request_adaptor{xid}
@@ -41,7 +42,8 @@ namespace messages {
           >
     {
     public:
-        static ofp_stats_types const stats_type_value = OFPST_DESC;
+        static protocol::ofp_stats_types const stats_type_value
+            = protocol::OFPST_DESC;
 
         auto manufacture_desc() const
             -> boost::string_ref

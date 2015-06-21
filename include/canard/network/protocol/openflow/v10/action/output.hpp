@@ -19,7 +19,8 @@ namespace actions {
         using ofp_action_t = v10_detail::ofp_action_output;
 
     public:
-        static ofp_action_type const action_type = OFPAT_OUTPUT;
+        static protocol::ofp_action_type const action_type
+            = protocol::OFPAT_OUTPUT;
 
         explicit output(
                   std::uint16_t const port
@@ -43,7 +44,7 @@ namespace actions {
         static auto to_controller(std::uint16_t const max_len = std::numeric_limits<std::uint16_t>::max())
             -> output
         {
-            return output{OFPP_CONTROLLER, max_len};
+            return output{protocol::OFPP_CONTROLLER, max_len};
         }
 
     private:
@@ -58,7 +59,7 @@ namespace actions {
         explicit output(ofp_action_t const output)
             : output_(output)
         {
-            if (output_.port == 0 || output_.port == OFPP_NONE) {
+            if (output_.port == 0 || output_.port == protocol::OFPP_NONE) {
                 throw std::runtime_error{"invalid outport"};
             }
         }

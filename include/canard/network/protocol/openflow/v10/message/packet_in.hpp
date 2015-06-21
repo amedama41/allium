@@ -51,7 +51,7 @@ namespace messages {
         : public v10_detail::basic_openflow_message<packet_in>
     {
     public:
-        static ofp_type const message_type = OFPT_PACKET_IN;
+        static protocol::ofp_type const message_type = protocol::OFPT_PACKET_IN;
 
         auto header() const
             -> v10_detail::ofp_header
@@ -78,9 +78,9 @@ namespace messages {
         }
 
         auto reason() const
-            -> ofp_packet_in_reason
+            -> protocol::ofp_packet_in_reason
         {
-            return ofp_packet_in_reason(packet_in_.reason);
+            return protocol::ofp_packet_in_reason(packet_in_.reason);
         }
 
         auto frame() const
@@ -112,7 +112,7 @@ namespace messages {
             : packet_in_(pkt_in)
             , data_(std::move(data))
         {
-            if (version() != OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
             if (type() != message_type) {

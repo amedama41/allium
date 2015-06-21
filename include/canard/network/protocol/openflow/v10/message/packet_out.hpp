@@ -22,7 +22,8 @@ namespace messages {
         : public v10_detail::basic_openflow_message<packet_out>
     {
     public:
-        static ofp_type const message_type = OFPT_PACKET_OUT;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_PACKET_OUT;
 
     private:
         packet_out(std::uint32_t const buffer_id, std::uint16_t const in_port
@@ -30,7 +31,7 @@ namespace messages {
                 , std::uint32_t const xid)
             : packet_out_{
                   {
-                        OFP_VERSION
+                        protocol::OFP_VERSION
                       , message_type
                       , std::uint16_t(sizeof(v10_detail::ofp_packet_out) + actions.length() + data.size())
                       , xid
@@ -53,14 +54,14 @@ namespace messages {
 
         packet_out(std::uint32_t const buffer_id, action_list actions
                 , std::uint32_t const xid = get_xid())
-            : packet_out{buffer_id, OFPP_NONE, std::move(actions), xid}
+            : packet_out{buffer_id, protocol::OFPP_NONE, std::move(actions), xid}
         {
         }
 
         packet_out(std::vector<std::uint8_t> data, std::uint16_t const in_port
                 , action_list actions, std::uint32_t const xid = get_xid())
             : packet_out{
-                  OFP_NO_BUFFER, in_port
+                  protocol::OFP_NO_BUFFER, in_port
                 , std::move(actions), std::move(data), xid
               }
         {
@@ -68,7 +69,9 @@ namespace messages {
 
         packet_out(std::vector<std::uint8_t> data, action_list actions
                 , std::uint32_t const xid = get_xid())
-            : packet_out{std::move(data), OFPP_NONE, std::move(actions), xid}
+            : packet_out{
+                std::move(data), protocol::OFPP_NONE, std::move(actions), xid
+              }
         {
         }
 

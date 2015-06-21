@@ -21,7 +21,8 @@ namespace messages {
         , public v10_detail::port_adaptor<port_status>
     {
     public:
-        static ofp_type const message_type = OFPT_PORT_STATUS;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_PORT_STATUS;
 
         auto header() const
             -> v10_detail::ofp_header
@@ -30,27 +31,27 @@ namespace messages {
         }
 
         auto reason() const
-            -> ofp_port_reason
+            -> protocol::ofp_port_reason
         {
-            return ofp_port_reason(port_status_.reason);
+            return protocol::ofp_port_reason(port_status_.reason);
         }
 
         auto is_added() const
             -> bool
         {
-            return reason() == OFPPR_ADD;
+            return reason() == protocol::OFPPR_ADD;
         }
 
         auto is_deleted() const
             -> bool
         {
-            return reason() == OFPPR_DELETE;
+            return reason() == protocol::OFPPR_DELETE;
         }
 
         auto is_modified() const
             -> bool
         {
-            return reason() == OFPPR_MODIFY;
+            return reason() == protocol::OFPPR_MODIFY;
         }
 
         template <class Container>
@@ -72,7 +73,7 @@ namespace messages {
         explicit port_status(v10_detail::ofp_port_status const& status)
             : port_status_(status)
         {
-            if (version() != v10::OFP_VERSION) {
+            if (version() != protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
             if (type() != message_type) {

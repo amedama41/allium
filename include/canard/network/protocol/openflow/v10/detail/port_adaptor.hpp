@@ -49,13 +49,13 @@ namespace v10_detail {
         auto administratively_down() const
             -> bool
         {
-            return config() & OFPPC_PORT_DOWN;
+            return config() & protocol::OFPPC_PORT_DOWN;
         }
 
         auto link_down() const
             -> bool
         {
-            return state() & OFPPS_LINK_DOWN;
+            return state() & protocol::OFPPS_LINK_DOWN;
         }
 
     private:

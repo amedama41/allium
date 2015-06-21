@@ -20,14 +20,14 @@ namespace messages {
         : public v10_detail::basic_openflow_message<port_mod>
     {
     public:
-        static ofp_type const message_type = OFPT_PORT_MOD;
+        static protocol::ofp_type const message_type = protocol::OFPT_PORT_MOD;
 
         port_mod(std::uint16_t const port_no, canard::mac_address const& macaddr
                 , std::uint32_t const config, std::uint32_t const mask
                 , std::uint32_t const advertise
                 , std::uint32_t const xid = get_xid())
             : port_mod_{
-                  {OFP_VERSION, message_type, sizeof(port_mod_), xid}
+                  {protocol::OFP_VERSION, message_type, sizeof(port_mod_), xid}
                 , port_no
                 , {
                       macaddr.to_bytes()[0], macaddr.to_bytes()[1]

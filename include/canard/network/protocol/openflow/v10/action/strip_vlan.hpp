@@ -16,7 +16,8 @@ namespace actions {
         using ofp_action_t = v10_detail::ofp_action_header;
 
     public:
-        static ofp_action_type const action_type = OFPAT_STRIP_VLAN;
+        static protocol::ofp_action_type const action_type
+            = protocol::OFPAT_STRIP_VLAN;
 
         strip_vlan()
             : strip_vlan_{action_type, sizeof(ofp_action_t), {0}}

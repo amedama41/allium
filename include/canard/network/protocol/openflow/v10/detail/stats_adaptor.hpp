@@ -56,13 +56,14 @@ namespace v10_detail {
         : public v10_detail::basic_openflow_message<T>
     {
     public:
-        static ofp_type const message_type = OFPT_STATS_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_STATS_REQUEST;
 
     protected:
         explicit stats_request_adaptor(std::uint32_t const xid)
             : stats_request_{
                   {
-                      OFP_VERSION
+                      protocol::OFP_VERSION
                     , message_type
                     , stats_adaptor_detail::length<BodyType>()
                     , xid
@@ -81,7 +82,7 @@ namespace v10_detail {
         }
 
         auto stats_type() const
-            -> ofp_stats_types
+            -> protocol::ofp_stats_types
         {
             return T::stats_type_value;
         }
@@ -95,7 +96,7 @@ namespace v10_detail {
         auto more() const
             -> bool
         {
-            return flags() & OFPSF_REPLY_MORE;
+            return flags() & protocol::OFPSF_REPLY_MORE;
         }
 
         template <class Container>
@@ -155,7 +156,7 @@ namespace v10_detail {
                   v10_detail::ofp_stats_request const& stats_request)
             : stats_request_(stats_request)
         {
-            if (stats_request_.header.version != v10::OFP_VERSION) {
+            if (stats_request_.header.version != v10::protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
         }
@@ -174,7 +175,8 @@ namespace v10_detail {
         >::type;
 
     public:
-        static ofp_type const message_type = OFPT_STATS_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_STATS_REPLY;
 
     protected:
         stats_reply_adaptor(
@@ -182,7 +184,7 @@ namespace v10_detail {
                 , std::uint16_t const body_length, std::uint16_t const flags)
             : stats_reply_{
                   {
-                      OFP_VERSION
+                      protocol::OFP_VERSION
                     , message_type
                     , std::uint16_t(sizeof(stats_reply_) + body_length)
                     , xid
@@ -201,7 +203,7 @@ namespace v10_detail {
         }
 
         auto stats_type() const
-            -> ofp_stats_types
+            -> protocol::ofp_stats_types
         {
             return T::stats_type_value;
         }
@@ -215,16 +217,16 @@ namespace v10_detail {
         auto more() const
             -> bool
         {
-            return flags() & OFPSF_REPLY_MORE;
+            return flags() & protocol::OFPSF_REPLY_MORE;
         }
 
         void more(bool const has_more)
         {
             if (has_more) {
-                stats_reply_.flags |= OFPSF_REPLY_MORE;
+                stats_reply_.flags |= protocol::OFPSF_REPLY_MORE;
             }
             else {
-                stats_reply_.flags &= ~OFPSF_REPLY_MORE;
+                stats_reply_.flags &= ~protocol::OFPSF_REPLY_MORE;
             }
         }
 
@@ -293,7 +295,7 @@ namespace v10_detail {
                   v10_detail::ofp_stats_reply const& stats_reply)
             : stats_reply_(stats_reply)
         {
-            if (stats_reply_.header.version != v10::OFP_VERSION) {
+            if (stats_reply_.header.version != protocol::OFP_VERSION) {
                 throw std::runtime_error{"invalid version"};
             }
         }

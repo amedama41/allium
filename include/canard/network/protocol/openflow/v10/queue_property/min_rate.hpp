@@ -16,12 +16,13 @@ namespace queue_properties {
     class min_rate
     {
     public:
-        static ofp_queue_properties const queue_property = OFPQT_MIN_RATE;
+        static protocol::ofp_queue_properties const queue_property
+            = protocol::OFPQT_MIN_RATE;
         static std::uint16_t const raw_size
             = sizeof(v10_detail::ofp_queue_prop_min_rate);
 
         auto property() const
-            -> std::uint16_t
+            -> protocol::ofp_queue_properties
         {
             return queue_property;
         }

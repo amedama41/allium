@@ -111,7 +111,7 @@ namespace v10 {
         {
             std::cout
                 << "version: " << std::uint16_t{header.version} << "\n"
-                << "type:    " << v10::to_string(ofp_type(header.type)) << "\n"
+                << "type:    " << v10::to_string(protocol::ofp_type(header.type)) << "\n"
                 << "length:  " << header.length << "\n"
                 << "xid:     " << header.xid << "\n"
                 << std::endl;
@@ -126,7 +126,7 @@ namespace v10 {
             static_assert(std::tuple_size<default_switch_message_list>::value == 10, "");
             BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
-            case OFPT_STATS_REPLY:
+            case protocol::OFPT_STATS_REPLY:
                 handle_stats_reply(first, last);
                 break;
             default:
