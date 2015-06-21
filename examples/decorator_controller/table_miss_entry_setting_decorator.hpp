@@ -25,7 +25,7 @@ struct table_miss_entry_setting_decorator
             channel->send(of::flow_mod_add{{
                       of::flow_entry_id::table_miss()
                     , of::instructions::write_actions{of::actions::output::to_controller()}
-            }, 0, of::OFPFF_SEND_FLOW_REM});
+            }, 0, of::protocol::OFPFF_SEND_FLOW_REM});
             static_cast<Derived*>(this)->handle(std::forward<Channel>(channel));
         }
 

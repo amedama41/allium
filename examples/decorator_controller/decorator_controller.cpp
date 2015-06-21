@@ -25,7 +25,9 @@ struct flooding_handler
 
     void handle(controller::channel_ptr channel, of::packet_in const& pkt_in)
     {
-        channel->send(of::packet_out{pkt_in.frame(), of::OFPP_CONTROLLER, of::actions::output{of::OFPP_ALL}});
+        channel->send(of::packet_out{pkt_in.frame()
+                , of::protocol::OFPP_CONTROLLER
+                , of::actions::output{of::protocol::OFPP_ALL}});
     }
 
     template <class... Args>

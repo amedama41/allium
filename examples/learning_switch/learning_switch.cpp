@@ -82,7 +82,7 @@ public:
                 channel->send(of::packet_out{pkt_in.frame(), in_port, of::actions::output{outport.get()}});
             }
             else {
-                channel->send(of::packet_out{pkt_in.frame(), in_port, of::actions::output{of::OFPP_ALL}});
+                channel->send(of::packet_out{pkt_in.frame(), in_port, of::actions::output{of::protocol::OFPP_ALL}});
             }
         });
     }
@@ -93,7 +93,7 @@ public:
                 of::flow_mod_add{{
                       of::flow_entry_id::table_miss()
                     , of::instructions::apply_actions{of::actions::output::to_controller()}
-                }, 0, of::OFPFF_SEND_FLOW_REM}
+                }, 0, of::protocol::OFPFF_SEND_FLOW_REM}
         );
     }
 
@@ -109,7 +109,7 @@ private:
                     {oxm_match_from_packet(frame), 65535}
                   , of::instructions::apply_actions{of::actions::output{port}}
               }
-            , 0, of::OFPFF_SEND_FLOW_REM}
+            , 0, of::protocol::OFPFF_SEND_FLOW_REM}
         );
     }
 

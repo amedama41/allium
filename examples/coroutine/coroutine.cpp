@@ -25,7 +25,7 @@ struct coroutine_handler
         channel->send(of::flow_mod_add{{
               of::flow_entry_id::table_miss()
             , of::instructions::write_actions{of::actions::output::to_controller()}
-        }, 0, of::OFPFF_SEND_FLOW_REM});
+        }, 0, of::protocol::OFPFF_SEND_FLOW_REM});
 
         boost::asio::spawn(*io_service_, [=](boost::asio::yield_context yield) {
             auto features_txn = channel->send_request(of::features_request{}, yield);
@@ -47,15 +47,15 @@ struct coroutine_handler
         boost::asio::spawn(*io_service_, [=](boost::asio::yield_context yield) {
             channel->send(of::flow_mod_add{{
                   {oxm_match_from_packet(pkt_in.frame()), 65535}
-                , of::instructions::write_actions{of::actions::output{of::OFPP_ALL}}
+                , of::instructions::write_actions{of::actions::output{of::protocol::OFPP_ALL}}
                 , of::timeouts{60, 60}
-            }, 0, of::OFPFF_SEND_FLOW_REM});
+            }, 0, of::protocol::OFPFF_SEND_FLOW_REM});
 
             auto barrier_txn = channel->send_request(of::barrier_request{}, yield);
             barrier_txn.expires_from_now(std::chrono::seconds{2});
             if (auto reply = barrier_txn.async_wait(yield)) {
                 channel->send(of::packet_out{pkt_in.frame()
-                    , pkt_in.in_port(), of::actions::output{of::OFPP_TABLE}});
+                    , pkt_in.in_port(), of::actions::output{of::protocol::OFPP_TABLE}});
             }
         });
     }

@@ -9,22 +9,23 @@ using controller = of::controller<repeater_hub>;
 
 struct repeater_hub
 {
+
     void handle(controller::channel_ptr channel)
     {
         channel->send(of::flow_mod_add{{
                   of::flow_entry_id::table_miss()
                 , of::instructions::write_actions{of::actions::output::to_controller()}
-        }, 0, of::OFPFF_SEND_FLOW_REM});
+        }, 0, of::protocol::OFPFF_SEND_FLOW_REM});
     }
 
     void handle(controller::channel_ptr channel, of::packet_in pkt_in)
     {
         channel->send(of::flow_mod_add{{
                   {oxm_match_from_packet(pkt_in.frame()), 65535}
-                , of::instructions::write_actions{of::actions::output{of::OFPP_ALL}}
-        }, 0, of::OFPFF_SEND_FLOW_REM});
+                , of::instructions::write_actions{of::actions::output{of::protocol::OFPP_ALL}}
+        }, 0, of::protocol::OFPFF_SEND_FLOW_REM});
         channel->send(of::packet_out{pkt_in.frame()
-                , of::OFPP_CONTROLLER, of::actions::output{of::OFPP_ALL}});
+                , of::protocol::OFPP_CONTROLLER, of::actions::output{of::protocol::OFPP_ALL}});
     }
 
     template <class... Args>
