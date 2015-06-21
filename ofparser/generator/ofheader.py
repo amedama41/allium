@@ -56,13 +56,22 @@ def _generate_enum_decls(enum_decls):
 """.format(name=name, members=_generate_enum_members(enum.get_children()))),
             enum_decls.items()))
 
-def _generate_constant_defs(macro_defs, macro_type_map):
+def _generate_constant_decls(macro_defs, macro_type_map):
     constants = '\n'.join(map(
-        lambda (name, macro): '        static constexpr {type} const {name} = {value};'.format(
+        lambda (name, macro): '            static constexpr {type} const {name} = {value};'.format(
             type=macro_type_map[name], name=name, value=list(macro.get_tokens())[1].spelling),
         filter(lambda (name, _): name in macro_type_map, macro_defs.items())))
     if 'OFP_NO_BUFFER' not in macro_defs:
-        return '\n'.join([constants, '        static constexpr std::uint32_t const OFP_NO_BUFFER = 0xffffffff;'])
+        return '\n'.join([constants, '            static constexpr std::uint32_t const OFP_NO_BUFFER = 0xffffffff;'])
+    return constants
+
+def _generate_constant_defs(macro_defs, macro_type_map):
+    constants = '\n'.join(map(
+        lambda (name, macro): '        template <class T> {type} const static_data_member_initializer<T>::{name};'.format(
+            type=macro_type_map[name], name=name),
+        filter(lambda (name, _): name in macro_type_map, macro_defs.items())))
+    if 'OFP_NO_BUFFER' not in macro_defs:
+        return '\n'.join([constants, '        template <class T> std::uint32_t const static_data_member_initializer<T>::OFP_NO_BUFFER;'])
     return constants
 
 def generate(collector, macro_type_map):
@@ -83,14 +92,22 @@ namespace v{version} {{
 
 {struct_decls}
 
+        template <class T>
+        class static_data_member_initializer
+        {{
+        public:
+{constant_decls}
+        }};
+
+{constant_defs}
+
     }} // namespace v{version}_detail
 
     class protocol
+        : public v{version}_detail::static_data_member_initializer<protocol>
     {{
     public:
 {enum_decls}
-
-{constant_defs}
     }};
 
 }} // namespace v{version}
@@ -102,6 +119,7 @@ namespace v{version} {{
 """.format(
     version=collector.version,
     struct_decls=_generate_struct_decls(collector.struct_decls, collector.version == 13),
-    enum_decls=_generate_enum_decls(collector.enum_decls),
-    constant_defs=_generate_constant_defs(collector.macro_defs, macro_type_map)))
+    constant_decls=_generate_constant_decls(collector.macro_defs, macro_type_map),
+    constant_defs=_generate_constant_defs(collector.macro_defs, macro_type_map),
+    enum_decls=_generate_enum_decls(collector.enum_decls)))
 
