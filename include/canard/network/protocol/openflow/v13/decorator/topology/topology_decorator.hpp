@@ -106,15 +106,15 @@ namespace topology {
         {
             auto const sw_info = switch_info(this->get_datapath_id(channel));
             switch (port_status.reason()) {
-            case canard::network::openflow::v13::OFPPR_ADD:
+            case canard::network::openflow::v13::protocol::OFPPR_ADD:
                 sw_info->emplace(port_status.port());
                 break;
 
-            case canard::network::openflow::v13::OFPPR_DELETE:
+            case canard::network::openflow::v13::protocol::OFPPR_DELETE:
                 sw_info->erase(port_status.port());
                 break;
 
-            case canard::network::openflow::v13::OFPPR_MODIFY:
+            case canard::network::openflow::v13::protocol::OFPPR_MODIFY:
                 sw_info->update(port_status.port());
                 break;
             }

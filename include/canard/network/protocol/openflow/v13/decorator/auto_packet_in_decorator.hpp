@@ -29,7 +29,7 @@ public:
                     of13::flow_entry{
                           of13::flow_entry_id::table_miss()
                         , of13::instructions::write_actions{of13::actions::output::to_controller()}
-                    }, 0, of13::OFPFF_SEND_FLOW_REM});
+                    }, 0, of13::protocol::OFPFF_SEND_FLOW_REM});
             static_cast<Derived*>(this)->handle(std::forward<Channel>(channel));
         }
 

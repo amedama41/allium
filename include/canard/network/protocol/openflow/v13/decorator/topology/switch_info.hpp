@@ -111,7 +111,7 @@ namespace topology {
             namespace of13 = canard::network::openflow::v13;
             channel_->send(of13::packet_out{
                       detail::create_lldp(get_datapath_id(), port)
-                    , of13::OFPP_CONTROLLER
+                    , of13::protocol::OFPP_CONTROLLER
                     , of13::actions::output{port.port_no()}
             });
         }
