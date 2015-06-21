@@ -11,7 +11,7 @@ def _generate_error_category_classes(version, error_type_enum, ignore_types):
             : public boost::system::error_category
         {{
         public:
-            static ofp_error_type const error_type = {value};
+            static protocol::ofp_error_type const error_type = protocol::{value};
 
             auto name() const noexcept
                 -> char const*
@@ -25,7 +25,9 @@ def _generate_error_category_classes(version, error_type_enum, ignore_types):
                 return {{ev + 1, *this}};
             }}
 
-            auto equivalent(boost::system::error_code const& code, int const condition) const noexcept
+            auto equivalent(
+                    boost::system::error_code const& code
+                  , int const condition) const noexcept
                 -> bool
             {{
                 return *this == code.category() && code.value() == condition + 1;
@@ -34,7 +36,7 @@ def _generate_error_category_classes(version, error_type_enum, ignore_types):
             auto message(int const ev) const
                 -> std::string
             {{
-                return v{version}::to_string(ofp_{name}_code(ev - 1));
+                return v{version}::to_string(protocol::ofp_{name}_code(ev - 1));
             }}
         }};\
 """.format(version=version, name=_strip_OFPET(error.displayname), value=error.displayname)),
@@ -57,7 +59,7 @@ def _generate_make_error_code_funcs(version, error_type_enum, ignore_types):
     return '\n\n'.join(map(
         lambda error: (
 """\
-    inline auto make_error_code(ofp_{name}_code const e)
+    inline auto make_error_code(protocol::ofp_{name}_code const e)
         -> boost::system::error_code
     {{
         return {{e + 1, v{version}::{name}_category()}};
@@ -69,7 +71,10 @@ def _generate_is_error_code_enum_specialization(version, error_type_enum, ignore
     return '\n\n'.join(map(
         lambda error: (
 """\
-    template <> struct is_error_code_enum<canard::network::openflow::v{version}::ofp_{name}_code>
+    template <>
+    struct is_error_code_enum<
+        canard::network::openflow::v{version}::protocol::ofp_{name}_code
+    >
     {{
         static bool const value = true;
     }};\

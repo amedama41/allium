@@ -2,7 +2,7 @@ from future_builtins import map, filter
 
 def _case_for_each_member(members, ignore_to_string_enums):
     return '\n'.join(map(
-        lambda mem: '        case {name}: return "{name}";'.format(name=mem.displayname),
+        lambda mem: '        case protocol::{name}: return "{name}";'.format(name=mem.displayname),
         filter(lambda mem: mem.displayname not in ignore_to_string_enums, members)))
 
 def _default_string(enum_name):
@@ -18,7 +18,7 @@ def _generate_to_string_funcs(enum_decls, ignore_to_string_enums):
     return '\n\n'.join(map(
         lambda (name, enum): (
 """\
-    inline auto to_string({name} const value)
+    inline auto to_string(protocol::{name} const value)
         -> std::string
     {{
         switch (value) {{

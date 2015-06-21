@@ -42,27 +42,27 @@ def _generate_struct_decls(struct_decls, is_skip_ofp_match=False):
 
 def _generate_enum_members(enum_members):
     return '\n'.join(map(
-        lambda member: '        {} = {},'.format(member.displayname, member.enum_value),
+        lambda member: '            {} = {},'.format(member.displayname, member.enum_value),
         enum_members))
 
 def _generate_enum_decls(enum_decls):
     return '\n\n'.join(map(
             lambda (name, enum): (
 """\
-    enum {name}
-    {{
+        enum {name}
+        {{
 {members}
-    }};\
+        }};\
 """.format(name=name, members=_generate_enum_members(enum.get_children()))),
             enum_decls.items()))
 
 def _generate_constant_defs(macro_defs, macro_type_map):
     constants = '\n'.join(map(
-        lambda (name, macro): '    constexpr {type} const {name} = {value};'.format(
+        lambda (name, macro): '        static constexpr {type} const {name} = {value};'.format(
             type=macro_type_map[name], name=name, value=list(macro.get_tokens())[1].spelling),
         filter(lambda (name, _): name in macro_type_map, macro_defs.items())))
     if 'OFP_NO_BUFFER' not in macro_defs:
-        return '\n'.join([constants, '    constexpr std::uint32_t const OFP_NO_BUFFER = 0xffffffff;'])
+        return '\n'.join([constants, '        static constexpr std::uint32_t const OFP_NO_BUFFER = 0xffffffff;'])
     return constants
 
 def generate(collector, macro_type_map):
@@ -85,9 +85,13 @@ namespace v{version} {{
 
     }} // namespace v{version}_detail
 
+    class protocol
+    {{
+    public:
 {enum_decls}
 
 {constant_defs}
+    }};
 
 }} // namespace v{version}
 }} // namespace openflow
