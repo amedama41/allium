@@ -32,9 +32,9 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_type
+                -> protocol::ofp_type
             {
-                return ofp_type(header().type);
+                return protocol::ofp_type(header().type);
             }
 
             auto length() const

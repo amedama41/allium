@@ -41,7 +41,11 @@ namespace v13 {
     {
     public:
         flow_entry(flow_entry_id identifer, instruction_set instructions)
-            : flow_entry{std::move(identifer), std::move(instructions), {0, 0}, {OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT}, 0}
+            : flow_entry{
+                  std::move(identifer), std::move(instructions), {0, 0}
+                , {protocol::OFP_FLOW_PERMANENT, protocol::OFP_FLOW_PERMANENT}
+                , 0
+              }
         {
         }
 
@@ -51,7 +55,11 @@ namespace v13 {
         }
 
         flow_entry(flow_entry_id identifer, instruction_set instructions, std::uint64_t const cookie)
-            : flow_entry{std::move(identifer), std::move(instructions), {0, 0}, {OFP_FLOW_PERMANENT, OFP_FLOW_PERMANENT}, cookie}
+            : flow_entry{
+                  std::move(identifer), std::move(instructions), {0, 0}
+                , {protocol::OFP_FLOW_PERMANENT, protocol::OFP_FLOW_PERMANENT}
+                , cookie
+              }
         {
         }
 

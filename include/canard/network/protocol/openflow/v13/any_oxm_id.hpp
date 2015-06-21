@@ -87,7 +87,7 @@ namespace v13 {
         {
             auto copy_first = first;
             auto const oxm_header = detail::decode<std::uint32_t>(copy_first, last);
-            if ((oxm_header >> 16) == OFPXMC_EXPERIMENTER) {
+            if ((oxm_header >> 16) == protocol::OFPXMC_EXPERIMENTER) {
                 return oxm_experimenter_id::decode(first, last);
             }
             return oxm_id::decode(first, last);

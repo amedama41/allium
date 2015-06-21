@@ -15,10 +15,14 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<barrier_request>
     {
     public:
-        static ofp_type const message_type = OFPT_BARRIER_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_BARRIER_REQUEST;
 
         barrier_request()
-            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), get_xid()}
+            : header_{
+                  protocol::OFP_VERSION, message_type
+                , sizeof(v13_detail::ofp_header), get_xid()
+              }
         {
         }
 
@@ -62,10 +66,14 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<barrier_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_BARRIER_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_BARRIER_REPLY;
 
         barrier_reply(barrier_request const& request)
-            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), request.xid()}
+            : header_{
+                  protocol::OFP_VERSION, message_type
+                , sizeof(v13_detail::ofp_header), request.xid()
+              }
         {
         }
 

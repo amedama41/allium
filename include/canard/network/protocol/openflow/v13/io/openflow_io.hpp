@@ -17,9 +17,9 @@ namespace v13 {
         -> std::string
     {
         return boost::algorithm::join(std::array<std::string, 3>{{
-                  (OFPPS_LINK_DOWN & port_state ? "LINK_DOWN" : "")
-                , (OFPPS_BLOCKED & port_state ? "BLOCKED" : "")
-                , (OFPPS_LIVE & port_state ? "LIVE" : "")
+                  (protocol::OFPPS_LINK_DOWN & port_state ? "LINK_DOWN" : "")
+                , (protocol::OFPPS_BLOCKED & port_state ? "BLOCKED" : "")
+                , (protocol::OFPPS_LIVE & port_state ? "LIVE" : "")
         }}, " ");
     }
 

@@ -143,7 +143,8 @@ namespace v13 {
     public:
         using const_iterator = table_features_list::const_iterator;
 
-        static ofp_multipart_type const multipart_type_value = OFPMP_TABLE_FEATURES;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = OFPMP_TABLE_FEATURES;
 
         table_features_request()
             : basic_multipart_request{0, 0}
@@ -200,7 +201,8 @@ namespace v13 {
     public:
         using const_iterator = table_features_list::const_iterator;
 
-        static ofp_multipart_type const multipart_type_value = OFPMP_TABLE_FEATURES;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = OFPMP_TABLE_FEATURES;
 
         table_features_reply(std::initializer_list<table_features> features)
             : basic_multipart_reply{

@@ -15,7 +15,8 @@ namespace v13 {
             : public action_detail::generic_action<decrement_mpls_ttl>
         {
         public:
-            static ofp_action_type const action_type = OFPAT_DEC_MPLS_TTL;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_DEC_MPLS_TTL;
         };
 
     } // namespace actions

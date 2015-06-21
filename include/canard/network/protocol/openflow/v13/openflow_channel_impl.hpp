@@ -296,7 +296,7 @@ namespace v13 {
             if (first != last) {
                 std::cout
                     << boost::format{"message length error (%s: length is %u but remained length is %u"}
-                    % v13::to_string(ofp_type(header.type)) % header.length % std::distance(first, last);
+                    % v13::to_string(protocol::ofp_type(header.type)) % header.length % std::distance(first, last);
             }
             streambuf_.consume(header.length);
             return message;
@@ -339,7 +339,7 @@ namespace v13 {
                 streambuf_.sgetn(&buf[0], buf.size());
                 std::cout
                     << boost::format{"receive unknown multipart message (type=%s)"}
-                    % to_string(ofp_multipart_type(multipart_reply.type));
+                    % to_string(protocol::ofp_multipart_type(multipart_reply.type));
             }();
         }
     }
@@ -348,7 +348,7 @@ namespace v13 {
     inline void
     openflow_channel_impl<ControllerHandler, Socket>::handle_message(v13_detail::ofp_header const& header)
     {
-        if (!this->endpoint_ and header.type != OFPT_HELLO) {
+        if (!this->endpoint_ and header.type != protocol::OFPT_HELLO) {
             std::cout << "received non-hello message before hello";
             socket().close();
             timer_.cancel();
@@ -362,16 +362,16 @@ namespace v13 {
             echo_reply, features_reply, switch_config_reply, barrier_reply
         >;
         switch (header.type) {
-        case OFPT_HELLO:
+        case protocol::OFPT_HELLO:
             handle_hello(header);
             break;
-        case OFPT_ERROR:
+        case protocol::OFPT_ERROR:
             handle_error(header);
             break;
-        case OFPT_ECHO_REQUEST:
+        case protocol::OFPT_ECHO_REQUEST:
             handle_echo_request(header);
             break;
-        case OFPT_MULTIPART_REPLY:
+        case protocol::OFPT_MULTIPART_REPLY:
             handle_multipart();
             break;
 

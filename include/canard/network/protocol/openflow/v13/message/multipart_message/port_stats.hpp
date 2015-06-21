@@ -136,10 +136,11 @@ namespace v13 {
         : public v13_detail::basic_multipart_request<port_stats_request>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_PORT_STATS;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_PORT_STATS;
 
         port_stats_request()
-            : port_stats_request{OFPP_ANY}
+            : port_stats_request{protocol::OFPP_ANY}
         {
         }
 
@@ -176,7 +177,8 @@ namespace v13 {
         using port_stats_list = std::vector<port_stats>;
 
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_PORT_STATS;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_PORT_STATS;
 
         using iterator = port_stats_list::iterator;
         using const_iterator = port_stats_list::const_iterator;

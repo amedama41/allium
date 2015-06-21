@@ -21,7 +21,8 @@ namespace v13 {
         class write_actions
         {
         public:
-            static ofp_instruction_type const instruction_type = OFPIT_WRITE_ACTIONS;
+            static protocol::ofp_instruction_type const instruction_type
+                = protocol::OFPIT_WRITE_ACTIONS;
 
             explicit write_actions(action_set act_set)
                 : actions_{instruction_type, std::uint16_t(sizeof(v13_detail::ofp_instruction_actions) + act_set.length()), {0, 0, 0, 0}}
@@ -36,7 +37,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_instruction_type
+                -> protocol::ofp_instruction_type
             {
                 return instruction_type;
             }

@@ -17,7 +17,8 @@ namespace v13 {
         class set_mpls_ttl
         {
         public:
-            static ofp_action_type const action_type = OFPAT_SET_MPLS_TTL;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_SET_MPLS_TTL;
 
             explicit set_mpls_ttl(std::uint8_t const mpls_ttl)
                 : mpls_ttl_{action_type, sizeof(v13_detail::ofp_action_mpls_ttl), mpls_ttl}
@@ -25,7 +26,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_action_type
+                -> protocol::ofp_action_type
             {
                 return action_type;
             }

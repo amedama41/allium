@@ -34,9 +34,9 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_hello_elem_type
+            -> protocol::ofp_hello_elem_type
         {
-            auto visitor = detail::type_visitor<ofp_hello_elem_type>{};
+            auto visitor = detail::type_visitor<protocol::ofp_hello_elem_type>{};
             return boost::apply_visitor(visitor, variant_);
         }
 

@@ -17,7 +17,8 @@ namespace v13 {
         class write_metadata
         {
         public:
-            static ofp_instruction_type const instruction_type = OFPIT_WRITE_METADATA;
+            static protocol::ofp_instruction_type const instruction_type
+                = protocol::OFPIT_WRITE_METADATA;
 
             explicit write_metadata(std::uint64_t const metadata)
                 : write_metadata{metadata, std::numeric_limits<std::uint64_t>::max()}
@@ -33,7 +34,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_instruction_type
+                -> protocol::ofp_instruction_type
             {
                 return instruction_type;
             }

@@ -54,9 +54,9 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<hello>
     {
     public:
-        static ofp_type const message_type = OFPT_HELLO;
+        static protocol::ofp_type const message_type = protocol::OFPT_HELLO;
 
-        explicit hello(std::uint8_t const version = OFP_VERSION)
+        explicit hello(std::uint8_t const version = protocol::OFP_VERSION)
             : hello_{{version, message_type, sizeof(v13_detail::ofp_hello), get_xid()}}
         {
         }
@@ -67,7 +67,12 @@ namespace v13 {
         }
 
         explicit hello(std::vector<any_hello_element> elements)
-            : hello_{{hello_detail::get_version(elements, OFP_VERSION), message_type, calc_length(elements), get_xid()}}
+            : hello_{
+                v13_detail::ofp_header{
+                      hello_detail::get_version(elements, protocol::OFP_VERSION)
+                    , message_type, calc_length(elements), get_xid()
+                }
+              }
             , elements_(std::move(elements))
         {
         }

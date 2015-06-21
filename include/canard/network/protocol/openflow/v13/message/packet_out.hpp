@@ -21,13 +21,18 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<packet_out>
     {
     public:
-        static ofp_type const message_type = OFPT_PACKET_OUT;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_PACKET_OUT;
 
         template <class... Actions>
         packet_out(std::vector<std::uint8_t> data, std::uint32_t const in_port, Actions&&... actions)
             : packet_out_{
-                { OFP_VERSION, message_type, std::uint16_t(sizeof(v13_detail::ofp_packet_out) + actions_length(actions...) + data.size()), get_xid() }
-                , OFP_NO_BUFFER, in_port, actions_length(actions...), {0}
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , std::uint16_t(sizeof(v13_detail::ofp_packet_out) + actions_length(actions...) + data.size())
+                    , get_xid()
+                  }
+                , protocol::OFP_NO_BUFFER, in_port, actions_length(actions...), {0}
               }
             , action_list_{std::forward<Actions>(actions)...}
             , data_(std::move(data))
@@ -37,7 +42,11 @@ namespace v13 {
         template <class... Actions>
         packet_out(std::uint32_t const buffer_id, std::uint32_t const in_port, Actions&&... actions)
             : packet_out_{
-                { OFP_VERSION, message_type, std::uint16_t(sizeof(v13_detail::ofp_packet_out) + actions_length(actions...)), get_xid() }
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , std::uint16_t(sizeof(v13_detail::ofp_packet_out) + actions_length(actions...))
+                    , get_xid()
+                  }
                 , buffer_id, in_port, actions_length(actions...), {0}
               }
             , action_list_{std::forward<Actions>(actions)...}

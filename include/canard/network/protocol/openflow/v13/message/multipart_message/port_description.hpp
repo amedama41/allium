@@ -19,7 +19,8 @@ namespace v13 {
         : public v13_detail::basic_multipart_request<port_description_request>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_PORT_DESC;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_PORT_DESC;
 
         port_description_request()
             : basic_multipart_request{0, 0}
@@ -50,7 +51,8 @@ namespace v13 {
         using value_type = port;
         using reference = port const&;
 
-        static ofp_multipart_type const multipart_type_value = OFPMP_PORT_DESC;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_PORT_DESC;
 
         port_description_reply(std::vector<port> ports, std::uint16_t const flags)
             : basic_multipart_reply{ports.size() * sizeof(v13_detail::ofp_port), flags}

@@ -31,7 +31,8 @@ namespace v13 {
         class versionbitmap
         {
         public:
-            static ofp_hello_elem_type const hello_element_type = OFPHET_VERSIONBITMAP;
+            static protocol::ofp_hello_elem_type const hello_element_type
+                = protocol::OFPHET_VERSIONBITMAP;
 
             explicit versionbitmap(std::vector<std::uint32_t> bitmaps)
                 : versionbitmap_{
@@ -51,9 +52,9 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_hello_elem_type
+                -> protocol::ofp_hello_elem_type
             {
-                return ofp_hello_elem_type(versionbitmap_.type);
+                return protocol::ofp_hello_elem_type(versionbitmap_.type);
             }
 
             auto length() const
@@ -104,7 +105,7 @@ namespace v13 {
                 : versionbitmap_(versionbitmap)
                 , bitmaps_(std::move(bitmaps))
             {
-                if (versionbitmap_.type != OFPHET_VERSIONBITMAP) {
+                if (versionbitmap_.type != hello_element_type) {
                     throw 1;
                 }
                 if (versionbitmap_.length != sizeof(versionbitmap_) + bitmaps_.size() * sizeof(std::uint32_t)) {
@@ -147,9 +148,9 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_hello_elem_type
+                -> protocol::ofp_hello_elem_type
             {
-                return ofp_hello_elem_type(header_.type);
+                return protocol::ofp_hello_elem_type(header_.type);
             }
 
             auto length() const

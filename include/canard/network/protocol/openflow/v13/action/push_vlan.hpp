@@ -16,7 +16,8 @@ namespace v13 {
             : public action_detail::action_push<push_vlan>
         {
         public:
-            static ofp_action_type const action_type = OFPAT_PUSH_VLAN;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_PUSH_VLAN;
 
             explicit push_vlan(std::uint16_t const ethertype)
                 : action_push{ethertype}

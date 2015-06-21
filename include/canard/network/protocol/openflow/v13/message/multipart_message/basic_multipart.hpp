@@ -29,14 +29,15 @@ namespace v13 {
             : public v13_detail::basic_openflow_message<T>
         {
         public:
-            static ofp_type const message_type = OFPT_MULTIPART_REQUEST;
+            static protocol::ofp_type const message_type
+                = protocol::OFPT_MULTIPART_REQUEST;
 
         protected:
             basic_multipart_request(std::size_t const body_length, std::uint16_t const flags)
                 : request_{
-                      {
-                            OFP_VERSION
-                          , OFPT_MULTIPART_REQUEST
+                      v13_detail::ofp_header{
+                            protocol::OFP_VERSION
+                          , protocol::OFPT_MULTIPART_REQUEST
                           , v13_detail::over_64kb(body_length)
                               ? std::numeric_limits<std::uint16_t>::max()
                               : std::uint16_t(sizeof(v13_detail::ofp_multipart_request) + body_length)
@@ -57,9 +58,9 @@ namespace v13 {
             }
 
             auto multipart_type() const
-                -> ofp_multipart_type
+                -> protocol::ofp_multipart_type
             {
-                return ofp_multipart_type(request_.type);
+                return protocol::ofp_multipart_type(request_.type);
             }
 
             auto flags() const
@@ -99,14 +100,15 @@ namespace v13 {
             : public v13_detail::basic_openflow_message<T>
         {
         public:
-            static ofp_type const message_type = OFPT_MULTIPART_REPLY;
+            static protocol::ofp_type const message_type
+                = protocol::OFPT_MULTIPART_REPLY;
 
         protected:
             basic_multipart_reply(std::size_t const body_length, std::uint16_t flags)
                 : reply_{
-                      {
-                            OFP_VERSION
-                          , OFPT_MULTIPART_REPLY
+                      v13_detail::ofp_header{
+                            protocol::OFP_VERSION
+                          , protocol::OFPT_MULTIPART_REPLY
                           , v13_detail::over_64kb(body_length)
                               ? std::numeric_limits<std::uint16_t>::max()
                               : std::uint16_t(sizeof(v13_detail::ofp_multipart_reply) + body_length)
@@ -127,9 +129,9 @@ namespace v13 {
             }
 
             auto multipart_type() const
-                -> ofp_multipart_type
+                -> protocol::ofp_multipart_type
             {
-                return ofp_multipart_type(reply_.type);
+                return protocol::ofp_multipart_type(reply_.type);
             }
 
             auto flags() const

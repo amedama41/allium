@@ -15,7 +15,8 @@ namespace v13 {
             : public action_detail::generic_action<decrement_nw_ttl>
         {
         public:
-            static ofp_action_type const action_type = OFPAT_DEC_NW_TTL;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_DEC_NW_TTL;
         };
 
     } // namespace actions

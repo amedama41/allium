@@ -21,7 +21,8 @@ namespace v13 {
         class apply_actions
         {
         public:
-            static ofp_instruction_type const instruction_type = OFPIT_APPLY_ACTIONS;
+            static protocol::ofp_instruction_type const instruction_type
+                = protocol::OFPIT_APPLY_ACTIONS;
 
             explicit apply_actions(action_list act_list)
                 : actions_{instruction_type, std::uint16_t(sizeof(v13_detail::ofp_instruction_actions) + act_list.length()), {0, 0, 0, 0}}
@@ -37,7 +38,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_instruction_type
+                -> protocol::ofp_instruction_type
             {
                 return instruction_type;
             }

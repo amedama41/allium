@@ -24,12 +24,16 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<error_msg>
     {
     public:
-        static ofp_type const message_type = OFPT_ERROR;
+        static protocol::ofp_type const message_type = protocol::OFPT_ERROR;
 
-        error_msg(ofp_error_type const type, std::uint16_t const code
+        error_msg(protocol::ofp_error_type const type, std::uint16_t const code
                 , std::vector<unsigned char> data)
             : error_msg_{
-                  { OFP_VERSION, message_type, std::uint16_t(sizeof(v13_detail::ofp_error_msg) + data.size()), get_xid() }
+                  v13_detail::ofp_header{
+                        protocol::OFP_VERSION, message_type
+                      , std::uint16_t(sizeof(v13_detail::ofp_error_msg) + data.size())
+                      , get_xid()
+                  }
                 , std::uint16_t(type), code
               }
             , data_(std::move(data))
@@ -46,9 +50,9 @@ namespace v13 {
         }
 
         auto error_type() const
-            -> ofp_error_type
+            -> protocol::ofp_error_type
         {
-            return ofp_error_type(error_msg_.type);
+            return protocol::ofp_error_type(error_msg_.type);
         }
 
         auto error_code() const

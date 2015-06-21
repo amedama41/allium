@@ -18,12 +18,17 @@ namespace v13 {
     {
     public:
         explicit bucket(action_set actions)
-            : bucket{0, OFPP_ANY, OFPG_ANY, std::move(actions)}
+            : bucket{
+                0, protocol::OFPP_ANY, protocol::OFPG_ANY, std::move(actions)
+              }
         {
         }
 
         bucket(std::uint16_t const weight, action_set actions)
-            : bucket{weight, OFPP_ANY, OFPG_ANY, std::move(actions)}
+            : bucket{
+                  weight, protocol::OFPP_ANY, protocol::OFPG_ANY
+                , std::move(actions)
+              }
         {
         }
 

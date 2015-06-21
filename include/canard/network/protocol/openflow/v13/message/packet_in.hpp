@@ -21,7 +21,7 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<packet_in>
     {
     public:
-        static ofp_type const message_type = OFPT_PACKET_IN;
+        static protocol::ofp_type const message_type = protocol::OFPT_PACKET_IN;
 
         auto header() const
             -> v13_detail::ofp_header const&
@@ -42,9 +42,9 @@ namespace v13 {
         }
 
         auto reason() const
-            -> ofp_packet_in_reason
+            -> protocol::ofp_packet_in_reason
         {
-            return ofp_packet_in_reason(packet_in_.reason);
+            return protocol::ofp_packet_in_reason(packet_in_.reason);
         }
 
         auto table_id() const

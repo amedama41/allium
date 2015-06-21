@@ -20,16 +20,16 @@ namespace v13 {
         {
         }
 
-        oxm_id(ofp_oxm_class const oxm_class, std::uint8_t const field
+        oxm_id(protocol::ofp_oxm_class const oxm_class, std::uint8_t const field
                 , bool const hasmask, std::uint8_t const length)
             : oxm_header_{(std::uint32_t(oxm_class) << 16) | (std::uint32_t{field} << 9) | (std::uint32_t{hasmask} << 8) | length}
         {
         }
 
         auto oxm_class() const
-            -> ofp_oxm_class
+            -> protocol::ofp_oxm_class
         {
-            return ofp_oxm_class(oxm_header_ >> 16);
+            return protocol::ofp_oxm_class(oxm_header_ >> 16);
         }
 
         auto oxm_field() const
@@ -96,9 +96,9 @@ namespace v13 {
         }
 
         auto oxm_class() const
-            -> ofp_oxm_class
+            -> protocol::ofp_oxm_class
         {
-            return ofp_oxm_class(header_.oxm_header >> 16);
+            return protocol::ofp_oxm_class(header_.oxm_header >> 16);
         }
 
         auto oxm_field() const

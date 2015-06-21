@@ -15,7 +15,8 @@ namespace v13 {
             : public action_detail::generic_action<pop_vlan>
         {
         public:
-            static ofp_action_type const action_type = OFPAT_POP_VLAN;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_POP_VLAN;
         };
 
     } // namespace actions

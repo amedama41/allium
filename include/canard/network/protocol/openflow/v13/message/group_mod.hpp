@@ -26,12 +26,19 @@ namespace v13 {
             : public basic_openflow_message<T>
         {
         public:
-            static ofp_type const message_type = OFPT_GROUP_MOD;
+            static protocol::ofp_type const message_type
+                = protocol::OFPT_GROUP_MOD;
 
         protected:
-            basic_group_mod(std::uint32_t const group_id, ofp_group_type const group_type, std::vector<bucket> buckets)
+            basic_group_mod(
+                      std::uint32_t const group_id
+                    , protocol::ofp_group_type const group_type
+                    , std::vector<bucket> buckets)
                 : group_mod_{
-                      {OFP_VERSION, message_type, calc_length(buckets), basic_group_mod::get_xid()}
+                      v13_detail::ofp_header{
+                          protocol::OFP_VERSION, message_type
+                        , calc_length(buckets), basic_group_mod::get_xid()
+                      }
                     , T::command_type, std::uint8_t(group_type), 0, group_id
                   }
                 , buckets_(std::move(buckets))
@@ -52,7 +59,7 @@ namespace v13 {
             }
 
             auto command() const
-                -> ofp_group_mod_command
+                -> protocol::ofp_group_mod_command
             {
                 return T::command_type;
             }
@@ -64,9 +71,9 @@ namespace v13 {
             }
 
             auto group_type() const
-                -> ofp_group_type
+                -> protocol::ofp_group_type
             {
-                return ofp_group_type(group_mod_.type);
+                return protocol::ofp_group_type(group_mod_.type);
             }
 
             auto buckets() const
@@ -125,9 +132,13 @@ namespace v13 {
         : public v13_detail::basic_group_mod<group_mod_add>
     {
     public:
-        static ofp_group_mod_command const command_type = OFPGC_ADD;
+        static protocol::ofp_group_mod_command const command_type
+            = protocol::OFPGC_ADD;
 
-        group_mod_add(std::uint32_t const group_id, ofp_group_type const group_type, std::vector<bucket> buckets)
+        group_mod_add(
+                  std::uint32_t const group_id
+                , protocol::ofp_group_type const group_type
+                , std::vector<bucket> buckets)
             : basic_group_mod{group_id, group_type, std::move(buckets)}
         {
         }
@@ -145,9 +156,13 @@ namespace v13 {
         : public v13_detail::basic_group_mod<group_mod_modify>
     {
     public:
-        static ofp_group_mod_command const command_type = OFPGC_MODIFY;
+        static protocol::ofp_group_mod_command const command_type
+            = protocol::OFPGC_MODIFY;
 
-        group_mod_modify(std::uint32_t const group_id, ofp_group_type const group_type, std::vector<bucket> buckets)
+        group_mod_modify(
+                  std::uint32_t const group_id
+                , protocol::ofp_group_type const group_type
+                , std::vector<bucket> buckets)
             : basic_group_mod{group_id, group_type, std::move(buckets)}
         {
         }
@@ -165,12 +180,16 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<group_mod_delete>
     {
     public:
-        static ofp_type const message_type = OFPT_GROUP_MOD;
-        static ofp_group_mod_command const command_type = OFPGC_DELETE;
+        static protocol::ofp_type const message_type = protocol::OFPT_GROUP_MOD;
+        static protocol::ofp_group_mod_command const command_type
+            = protocol::OFPGC_DELETE;
 
         explicit group_mod_delete(std::uint32_t const group_id)
             : group_mod_{
-                  {OFP_VERSION, message_type, sizeof(v13_detail::ofp_group_mod), get_xid()}
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , sizeof(v13_detail::ofp_group_mod), get_xid()
+                  }
                 , command_type, 0, 0, group_id
               }
         {

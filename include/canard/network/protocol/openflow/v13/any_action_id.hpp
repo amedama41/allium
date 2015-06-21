@@ -41,9 +41,9 @@ namespace v13 {
         }
 
         auto type()
-            -> ofp_action_type
+            -> protocol::ofp_action_type
         {
-            auto visitor = detail::type_visitor<ofp_action_type>{};
+            auto visitor = detail::type_visitor<protocol::ofp_action_type>{};
             return boost::apply_visitor(visitor, variant_);
         }
 
@@ -69,7 +69,7 @@ namespace v13 {
             auto copy_first = first;
             auto const type = detail::decode<std::uint16_t>(copy_first, last);
             switch (type) {
-            case OFPAT_EXPERIMENTER:
+            case protocol::OFPAT_EXPERIMENTER:
                 return action_experimenter_id::decode(first, last);
             default:
                 return action_id::decode(first, last);

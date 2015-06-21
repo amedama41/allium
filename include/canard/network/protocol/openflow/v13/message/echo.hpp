@@ -26,12 +26,19 @@ namespace v13 {
 
     protected:
         basic_echo()
-            : header_{OFP_VERSION, T::message_type, sizeof(v13_detail::ofp_header), get_xid()}
+            : header_{
+                  protocol::OFP_VERSION, T::message_type
+                , sizeof(v13_detail::ofp_header), get_xid()
+              }
         {
         }
 
         explicit basic_echo(std::vector<unsigned char> data)
-            : header_{OFP_VERSION, T::message_type, std::uint16_t(sizeof(v13_detail::ofp_header) + data.size()), get_xid()}
+            : header_{
+                  protocol::OFP_VERSION, T::message_type
+                , std::uint16_t(sizeof(v13_detail::ofp_header) + data.size())
+                , get_xid()
+              }
             , data_(std::move(data))
         {
         }
@@ -112,7 +119,8 @@ namespace v13 {
         : public basic_echo<echo_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_ECHO_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_ECHO_REPLY;
 
         echo_reply()
             : basic_echo{}
@@ -149,7 +157,8 @@ namespace v13 {
         : public basic_echo<echo_request>
     {
     public:
-        static ofp_type const message_type = OFPT_ECHO_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_ECHO_REQUEST;
 
         echo_request()
             : basic_echo{}

@@ -45,25 +45,25 @@ namespace v13 {
         auto is_reserved() const
             -> bool
         {
-            return OFPP_MAX < port_no();
+            return protocol::OFPP_MAX < port_no();
         }
 
         auto is_in_port() const
             -> bool
         {
-            return port_no() == OFPP_IN_PORT;
+            return port_no() == protocol::OFPP_IN_PORT;
         }
 
         auto is_table() const
             -> bool
         {
-            return port_no() == OFPP_TABLE;
+            return port_no() == protocol::OFPP_TABLE;
         }
 
         auto is_normal() const
             -> bool
         {
-            return port_no() == OFPP_NORMAL;
+            return port_no() == protocol::OFPP_NORMAL;
         }
 
         auto hardware_address() const
@@ -87,7 +87,7 @@ namespace v13 {
         auto administratively_down() const
             -> bool
         {
-            return port_->config & OFPPC_PORT_DOWN;
+            return port_->config & protocol::OFPPC_PORT_DOWN;
         }
 
         auto state() const
@@ -99,7 +99,7 @@ namespace v13 {
         auto link_down() const
             -> bool
         {
-            return port_->state & OFPPS_LINK_DOWN;
+            return port_->state & protocol::OFPPS_LINK_DOWN;
         }
 
         auto curr_speed() const

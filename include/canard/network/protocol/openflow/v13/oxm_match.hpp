@@ -23,7 +23,7 @@ namespace v13 {
     class oxm_match
     {
     public:
-        static ofp_match_type const match_type = OFPMT_OXM;
+        static protocol::ofp_match_type const match_type = protocol::OFPMT_OXM;
         static std::uint16_t const match_base_length = offsetof(v13_detail::ofp_match, pad);
 
         template <class... OXMMatchFields, typename std::enable_if<!is_related<oxm_match, OXMMatchFields...>::value>::type* = nullptr>
@@ -33,7 +33,7 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_match_type
+            -> protocol::ofp_match_type
         {
             return match_type;
         }

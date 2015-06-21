@@ -16,7 +16,8 @@ namespace v13 {
         class clear_actions
         {
         public:
-            static ofp_instruction_type const instruction_type = OFPIT_CLEAR_ACTIONS;
+            static protocol::ofp_instruction_type const instruction_type
+                = protocol::OFPIT_CLEAR_ACTIONS;
 
             clear_actions()
                 : actions_{instruction_type, sizeof(v13_detail::ofp_instruction_actions), {0}}
@@ -24,7 +25,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_instruction_type
+                -> protocol::ofp_instruction_type
             {
                 return instruction_type;
             }

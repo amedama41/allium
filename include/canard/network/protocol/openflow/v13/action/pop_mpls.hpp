@@ -17,7 +17,8 @@ namespace v13 {
         class pop_mpls
         {
         public:
-            static ofp_action_type const action_type = OFPAT_POP_MPLS;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_POP_MPLS;
 
             explicit pop_mpls(std::uint16_t const ethertype)
                 : pop_mpls_{action_type, sizeof(v13_detail::ofp_action_pop_mpls), ethertype, {0}}
@@ -25,7 +26,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_action_type
+                -> protocol::ofp_action_type
             {
                 return action_type;
             }

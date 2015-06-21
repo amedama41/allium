@@ -15,7 +15,8 @@ namespace v13 {
             : public action_detail::generic_action<copy_ttl_in>
         {
         public:
-            static ofp_action_type const action_type = OFPAT_COPY_TTL_IN;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_COPY_TTL_IN;
         };
 
     } // namespace actions

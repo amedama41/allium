@@ -24,9 +24,9 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_instruction_type
+            -> protocol::ofp_instruction_type
         {
-            return ofp_instruction_type(type_);
+            return protocol::ofp_instruction_type(type_);
         }
 
         auto length() const
@@ -76,9 +76,9 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_instruction_type
+            -> protocol::ofp_instruction_type
         {
-            return OFPIT_EXPERIMENTER;
+            return protocol::OFPIT_EXPERIMENTER;
         }
 
         auto length() const

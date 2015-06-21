@@ -26,9 +26,9 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_action_type
+            -> protocol::ofp_action_type
         {
-            return ofp_action_type(type_);
+            return protocol::ofp_action_type(type_);
         }
 
         auto length() const
@@ -77,7 +77,7 @@ namespace v13 {
         auto type() const
             -> ofp_action_type
         {
-            return OFPAT_EXPERIMENTER;
+            return protocol::OFPAT_EXPERIMENTER;
         }
 
         auto length() const

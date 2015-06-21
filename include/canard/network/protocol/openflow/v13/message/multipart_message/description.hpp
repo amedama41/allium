@@ -17,7 +17,8 @@ namespace v13 {
         : public v13_detail::basic_multipart_request<description_request>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_DESC;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_DESC;
 
         description_request()
             : basic_multipart_request{0, 0}
@@ -42,7 +43,8 @@ namespace v13 {
         : public v13_detail::basic_multipart_reply<description_reply>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_DESC;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_DESC;
 
         auto manufacture_desc() const
             -> char const*

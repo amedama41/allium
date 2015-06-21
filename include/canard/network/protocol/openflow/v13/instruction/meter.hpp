@@ -16,18 +16,19 @@ namespace v13 {
         class meter
         {
         public:
-            static ofp_instruction_type const instruction_type = OFPIT_METER;
+            static protocol::ofp_instruction_type const instruction_type
+                = protocol::OFPIT_METER;
 
             explicit meter(std::uint32_t const meter_id)
                 : meter_{instruction_type, sizeof(v13_detail::ofp_instruction_meter), meter_id}
             {
-                if (meter_id == 0 || meter_id > OFPM_MAX) {
+                if (meter_id == 0 || meter_id > protocol::OFPM_MAX) {
                     throw 3;
                 }
             }
 
             auto type() const
-                -> ofp_instruction_type
+                -> protocol::ofp_instruction_type
             {
                 return instruction_type;
             }

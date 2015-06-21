@@ -17,18 +17,19 @@ namespace v13 {
         class group
         {
         public:
-            static ofp_action_type const action_type = OFPAT_GROUP;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_GROUP;
 
             explicit group(std::uint32_t const group_id)
                 : group_{action_type, sizeof(v13_detail::ofp_action_group), group_id}
             {
-                if (group_id > OFPG_MAX) {
+                if (group_id > protocol::OFPG_MAX) {
                     throw 3;
                 }
             };
 
             auto type() const
-                -> ofp_action_type
+                -> protocol::ofp_action_type
             {
                 return action_type;
             }
@@ -62,7 +63,7 @@ namespace v13 {
                 if (group_.len != sizeof(v13_detail::ofp_action_group)) {
                     throw 2;
                 }
-                if (group_id() > OFPG_MAX) {
+                if (group_id() > protocol::OFPG_MAX) {
                     throw 3;
                 }
             }

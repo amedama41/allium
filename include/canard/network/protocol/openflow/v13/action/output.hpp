@@ -18,10 +18,13 @@ namespace v13 {
         class output
         {
         public:
-            static ofp_action_type const action_type = OFPAT_OUTPUT;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_OUTPUT;
 
             explicit output(std::uint32_t const port)
-                : output_{action_type, length(), port, OFPCML_NO_BUFFER, {0}}
+                : output_{
+                    action_type, length(), port, protocol::OFPCML_NO_BUFFER, {0}
+                  }
             {
                 if (!validate_output_port(port)) {
                     throw 1;
@@ -37,7 +40,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_action_type
+                -> protocol::ofp_action_type
             {
                 return action_type;
             }
@@ -49,15 +52,15 @@ namespace v13 {
             }
 
             auto port() const
-                -> ofp_port_no
+                -> protocol::ofp_port_no
             {
-                return ofp_port_no(output_.port);
+                return protocol::ofp_port_no(output_.port);
             }
 
             auto max_length() const
-                -> ofp_controller_max_len
+                -> protocol::ofp_controller_max_len
             {
-                return ofp_controller_max_len(output_.max_len);
+                return protocol::ofp_controller_max_len(output_.max_len);
             }
 
             template <class Container>
@@ -91,17 +94,18 @@ namespace v13 {
                 return output{action_output};
             }
 
-            static auto to_controller(std::uint16_t const max_length = OFPCML_NO_BUFFER)
+            static auto to_controller(
+                    std::uint16_t const max_length = protocol::OFPCML_NO_BUFFER)
                 -> output
             {
-                return output{OFPP_CONTROLLER, max_length};
+                return output{protocol::OFPP_CONTROLLER, max_length};
             }
 
         private:
             static auto validate_output_port(std::uint32_t const port)
                 -> bool
             {
-                return port != 0 && port != OFPP_ANY;
+                return port != 0 && port != protocol::OFPP_ANY;
             }
 
             v13_detail::ofp_action_output output_;

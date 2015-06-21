@@ -27,7 +27,7 @@ namespace v13 {
 
             public:
                 auto type() const
-                    -> ofp_action_type
+                    -> protocol::ofp_action_type
                 {
                     return T::action_type;
                 }

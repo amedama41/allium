@@ -22,12 +22,21 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<flow_removed>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_REMOVED;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_FLOW_REMOVED;
 
-        flow_removed(flow_entry const& entry, std::uint8_t const table_id, ofp_flow_removed_reason const reason
-                , std::uint32_t const duration_sec, std::uint32_t const duration_nsec)
+        flow_removed(
+                  flow_entry const& entry
+                , std::uint8_t const table_id
+                , protocol::ofp_flow_removed_reason const reason
+                , std::uint32_t const duration_sec
+                , std::uint32_t const duration_nsec)
             : flow_removed_{
-                  { OFP_VERSION, message_type, detail::exact_length(sizeof(v13_detail::ofp_flow_removed) + entry.match().length()), get_xid() }
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , detail::exact_length(sizeof(v13_detail::ofp_flow_removed) + entry.match().length())
+                    , get_xid()
+                  }
                 , entry.cookie()
                 , entry.priority()
                 , std::uint8_t(reason)
@@ -50,9 +59,9 @@ namespace v13 {
         }
 
         auto reason() const
-            -> ofp_flow_removed_reason
+            -> protocol::ofp_flow_removed_reason
         {
-            return ofp_flow_removed_reason(flow_removed_.reason);
+            return protocol::ofp_flow_removed_reason(flow_removed_.reason);
         }
 
         auto table_id() const

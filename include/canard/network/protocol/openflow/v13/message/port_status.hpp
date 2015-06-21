@@ -21,7 +21,8 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<port_status>
     {
     public:
-        static ofp_type const message_type = OFPT_PORT_STATUS;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_PORT_STATUS;
 
         auto header() const
             -> v13_detail::ofp_header const&
@@ -30,9 +31,9 @@ namespace v13 {
         }
 
         auto reason() const
-            -> ofp_port_reason
+            -> protocol::ofp_port_reason
         {
-            return ofp_port_reason(reason_);
+            return protocol::ofp_port_reason(reason_);
         }
 
         auto port() const

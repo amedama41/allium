@@ -123,11 +123,19 @@ namespace v13 {
         : public v13_detail::basic_multipart_request<flow_stats_request>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_FLOW;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_FLOW;
 
         explicit flow_stats_request(oxm_match match)
-            : basic_multipart_request{detail::exact_length(sizeof(v13_detail::ofp_flow_stats_request) + match.length()), 0}
-            , flow_stats_request_{OFPTT_ALL, {0, 0, 0}, OFPP_ANY, OFPG_ANY, {0, 0, 0, 0}, 0, 0}
+            : basic_multipart_request{
+                  detail::exact_length(sizeof(v13_detail::ofp_flow_stats_request) + match.length())
+                , 0
+              }
+            , flow_stats_request_{
+                  protocol::OFPTT_ALL, {0, 0, 0}
+                , protocol::OFPP_ANY, protocol::OFPG_ANY
+                , {0, 0, 0, 0}, 0, 0
+              }
             , match_(std::move(match))
         {
         }
@@ -174,7 +182,8 @@ namespace v13 {
         using flow_stats_list = std::vector<flow_stats>;
 
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_FLOW;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_FLOW;
 
         using const_iterator = flow_stats_list::const_iterator;
 

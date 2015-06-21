@@ -36,7 +36,8 @@ namespace v13 {
 
         protected:
             transaction_base(boost::asio::io_service& io_service
-                    , ofp_type const request_type, ofp_type const reply_type)
+                    , protocol::ofp_type const request_type
+                    , protocol::ofp_type const reply_type)
                 : timer_{io_service}
                 , error_{}
                 , request_type_(request_type)
@@ -58,13 +59,13 @@ namespace v13 {
             }
 
             auto request_type() const
-                -> ofp_type
+                -> protocol::ofp_type
             {
                 return request_type_;
             }
 
             auto reply_type() const
-                -> ofp_type
+                -> protocol::ofp_type
             {
                 return reply_type_;
             }
@@ -140,8 +141,8 @@ namespace v13 {
         private:
             Timer timer_;
             boost::system::error_code error_;
-            ofp_type request_type_;
-            ofp_type reply_type_;
+            protocol::ofp_type request_type_;
+            protocol::ofp_type reply_type_;
         };
 
         template <class Transaction, class WaitForReplyHandler>

@@ -16,7 +16,7 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<port_mod>
     {
     public:
-        static ofp_type const message_type = OFPT_PORT_MOD;
+        static protocol::ofp_type const message_type = protocol::OFPT_PORT_MOD;
 
         auto header() const
             -> v13_detail::ofp_header const&

@@ -73,7 +73,7 @@ namespace v13 {
                 }
 
                 auto type() const
-                    -> ofp_table_feature_prop_type
+                    -> protocol::ofp_table_feature_prop_type
                 {
                     return T::prop_type;
                 }
@@ -170,7 +170,7 @@ namespace v13 {
                 }
 
                 auto type() const
-                    -> ofp_table_feature_prop_type
+                    -> protocol::ofp_table_feature_prop_type
                 {
                     return T::prop_type;
                 }
@@ -261,7 +261,7 @@ namespace v13 {
                 }
 
                 auto type() const
-                    -> ofp_table_feature_prop_type
+                    -> protocol::ofp_table_feature_prop_type
                 {
                     return T::prop_type;
                 }
@@ -359,7 +359,7 @@ namespace v13 {
                 }
 
                 auto type() const
-                    -> ofp_table_feature_prop_type
+                    -> protocol::ofp_table_feature_prop_type
                 {
                     return T::prop_type;
                 }
@@ -425,7 +425,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_instructions<prop_instructions>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_INSTRUCTIONS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_INSTRUCTIONS;
 
             explicit prop_instructions(std::vector<any_instruction_id> instruction_ids)
                 : basic_prop_instructions{std::move(instruction_ids)}
@@ -443,7 +444,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_instructions<prop_instructions_miss>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_INSTRUCTIONS_MISS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_INSTRUCTIONS_MISS;
 
             explicit prop_instructions_miss(std::vector<any_instruction_id> instruction_ids)
                 : basic_prop_instructions{std::move(instruction_ids)}
@@ -461,7 +463,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_next_tables<prop_next_tables>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_NEXT_TABLES;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_NEXT_TABLES;
 
             explicit prop_next_tables(std::vector<std::uint8_t> table_ids)
                 : basic_prop_next_tables{std::move(table_ids)}
@@ -478,7 +481,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_next_tables<prop_next_tables_miss>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_NEXT_TABLES_MISS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_NEXT_TABLES_MISS;
 
             explicit prop_next_tables_miss(std::vector<std::uint8_t> table_ids)
                 : basic_prop_next_tables{std::move(table_ids)}
@@ -495,7 +499,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_actions<prop_write_actions>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_WRITE_ACTIONS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_WRITE_ACTIONS;
 
             explicit prop_write_actions(std::vector<any_action_id> action_ids)
                 : basic_prop_actions{std::move(action_ids)}
@@ -513,7 +518,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_actions<prop_write_actions_miss>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_WRITE_ACTIONS_MISS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_WRITE_ACTIONS_MISS;
 
             explicit prop_write_actions_miss(std::vector<any_action_id> action_ids)
                 : basic_prop_actions{std::move(action_ids)}
@@ -531,7 +537,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_actions<prop_apply_actions>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_APPLY_ACTIONS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_APPLY_ACTIONS;
 
             explicit prop_apply_actions(std::vector<any_action_id> action_ids)
                 : basic_prop_actions{std::move(action_ids)}
@@ -549,7 +556,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_actions<prop_apply_actions_miss>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_APPLY_ACTIONS_MISS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_APPLY_ACTIONS_MISS;
 
             explicit prop_apply_actions_miss(std::vector<any_action_id> action_ids)
                 : basic_prop_actions{std::move(action_ids)}
@@ -567,7 +575,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_oxm<prop_match>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_MATCH;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_MATCH;
 
             explicit prop_match(std::vector<any_oxm_id> oxm_ids)
                 : basic_prop_oxm{std::move(oxm_ids)}
@@ -585,7 +594,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_oxm<prop_wildcards>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_WILDCARDS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_WILDCARDS;
 
             explicit prop_wildcards(std::vector<any_oxm_id> oxm_ids)
                 : basic_prop_oxm{std::move(oxm_ids)}
@@ -603,7 +613,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_oxm<prop_write_setfield>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_WRITE_SETFIELD;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_WRITE_SETFIELD;
 
             explicit prop_write_setfield(std::vector<any_oxm_id> oxm_ids)
                 : basic_prop_oxm{std::move(oxm_ids)}
@@ -621,7 +632,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_oxm<prop_write_setfield_miss>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_WRITE_SETFIELD_MISS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_WRITE_SETFIELD_MISS;
 
             explicit prop_write_setfield_miss(std::vector<any_oxm_id> oxm_ids)
                 : basic_prop_oxm{std::move(oxm_ids)}
@@ -639,7 +651,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_oxm<prop_apply_setfield>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_APPLY_SETFIELD;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_APPLY_SETFIELD;
 
             explicit prop_apply_setfield(std::vector<any_oxm_id> oxm_ids)
                 : basic_prop_oxm{std::move(oxm_ids)}
@@ -657,7 +670,8 @@ namespace v13 {
             : public table_feature_properties_detail::basic_prop_oxm<prop_apply_setfield_miss>
         {
         public:
-            static ofp_table_feature_prop_type const prop_type = OFPTFPT_APPLY_SETFIELD_MISS;
+            static protocol::ofp_table_feature_prop_type const prop_type
+                = protocol::OFPTFPT_APPLY_SETFIELD_MISS;
 
             explicit prop_apply_setfield_miss(std::vector<any_oxm_id> oxm_ids)
                 : basic_prop_oxm{std::move(oxm_ids)}

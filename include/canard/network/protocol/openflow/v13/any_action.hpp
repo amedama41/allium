@@ -40,9 +40,9 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_action_type
+            -> protocol::ofp_action_type
         {
-            auto visitor = detail::type_visitor<ofp_action_type>{};
+            auto visitor = detail::type_visitor<protocol::ofp_action_type>{};
             return boost::apply_visitor(visitor, variant_);
         }
 

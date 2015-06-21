@@ -17,18 +17,19 @@ namespace v13 {
         class set_queue
         {
         public:
-            static ofp_action_type const action_type = OFPAT_SET_QUEUE;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_SET_QUEUE;
 
             explicit set_queue(std::uint32_t const queue_id)
                 : set_queue_{action_type, sizeof(v13_detail::ofp_action_set_queue), queue_id}
             {
-                if (queue_id == OFPQ_ALL) {
+                if (queue_id == protocol::OFPQ_ALL) {
                     throw 3;
                 }
             }
 
             auto type() const
-                -> ofp_action_type
+                -> protocol::ofp_action_type
             {
                 return action_type;
             }
@@ -62,7 +63,7 @@ namespace v13 {
                 if (set_queue_.len != length()) {
                     throw 2;
                 }
-                if (set_queue_.queue_id == OFPQ_ALL) {
+                if (set_queue_.queue_id == protocol::OFPQ_ALL) {
                     throw 3;
                 }
             }

@@ -16,10 +16,14 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<switch_config_request>
     {
     public:
-        static ofp_type const message_type = OFPT_GET_CONFIG_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_GET_CONFIG_REQUEST;
 
         switch_config_request()
-            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), get_xid()}
+            : header_{
+                  protocol::OFP_VERSION, message_type
+                , sizeof(v13_detail::ofp_header), get_xid()
+              }
         {
         }
 
@@ -64,7 +68,11 @@ namespace v13 {
         protected:
             basic_switch_config(std::uint16_t const flags, std::uint16_t const miss_send_len)
                 : switch_config_{
-                      {OFP_VERSION, T::message_type, sizeof(v13_detail::ofp_switch_config), v13_detail::basic_openflow_message<T>::get_xid()}
+                      v13_detail::ofp_header{
+                          protocol::OFP_VERSION, T::message_type
+                        , sizeof(v13_detail::ofp_switch_config)
+                        , v13_detail::basic_openflow_message<T>::get_xid()
+                      }
                     , flags, miss_send_len
                   }
             {
@@ -121,7 +129,8 @@ namespace v13 {
         : public v13_detail::basic_switch_config<switch_config_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_GET_CONFIG_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_GET_CONFIG_REPLY;
 
         switch_config_reply(std::uint16_t const flags, std::uint16_t const miss_send_len)
             : basic_switch_config{flags, miss_send_len}
@@ -141,7 +150,8 @@ namespace v13 {
         : public v13_detail::basic_switch_config<set_switch_config>
     {
     public:
-        static ofp_type const message_type = OFPT_SET_CONFIG;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_SET_CONFIG;
 
         set_switch_config(std::uint16_t const flags, std::uint16_t const miss_send_len)
             : basic_switch_config{flags, miss_send_len}

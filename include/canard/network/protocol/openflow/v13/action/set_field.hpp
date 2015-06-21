@@ -26,7 +26,8 @@ namespace v13 {
         class set_field
         {
         public:
-            static ofp_action_type const action_type = OFPAT_SET_FIELD;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_SET_FIELD;
 
             template <class OXMField, typename std::enable_if<!is_related<set_field, OXMField>::value>::type* = nullptr>
             explicit set_field(OXMField&& oxm_field)
@@ -37,7 +38,7 @@ namespace v13 {
             }
 
             auto type() const
-                -> ofp_action_type
+                -> protocol::ofp_action_type
             {
                 return action_type;
             }

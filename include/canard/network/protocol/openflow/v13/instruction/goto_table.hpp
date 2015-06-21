@@ -16,18 +16,19 @@ namespace v13 {
         class goto_table
         {
         public:
-            static ofp_instruction_type const instruction_type = OFPIT_GOTO_TABLE;
+            static protocol::ofp_instruction_type const instruction_type
+                = protocol::OFPIT_GOTO_TABLE;
 
             explicit goto_table(std::uint8_t const table_id)
                 : goto_table_{instruction_type, sizeof(v13_detail::ofp_instruction_goto_table), table_id, {0}}
             {
-                if (table_id > OFPTT_MAX) {
+                if (table_id > protocol::OFPTT_MAX) {
                     throw 3;
                 }
             }
 
             auto type() const
-                -> ofp_instruction_type
+                -> protocol::ofp_instruction_type
             {
                 return instruction_type;
             }

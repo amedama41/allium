@@ -20,7 +20,8 @@ namespace v13 {
         : public v13_detail::basic_multipart_request<aggregate_stats_request>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_AGGREGATE;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_AGGREGATE;
 
         explicit aggregate_stats_request(oxm_match match)
             : basic_multipart_request{
@@ -28,7 +29,9 @@ namespace v13 {
                 , 0
               }
             , aggregate_stats_request_{
-                OFPTT_ALL, {0, 0, 0}, OFPP_ANY, OFPG_ANY, {0, 0, 0, 0}, 0, 0
+                  protocol::OFPTT_ALL, {0, 0, 0}
+                , protocol::OFPP_ANY, protocol::OFPG_ANY
+                , {0, 0, 0, 0}, 0, 0
               }
             , match_(std::move(match))
         {
@@ -55,7 +58,8 @@ namespace v13 {
         : public v13_detail::basic_multipart_reply<aggregate_stats_reply>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_AGGREGATE;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_AGGREGATE;
 
         aggregate_stats_reply(v13::counters const& counters, std::uint32_t const flow_count)
             : basic_multipart_reply{std::uint16_t(sizeof(v13_detail::ofp_aggregate_stats_reply)), 0}

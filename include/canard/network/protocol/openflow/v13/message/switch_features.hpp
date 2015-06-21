@@ -17,10 +17,14 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<features_request>
     {
     public:
-        static ofp_type const message_type = OFPT_FEATURES_REQUEST;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_FEATURES_REQUEST;
 
         features_request()
-            : header_{OFP_VERSION, message_type, sizeof(v13_detail::ofp_header), get_xid()}
+            : header_{
+                  protocol::OFP_VERSION, message_type
+                , sizeof(v13_detail::ofp_header), get_xid()
+              }
         {
         }
 
@@ -65,11 +69,15 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<features_reply>
     {
     public:
-        static ofp_type const message_type = OFPT_FEATURES_REPLY;
+        static protocol::ofp_type const message_type
+            = protocol::OFPT_FEATURES_REPLY;
 
         features_reply(features_request const& request, std::uint64_t const dpid)
             : switch_features_{
-                  {OFP_VERSION, message_type, sizeof(v13_detail::ofp_switch_features), request.xid()}
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , sizeof(v13_detail::ofp_switch_features), request.xid()
+                  }
                 , dpid
                 , 0 // n_buffers
                 , 0 // n_tables

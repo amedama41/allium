@@ -83,7 +83,8 @@ namespace v13 {
         : public v13_detail::basic_multipart_request<table_stats_request>
     {
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_TABLE;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_TABLE;
 
         table_stats_request()
             : basic_multipart_request{0, 0}
@@ -97,7 +98,8 @@ namespace v13 {
     {
         using table_stats_list = std::vector<table_stats>;
     public:
-        static ofp_multipart_type const multipart_type_value = OFPMP_TABLE;
+        static protocol::ofp_multipart_type const multipart_type_value
+            = protocol::OFPMP_TABLE;
 
         using iterator = table_stats_list::iterator;
         using const_iterator = table_stats_list::const_iterator;

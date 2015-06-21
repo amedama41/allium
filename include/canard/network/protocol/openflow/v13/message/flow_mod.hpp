@@ -27,23 +27,29 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<flow_mod_add>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_ADD;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_ADD;
 
         flow_mod_add(flow_entry entry, std::uint8_t const table_id, std::uint16_t const flags)
-            : flow_mod_add{std::move(entry), table_id, flags, OFP_NO_BUFFER}
+            : flow_mod_add{
+                std::move(entry), table_id, flags, protocol::OFP_NO_BUFFER
+              }
         {
         }
 
         flow_mod_add(flow_entry entry, std::uint8_t const table_id
                 , std::uint16_t const flags, std::uint32_t buffer_id)
             : mod_add_{
-                  { OFP_VERSION, message_type, calc_length(entry), get_xid() }
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , calc_length(entry), get_xid()
+                  }
                 , entry.cookie(), 0
                 , table_id, command_type
                 , entry.idle_timeout(), entry.hard_timeout()
                 , entry.priority()
-                , buffer_id, OFPP_ANY, OFPG_ANY
+                , buffer_id, protocol::OFPP_ANY, protocol::OFPG_ANY
                 , flags, {0, 0}
               }
             , entry_(std::move(entry))
@@ -121,8 +127,9 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<flow_mod_modify_strict>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_MODIFY_STRICT;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_MODIFY_STRICT;
 
         template <class... Instructions>
         flow_mod_modify_strict(flow_entry_id entry_id, Instructions&&... instructions);
@@ -134,8 +141,8 @@ namespace v13 {
                 , oxm_match match
                 , instruction_set instructions)
             : mod_modify_{
-                  {
-                      OFP_VERSION
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION
                     , message_type
                     , detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length() + instructions.length())
                     , get_xid()
@@ -144,8 +151,8 @@ namespace v13 {
                 , table_id, command_type
                 , 0, 0
                 , entry_id.priority_
-                , buffer_id, OFPP_ANY, OFPG_ANY
-                , std::uint16_t(is_reset_count ? OFPFF_RESET_COUNTS : 0)
+                , buffer_id, protocol::OFPP_ANY, protocol::OFPG_ANY
+                , std::uint16_t(is_reset_count ? protocol::OFPFF_RESET_COUNTS : 0)
                 , {0, 0}
             }
             , match_(std::move(entry_id.match_))
@@ -202,21 +209,25 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<flow_mod_modify>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_MODIFY;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_MODIFY;
 
         flow_mod_modify(oxm_match match, std::uint8_t const table_id
                 , std::uint64_t const cookie, std::uint64_t const cookie_mask
                 , std::uint16_t const flags, std::uint32_t const buffer_id
                 , instruction_set instructions)
             : mod_modify_{
-                  { OFP_VERSION, message_type, calc_length(match, instructions), get_xid() }
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , calc_length(match, instructions), get_xid()
+                  }
                 , cookie, cookie_mask
                 , table_id, command_type
                 , 0, 0
                 , 0
-                , buffer_id, OFPP_ANY, OFPG_ANY
-                , std::uint16_t(flags & OFPFF_RESET_COUNTS), {0, 0}
+                , buffer_id, protocol::OFPP_ANY, protocol::OFPG_ANY
+                , std::uint16_t(flags & protocol::OFPFF_RESET_COUNTS), {0, 0}
               }
             , match_(std::move(match))
             , instructions_{std::move(instructions)}
@@ -227,7 +238,8 @@ namespace v13 {
         flow_mod_modify(oxm_match match, std::uint8_t const table_id, Instructions&&... instructions)
             : flow_mod_modify{
                   std::move(match), table_id
-                , std::uint64_t{0}, std::uint64_t{0}, std::uint16_t{0}, std::uint32_t{OFP_NO_BUFFER}
+                , std::uint64_t{0}, std::uint64_t{0}
+                , std::uint16_t{0}, std::uint32_t{protocol::OFP_NO_BUFFER}
                 , instruction_set{std::forward<Instructions>(instructions)...}
               }
         {
@@ -289,16 +301,23 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<flow_mod_delete_strict>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_DELETE_STRICT;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_DELETE_STRICT;
 
         explicit flow_mod_delete_strict(flow_entry_id entry_id)
-            : flow_mod_delete_strict{std::move(entry_id), OFPTT_ALL, 0, 0, OFPP_ANY, OFPG_ANY}
+            : flow_mod_delete_strict{
+                  std::move(entry_id), protocol::OFPTT_ALL, 0, 0
+                , protocol::OFPP_ANY, protocol::OFPG_ANY
+              }
         {
         }
 
         flow_mod_delete_strict(flow_entry_id entry_id, std::uint8_t const table_id)
-            : flow_mod_delete_strict{std::move(entry_id), table_id, 0, 0, OFPP_ANY, OFPG_ANY}
+            : flow_mod_delete_strict{
+                  std::move(entry_id), table_id, 0, 0
+                , protocol::OFPP_ANY, protocol::OFPG_ANY
+              }
         {
         }
 
@@ -306,7 +325,11 @@ namespace v13 {
                 , std::uint64_t const cookie, std::uint64_t const cookie_mask
                 , std::uint32_t const out_port, std::uint32_t const out_group)
             : mod_delete_{
-                  {OFP_VERSION, message_type, detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length()), get_xid()}
+                  v13_detail::ofp_header{
+                        protocol::OFP_VERSION, message_type
+                      , detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length())
+                      , get_xid()
+                  }
                 , cookie, cookie_mask
                 , table_id
                 , command_type
@@ -365,11 +388,15 @@ namespace v13 {
         : public v13_detail::basic_openflow_message<flow_mod_delete>
     {
     public:
-        static ofp_type const message_type = OFPT_FLOW_MOD;
-        static ofp_flow_mod_command const command_type = OFPFC_DELETE;
+        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
+        static protocol::ofp_flow_mod_command const command_type
+            = protocol::OFPFC_DELETE;
 
         explicit flow_mod_delete(oxm_match match)
-            : flow_mod_delete{std::move(match), OFPTT_ALL, 0, 0, OFPP_ANY, OFPG_ANY}
+            : flow_mod_delete{
+                  std::move(match), protocol::OFPTT_ALL, 0, 0
+                , protocol::OFPP_ANY, protocol::OFPG_ANY
+              }
         {
         }
 
@@ -377,7 +404,11 @@ namespace v13 {
                 , std::uint64_t const cookie, std::uint64_t const cookie_mask
                 , std::uint32_t const out_port, std::uint32_t const out_group)
             : mod_delete_{
-                  { OFP_VERSION, message_type, detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + match.length()), get_xid() }
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + match.length())
+                    , get_xid()
+                  }
                 , 0, 0, table_id, command_type, 0, 0, 0, 0, out_port, out_group, 0, {0, 0}
               }
             , match_(std::move(match))

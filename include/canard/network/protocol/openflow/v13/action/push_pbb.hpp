@@ -16,7 +16,8 @@ namespace v13 {
             : public action_detail::action_push<push_pbb>
         {
         public:
-            static ofp_action_type const action_type = OFPAT_PUSH_PBB;
+            static protocol::ofp_action_type const action_type
+                = protocol::OFPAT_PUSH_PBB;
 
             push_pbb()
                 : action_push{0x88e7}

@@ -45,9 +45,9 @@ namespace v13 {
         }
 
         auto type() const
-            -> ofp_instruction_type
+            -> protocol::ofp_instruction_type
         {
-            auto visitor = detail::type_visitor<ofp_instruction_type>{};
+            auto visitor = detail::type_visitor<protocol::ofp_instruction_type>{};
             return boost::apply_visitor(visitor, variant_);
         }
 
@@ -73,7 +73,7 @@ namespace v13 {
             auto copy_first = first;
             auto const type = detail::decode<std::uint16_t>(copy_first, last);
             switch (type) {
-            case OFPIT_EXPERIMENTER:
+            case protocol::OFPIT_EXPERIMENTER:
                 return instruction_experimenter_id::decode(first, last);
             default:
                 return instruction_id::decode(first, last);

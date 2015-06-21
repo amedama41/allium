@@ -18,7 +18,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    template <ofp_oxm_class OXMClass, std::uint8_t OXMField>
+    template <protocol::ofp_oxm_class OXMClass, std::uint8_t OXMField>
     class oxm_match_field
         : public v13_detail::basic_oxm_type<OXMClass, OXMField>
     {
@@ -138,49 +138,61 @@ namespace v13 {
     };
 
     template <>
-    inline oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IN_PORT>::oxm_match_field(value_type value)
+    inline oxm_match_field<
+        protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PORT
+    >::oxm_match_field(value_type value)
         : value_(value)
         , mask_{boost::none}
     {
-        if (value_ == 0 || value_ > OFPP_MAX) {
+        if (value_ == 0 || value_ > protocol::OFPP_MAX) {
             throw std::runtime_error{(boost::format{"%1%: oxm_value(port_no:%2%) is invalid"} % __func__ % value_).str()};
         }
     }
 
     template <>
-    inline oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IN_PORT>::oxm_match_field(value_type value, value_type mask)
+    inline oxm_match_field<
+        protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PORT
+    >::oxm_match_field(value_type value, value_type mask)
         : value_(value)
         , mask_{all_of(mask, 0xFF) ? boost::none : boost::optional<value_type>{mask}}
     {
-        if (value_ == 0 || value_ > OFPP_MAX) {
+        if (value_ == 0 || value_ > protocol::OFPP_MAX) {
             throw std::runtime_error{(boost::format{"%1%: oxm_value(port_no:%2%) is invalid"} % __func__ % value_).str()};
         }
     }
 
     template <>
-    inline oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IN_PHY_PORT>::oxm_match_field(value_type value)
+    inline oxm_match_field<
+        protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PHY_PORT
+    >::oxm_match_field(value_type value)
         : value_(value)
         , mask_{boost::none}
     {
-        if (value_ == 0 || value_ > OFPP_MAX) {
+        if (value_ == 0 || value_ > protocol::OFPP_MAX) {
             throw 3;
         }
     }
 
     template <>
-    inline oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IN_PHY_PORT>::oxm_match_field(value_type value, value_type mask)
+    inline oxm_match_field<
+        protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PHY_PORT
+    >::oxm_match_field(value_type value, value_type mask)
         : value_(value)
         , mask_{all_of(mask, 0xFF) ? boost::none : boost::optional<value_type>{mask}}
     {
-        if (value_ == 0 || value_ > OFPP_MAX) {
+        if (value_ == 0 || value_ > protocol::OFPP_MAX) {
             throw 3;
         }
     }
 
     template <>
-    inline oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_VID>::oxm_match_field(value_type value)
-        : value_(value == OFPVID_NONE ? OFPVID_NONE : (value | OFPVID_PRESENT))
-        , mask_(value == OFPVID_PRESENT ? boost::optional<value_type>{OFPVID_PRESENT} : boost::none)
+    inline oxm_match_field<
+        protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_VID
+    >::oxm_match_field(value_type value)
+        : value_(value == protocol::OFPVID_NONE
+                ? protocol::OFPVID_NONE : (value | protocol::OFPVID_PRESENT))
+        , mask_(value == protocol::OFPVID_PRESENT
+                ? boost::optional<value_type>{protocol::OFPVID_PRESENT} : boost::none)
     {
         if (value_ > 0x1FFF) {
             throw std::runtime_error{(boost::format{"%1%: oxm_value(vlan_vid:%2%) is invalid"} % __func__ % value_).str()};
@@ -188,9 +200,13 @@ namespace v13 {
     }
 
     template <>
-    inline oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_VID>::oxm_match_field(value_type value, value_type mask)
-        : value_(value == OFPVID_NONE ? OFPVID_NONE : (value | OFPVID_PRESENT))
-        , mask_((mask & 0xFFF) == 0xFFF ? boost::none : boost::optional<value_type>(mask | OFPVID_PRESENT))
+    inline oxm_match_field<
+        protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_VID
+    >::oxm_match_field(value_type value, value_type mask)
+        : value_(value == protocol::OFPVID_NONE
+                ? protocol::OFPVID_NONE : (value | protocol::OFPVID_PRESENT))
+        , mask_((mask & 0xFFF) == 0xFFF
+                ? boost::none : boost::optional<value_type>(mask | protocol::OFPVID_PRESENT))
     {
         if (value_ > 0x1FFF) {
             throw std::runtime_error{(boost::format{"%1%: oxm_value(vlan_vid:%2%) is invalid"} % __func__ % value_).str()};
@@ -198,52 +214,55 @@ namespace v13 {
     }
 
     template <>
-    inline auto oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_VID>::oxm_value() const
+    inline auto oxm_match_field<
+        protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_VID
+    >::oxm_value() const
         -> value_type
     {
-        return value_ == OFPVID_PRESENT ? OFPVID_PRESENT : value_ & ~OFPVID_PRESENT;
+        return value_ == protocol::OFPVID_PRESENT
+            ? protocol::OFPVID_PRESENT : value_ & ~protocol::OFPVID_PRESENT;
     }
 
-    using oxm_in_port       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IN_PORT>;
-    using oxm_in_phy_port   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IN_PHY_PORT>;
-    using oxm_metadata      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_METADATA>;
-    using oxm_eth_dst       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_DST>;
-    using oxm_eth_src       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_SRC>;
-    using oxm_eth_type      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_TYPE>;
-    using oxm_vlan_vid      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_VID>;
-    using oxm_vlan_pcp      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_PCP>;
-    using oxm_ip_dscp       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_DSCP>;
-    using oxm_ip_ecn        = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_ECN>;
-    using oxm_ip_proto      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_PROTO>;
-    using oxm_ipv4_src      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_SRC>;
-    using oxm_ipv4_dst      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_DST>;
-    using oxm_tcp_src       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_SRC>;
-    using oxm_tcp_dst       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_DST>;
-    using oxm_udp_src       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_SRC>;
-    using oxm_udp_dst       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_DST>;
-    using oxm_sctp_src      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_SRC>;
-    using oxm_sctp_dst      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_DST>;
-    using oxm_icmpv4_type   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ICMPV4_TYPE>;
-    using oxm_icmpv4_code   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ICMPV4_CODE>;
-    using oxm_arp_op        = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ARP_OP>;
-    using oxm_arp_spa       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ARP_SPA>;
-    using oxm_arp_tpa       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ARP_TPA>;
-    using oxm_arp_sha       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ARP_SHA>;
-    using oxm_arp_tha       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ARP_THA>;
-    using oxm_ipv6_src      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV6_SRC>;
-    using oxm_ipv6_dst      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV6_DST>;
-    using oxm_ipv6_flabel   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV6_FLABEL>;
-    using oxm_icmpv6_type   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ICMPV6_TYPE>;
-    using oxm_icmpv6_code   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ICMPV6_CODE>;
-    using oxm_ipv6_nd_target= oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV6_ND_TARGET>;
-    using oxm_ipv6_nd_sll   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV6_ND_SLL>;
-    using oxm_ipv6_nd_tll   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV6_ND_TLL>;
-    using oxm_mpls_label    = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_MPLS_LABEL>;
-    using oxm_mpls_tc       = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_MPLS_TC>;
-    using oxm_mpls_bos      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_MPLS_BOS>;
-    using oxm_pbb_isid      = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_PBB_ISID>;
-    using oxm_tunnel_id     = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TUNNEL_ID>;
-    using oxm_ipv6_exthdr   = oxm_match_field<OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV6_EXTHDR>;
+    using oxm_in_port       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PORT>;
+    using oxm_in_phy_port   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PHY_PORT>;
+    using oxm_metadata      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_METADATA>;
+    using oxm_eth_dst       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_DST>;
+    using oxm_eth_src       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_SRC>;
+    using oxm_eth_type      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_TYPE>;
+    using oxm_vlan_vid      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_VID>;
+    using oxm_vlan_pcp      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_PCP>;
+    using oxm_ip_dscp       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_DSCP>;
+    using oxm_ip_ecn        = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_ECN>;
+    using oxm_ip_proto      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_PROTO>;
+    using oxm_ipv4_src      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_SRC>;
+    using oxm_ipv4_dst      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_DST>;
+    using oxm_tcp_src       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_SRC>;
+    using oxm_tcp_dst       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_DST>;
+    using oxm_udp_src       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_SRC>;
+    using oxm_udp_dst       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_DST>;
+    using oxm_sctp_src      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_SRC>;
+    using oxm_sctp_dst      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_DST>;
+    using oxm_icmpv4_type   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ICMPV4_TYPE>;
+    using oxm_icmpv4_code   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ICMPV4_CODE>;
+    using oxm_arp_op        = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ARP_OP>;
+    using oxm_arp_spa       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ARP_SPA>;
+    using oxm_arp_tpa       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ARP_TPA>;
+    using oxm_arp_sha       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ARP_SHA>;
+    using oxm_arp_tha       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ARP_THA>;
+    using oxm_ipv6_src      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_SRC>;
+    using oxm_ipv6_dst      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_DST>;
+    using oxm_ipv6_flabel   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_FLABEL>;
+    using oxm_icmpv6_type   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ICMPV6_TYPE>;
+    using oxm_icmpv6_code   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ICMPV6_CODE>;
+    using oxm_ipv6_nd_target= oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_ND_TARGET>;
+    using oxm_ipv6_nd_sll   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_ND_SLL>;
+    using oxm_ipv6_nd_tll   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_ND_TLL>;
+    using oxm_mpls_label    = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_MPLS_LABEL>;
+    using oxm_mpls_tc       = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_MPLS_TC>;
+    using oxm_mpls_bos      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_MPLS_BOS>;
+    using oxm_pbb_isid      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_PBB_ISID>;
+    using oxm_tunnel_id     = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TUNNEL_ID>;
+    using oxm_ipv6_exthdr   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_EXTHDR>;
 
 } // namespace v13
 } // namespace openflow
