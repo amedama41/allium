@@ -20,6 +20,15 @@ struct oxm_match_creator
         return boost::asio::ip::address_v4{bytes};
     }
 
+    template <class ByteRange>
+    static auto to_mac_address(ByteRange const& range)
+        -> canard::mac_address
+    {
+        auto array = std::array<std::uint8_t, 6>{};
+        boost::copy(range, array.begin());
+        return canard::mac_address{array};
+    }
+
     bool operator()(canard::ether_header const& ether) const
     {
         match.add(canard::network::openflow::v13::oxm_eth_dst{ether.destination()});
@@ -44,8 +53,8 @@ struct oxm_match_creator
         match.add(canard::network::openflow::v13::oxm_arp_spa(to_address_v4(arp.sender_protocol_address()).to_ulong()));
         match.add(canard::network::openflow::v13::oxm_arp_tpa(to_address_v4(arp.target_protocol_address()).to_ulong()));
         if (arp.hardware_type() == 1) {
-            match.add(canard::network::openflow::v13::oxm_arp_sha{canard::mac_address{arp.sender_hardware_address()}});
-            match.add(canard::network::openflow::v13::oxm_arp_tha{canard::mac_address{arp.target_hardware_address()}});
+            match.add(canard::network::openflow::v13::oxm_arp_sha{to_mac_address(arp.sender_hardware_address())});
+            match.add(canard::network::openflow::v13::oxm_arp_tha{to_mac_address(arp.target_hardware_address())});
         }
         return true;
     }
@@ -118,7 +127,7 @@ struct oxm_match_creator
         match.add(canard::network::openflow::v13::oxm_icmpv6_code{icmpv6.code()});
         match.add(canard::network::openflow::v13::oxm_ipv6_nd_target{icmpv6.target_address()});
         if (boost::distance(icmpv6.source_link_layer_address()) == 6) {
-            match.add(canard::network::openflow::v13::oxm_ipv6_nd_sll{canard::mac_address{icmpv6.source_link_layer_address()}});
+            match.add(canard::network::openflow::v13::oxm_ipv6_nd_sll{to_mac_address(icmpv6.source_link_layer_address())});
         }
         return true;
     }
@@ -129,7 +138,7 @@ struct oxm_match_creator
         match.add(canard::network::openflow::v13::oxm_icmpv6_code{icmpv6.code()});
         match.add(canard::network::openflow::v13::oxm_ipv6_nd_target{icmpv6.target_address()});
         if (boost::distance(icmpv6.target_link_layer_address()) == 6) {
-            match.add(canard::network::openflow::v13::oxm_ipv6_nd_tll{canard::mac_address{icmpv6.target_link_layer_address()}});
+            match.add(canard::network::openflow::v13::oxm_ipv6_nd_tll{to_mac_address(icmpv6.target_link_layer_address())});
         }
         return true;
     }
