@@ -18,9 +18,9 @@ BOOST_AUTO_TEST_CASE(oxm_type_definition_test)
 {
     BOOST_CHECK((std::is_same<oxm_in_port::value_type, std::uint32_t>::value));
     BOOST_CHECK((std::is_same<oxm_in_port::needs_byteorder_conversion, std::true_type>::value));
-    BOOST_CHECK_EQUAL(oxm_in_port::oxm_class(), OFPXMC_OPENFLOW_BASIC);
-    BOOST_CHECK_EQUAL(oxm_in_port::oxm_field(), OFPXMT_OFB_IN_PORT);
-    BOOST_CHECK_EQUAL(oxm_in_port::oxm_type(), OFPXMC_OPENFLOW_BASIC << 7 | OFPXMT_OFB_IN_PORT);
+    BOOST_CHECK_EQUAL(oxm_in_port::oxm_class(), protocol::OFPXMC_OPENFLOW_BASIC);
+    BOOST_CHECK_EQUAL(oxm_in_port::oxm_field(), protocol::OFPXMT_OFB_IN_PORT);
+    BOOST_CHECK_EQUAL(oxm_in_port::oxm_type(), protocol::OFPXMC_OPENFLOW_BASIC << 7 | protocol::OFPXMT_OFB_IN_PORT);
 }
 
 BOOST_AUTO_TEST_SUITE(instantiation_test)
@@ -83,9 +83,9 @@ BOOST_AUTO_TEST_CASE(construct_by_xvalue)
 
 BOOST_AUTO_TEST_CASE(construct_by_prvalue)
 {
-    auto const sut = oxm_in_port{std::uint32_t{OFPP_MAX}};
+    auto const sut = oxm_in_port{std::uint32_t{protocol::OFPP_MAX}};
 
-    BOOST_CHECK_EQUAL(sut.oxm_value(), OFPP_MAX);
+    BOOST_CHECK_EQUAL(sut.oxm_value(), protocol::OFPP_MAX);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // value_category_test
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(port_no_is_zero)
 
 BOOST_AUTO_TEST_CASE(port_no_is_not_physical_and_logical_port)
 {
-    BOOST_CHECK_THROW(oxm_in_port{OFPP_MAX + 1}, std::runtime_error);
-    BOOST_CHECK_THROW(oxm_in_port{OFPP_ANY}, std::runtime_error);
+    BOOST_CHECK_THROW(oxm_in_port{protocol::OFPP_MAX + 1}, std::runtime_error);
+    BOOST_CHECK_THROW(oxm_in_port{protocol::OFPP_ANY}, std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(field_is_wildcard)

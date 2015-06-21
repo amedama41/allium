@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
     {
         auto header = v13_detail::ofp_instruction_actions{};
         auto expected_header = v13_detail::ofp_instruction_actions{
-            OFPIT_APPLY_ACTIONS, 40, {0, 0, 0, 0}
+            protocol::OFPIT_APPLY_ACTIONS, 40, {0, 0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
         header = v13_detail::ntoh(header);
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
         {
             auto set_field_header = v13_detail::ofp_action_set_field{};
             auto expected_set_field_header = v13_detail::ofp_action_set_field{
-                OFPAT_SET_FIELD, 16, {0}
+                protocol::OFPAT_SET_FIELD, 16, {0}
             };
             std::memcpy(&set_field_header, &buffer[index], sizeof(set_field_header));
             set_field_header = v13_detail::ntoh(set_field_header);
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
         {
             auto set_field_header = v13_detail::ofp_action_set_field{};
             auto expected_set_field_header = v13_detail::ofp_action_set_field{
-                OFPAT_SET_FIELD, 16, {0}
+                protocol::OFPAT_SET_FIELD, 16, {0}
             };
             std::memcpy(&set_field_header, &buffer[index], sizeof(set_field_header));
             set_field_header = v13_detail::ntoh(set_field_header);
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
     {
         auto header = v13_detail::ofp_instruction_actions{};
         auto expected_header = v13_detail::ofp_instruction_actions{
-            OFPIT_CLEAR_ACTIONS, 8, {0, 0, 0, 0}
+            protocol::OFPIT_CLEAR_ACTIONS, 8, {0, 0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
         header = v13_detail::ntoh(header);
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
     {
         auto header = v13_detail::ofp_instruction_actions{};
         auto expected_header = v13_detail::ofp_instruction_actions{
-            OFPIT_WRITE_ACTIONS, 32, {0, 0, 0, 0}
+            protocol::OFPIT_WRITE_ACTIONS, 32, {0, 0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
         header = v13_detail::ntoh(header);
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
         {
             auto set_field_header = v13_detail::ofp_action_set_field{};
             auto expected_set_field_header = v13_detail::ofp_action_set_field{
-                OFPAT_SET_FIELD, 16, {0}
+                protocol::OFPAT_SET_FIELD, 16, {0}
             };
             std::memcpy(&set_field_header, &buffer[index], sizeof(set_field_header));
             set_field_header = v13_detail::ntoh(set_field_header);
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
         {
             auto set_queue_header = v13_detail::ofp_action_set_queue{};
             auto expected_set_queue_header = v13_detail::ofp_action_set_queue{
-                OFPAT_SET_QUEUE, 8, 4
+                protocol::OFPAT_SET_QUEUE, 8, 4
             };
             std::memcpy(&set_queue_header, &buffer[index], sizeof(set_queue_header));
             set_queue_header = v13_detail::ntoh(set_queue_header);
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(encode_test)
     {
         auto header = v13_detail::ofp_instruction_goto_table{};
         auto expected_header = v13_detail::ofp_instruction_goto_table{
-            OFPIT_GOTO_TABLE, 8, 4, {0, 0, 0}
+            protocol::OFPIT_GOTO_TABLE, 8, 4, {0, 0, 0}
         };
         std::memcpy(&header, &buffer[index], sizeof(header));
         header = v13_detail::ntoh(header);

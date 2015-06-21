@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         auto const sut = actions::set_field{oxm};
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPAT_SET_FIELD);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_SET_FIELD);
         BOOST_CHECK_EQUAL(sut.length(), ((4 + oxm.length()) + 7) / 8 * 8);
         BOOST_CHECK_EQUAL(sut.length() % 8, 0);
         BOOST_CHECK_EQUAL(sut.oxm_match_field().oxm_type(), oxm.oxm_type());
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
         auto const sut = actions::set_field{std::move(oxm)};
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPAT_SET_FIELD);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_SET_FIELD);
         BOOST_CHECK_EQUAL(sut.length(), ((4 + sizeof(std::uint32_t) + sizeof(std::uint16_t)) + 7) / 8 * 8);
         BOOST_CHECK_EQUAL(sut.length() % 8, 0);
         BOOST_CHECK_EQUAL(sut.oxm_match_field().oxm_type(), oxm_vlan_vid::oxm_type());

@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto const sut = barrier_request{};
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_BARRIER_REQUEST);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_BARRIER_REQUEST);
         BOOST_CHECK_EQUAL(sut.length(), 8);
     }
 
@@ -80,8 +80,8 @@ BOOST_FIXTURE_TEST_SUITE(instantiation_test, barrier_request_fixture)
     {
         auto const sut = barrier_reply{request};
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_BARRIER_REPLY);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_BARRIER_REPLY);
         BOOST_CHECK_EQUAL(sut.length(), 8);
         BOOST_CHECK_EQUAL(sut.xid(), request.xid());
     }

@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(default_constructor_test)
 {
     auto const sut = instructions::apply_actions{};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_APPLY_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_APPLY_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8);
 }
 
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(variadic_template_constructor_test)
         , actions::push_vlan{0x8100}, actions::set_field{oxm_vlan_vid{1024}}, actions::output{4}
     };
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_APPLY_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_APPLY_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + 80);
 }
 
@@ -43,12 +43,12 @@ BOOST_AUTO_TEST_CASE(constructed_by_lvalue)
 {
     auto list = action_list{
           actions::push_vlan{0x8100}, actions::set_field{oxm_vlan_vid{1024}}, actions::output{4}
-        , actions::pop_vlan{}, actions::output{OFPP_MAX}
+        , actions::pop_vlan{}, actions::output{protocol::OFPP_MAX}
     };
 
     auto const sut = instructions::apply_actions{list};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_APPLY_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_APPLY_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + list.length());
 }
 
@@ -56,12 +56,12 @@ BOOST_AUTO_TEST_CASE(constructed_by_const_lvalue)
 {
     auto const list = action_list{
           actions::push_vlan{0x8100}, actions::set_field{oxm_vlan_vid{1024}}, actions::output{4}
-        , actions::set_field{oxm_eth_dst{{{0x66, 0x55, 0x44, 0x33, 0x22, 0x11}}}}, actions::output{OFPP_MAX}
+        , actions::set_field{oxm_eth_dst{{{0x66, 0x55, 0x44, 0x33, 0x22, 0x11}}}}, actions::output{protocol::OFPP_MAX}
     };
 
     auto const sut = instructions::apply_actions{list};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_APPLY_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_APPLY_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + list.length());
 }
 
@@ -69,13 +69,13 @@ BOOST_AUTO_TEST_CASE(constructed_by_xvalue)
 {
     auto list = action_list{
           actions::push_vlan{0x8100}, actions::set_field{oxm_vlan_vid{1024}}, actions::output{4}
-        , actions::set_field{oxm_eth_dst{{{0x66, 0x55, 0x44, 0x33, 0x22, 0x11}}}}, actions::output{OFPP_MAX}
+        , actions::set_field{oxm_eth_dst{{{0x66, 0x55, 0x44, 0x33, 0x22, 0x11}}}}, actions::output{protocol::OFPP_MAX}
     };
     auto const list_lenght = list.length();
 
     auto const sut = instructions::apply_actions{std::move(list)};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_APPLY_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_APPLY_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + list_lenght);
     BOOST_CHECK_EQUAL(list.length(), 0);
 }
@@ -86,11 +86,11 @@ BOOST_AUTO_TEST_CASE(constructed_by_prvalue)
     auto const sut = instructions::apply_actions{
         action_list{
               actions::push_vlan{0x8100}, actions::set_field{oxm_vlan_vid{1024}}, actions::output{4}
-            , actions::set_field{oxm_eth_dst{{{0x66, 0x55, 0x44, 0x33, 0x22, 0x11}}}}, actions::output{OFPP_MAX}
+            , actions::set_field{oxm_eth_dst{{{0x66, 0x55, 0x44, 0x33, 0x22, 0x11}}}}, actions::output{protocol::OFPP_MAX}
         }
     };
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_APPLY_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_APPLY_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 80);
 }
 

@@ -17,90 +17,90 @@ struct table_features_fixture {
         return table_features{table_id, table_name.c_str(), 0xffffffffffffffff, 0xffffffffffffffff, 0, 0xffffffff
             , {
                   table_feature_properties::prop_instructions{
-                      instruction_id{OFPIT_GOTO_TABLE}, instruction_id{OFPIT_WRITE_METADATA}
-                    , instruction_id{OFPIT_WRITE_ACTIONS}, instruction_id{OFPIT_APPLY_ACTIONS}
-                    , instruction_id{OFPIT_CLEAR_ACTIONS}, instruction_id{OFPIT_METER}
+                      instruction_id{protocol::OFPIT_GOTO_TABLE}, instruction_id{protocol::OFPIT_WRITE_METADATA}
+                    , instruction_id{protocol::OFPIT_WRITE_ACTIONS}, instruction_id{protocol::OFPIT_APPLY_ACTIONS}
+                    , instruction_id{protocol::OFPIT_CLEAR_ACTIONS}, instruction_id{protocol::OFPIT_METER}
                     , instruction_experimenter_id{32, {'A', 'B'}}
                   } // 4 + 4 * 6 + (8 + 2) = 38 => 40
                 , table_feature_properties::prop_next_tables{
                     1, 2, 3, 4, 5, 6, 7
                   } // 4 + 7 = 11 => 16
                 , table_feature_properties::prop_write_actions{
-                      action_id{OFPAT_OUTPUT}, action_id{OFPAT_COPY_TTL_OUT}, action_id{OFPAT_COPY_TTL_IN}
-                    , action_id{OFPAT_SET_MPLS_TTL}, action_id{OFPAT_DEC_MPLS_TTL}
-                    , action_id{OFPAT_PUSH_VLAN}, action_id{OFPAT_POP_VLAN}
-                    , action_id{OFPAT_PUSH_MPLS}, action_id{OFPAT_POP_MPLS}
-                    , action_id{OFPAT_SET_QUEUE}, action_id{OFPAT_GROUP}
-                    , action_id{OFPAT_SET_NW_TTL}, action_id{OFPAT_DEC_NW_TTL}
-                    , action_id{OFPAT_SET_FIELD}
-                    , action_id{OFPAT_PUSH_PBB}, action_id{OFPAT_POP_PBB}
+                      action_id{protocol::OFPAT_OUTPUT}, action_id{protocol::OFPAT_COPY_TTL_OUT}, action_id{protocol::OFPAT_COPY_TTL_IN}
+                    , action_id{protocol::OFPAT_SET_MPLS_TTL}, action_id{protocol::OFPAT_DEC_MPLS_TTL}
+                    , action_id{protocol::OFPAT_PUSH_VLAN}, action_id{protocol::OFPAT_POP_VLAN}
+                    , action_id{protocol::OFPAT_PUSH_MPLS}, action_id{protocol::OFPAT_POP_MPLS}
+                    , action_id{protocol::OFPAT_SET_QUEUE}, action_id{protocol::OFPAT_GROUP}
+                    , action_id{protocol::OFPAT_SET_NW_TTL}, action_id{protocol::OFPAT_DEC_NW_TTL}
+                    , action_id{protocol::OFPAT_SET_FIELD}
+                    , action_id{protocol::OFPAT_PUSH_PBB}, action_id{protocol::OFPAT_POP_PBB}
                   } // 4 + 4 * 16 = 68 => 72
                 , table_feature_properties::prop_apply_actions{
-                      action_id{OFPAT_OUTPUT}, action_id{OFPAT_COPY_TTL_OUT}, action_id{OFPAT_COPY_TTL_IN}
-                    , action_id{OFPAT_SET_MPLS_TTL}, action_id{OFPAT_DEC_MPLS_TTL}
-                    , action_id{OFPAT_PUSH_VLAN}, action_id{OFPAT_POP_VLAN}
-                    , action_id{OFPAT_PUSH_MPLS}, action_id{OFPAT_POP_MPLS}
-                    , action_id{OFPAT_SET_QUEUE}, action_id{OFPAT_GROUP}
-                    , action_id{OFPAT_SET_NW_TTL}, action_id{OFPAT_DEC_NW_TTL}
-                    , action_id{OFPAT_SET_FIELD}
-                    , action_id{OFPAT_PUSH_PBB}, action_id{OFPAT_POP_PBB}
+                      action_id{protocol::OFPAT_OUTPUT}, action_id{protocol::OFPAT_COPY_TTL_OUT}, action_id{protocol::OFPAT_COPY_TTL_IN}
+                    , action_id{protocol::OFPAT_SET_MPLS_TTL}, action_id{protocol::OFPAT_DEC_MPLS_TTL}
+                    , action_id{protocol::OFPAT_PUSH_VLAN}, action_id{protocol::OFPAT_POP_VLAN}
+                    , action_id{protocol::OFPAT_PUSH_MPLS}, action_id{protocol::OFPAT_POP_MPLS}
+                    , action_id{protocol::OFPAT_SET_QUEUE}, action_id{protocol::OFPAT_GROUP}
+                    , action_id{protocol::OFPAT_SET_NW_TTL}, action_id{protocol::OFPAT_DEC_NW_TTL}
+                    , action_id{protocol::OFPAT_SET_FIELD}
+                    , action_id{protocol::OFPAT_PUSH_PBB}, action_id{protocol::OFPAT_POP_PBB}
                   } // 4 + 4 * 16 = 68 => 72
                 , table_feature_properties::prop_match{
-                      oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IN_PORT, false, 4}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_METADATA, false, 8}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_DST, true, 12}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_SRC, true, 12}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_TYPE, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_VID, true, 4}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_PCP, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_DSCP, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_ECN, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_PROTO, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_SRC, true, 8}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_DST, true, 8}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_DST, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_DST, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_DST, false, 2}
-                    , oxm_experimenter_id{(std::uint32_t{OFPXMC_EXPERIMENTER} << 16) | 16, 32}
+                      oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PORT, false, 4}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_METADATA, false, 8}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_DST, true, 12}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_SRC, true, 12}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_TYPE, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_VID, true, 4}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_PCP, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_DSCP, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_ECN, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_PROTO, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_SRC, true, 8}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_DST, true, 8}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_DST, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_DST, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_DST, false, 2}
+                    , oxm_experimenter_id{(std::uint32_t{protocol::OFPXMC_EXPERIMENTER} << 16) | 16, 32}
                   } // 4 + 4 * 18 + 8 = 84 => 88
                 , table_feature_properties::prop_write_setfield{
-                      oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_DST, true, 12}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_SRC, true, 12}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_TYPE, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_VID, true, 4}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_PCP, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_DSCP, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_ECN, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_PROTO, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_SRC, true, 8}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_DST, true, 8}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_DST, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_DST, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_DST, false, 2}
+                      oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_DST, true, 12}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_SRC, true, 12}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_TYPE, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_VID, true, 4}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_PCP, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_DSCP, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_ECN, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_PROTO, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_SRC, true, 8}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_DST, true, 8}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_DST, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_DST, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_DST, false, 2}
                   } // 4 + 4 * 16 = 68 => 72
                 , table_feature_properties::prop_apply_setfield{
-                      oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_DST, true, 12}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_SRC, true, 12}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_ETH_TYPE, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_VID, true, 4}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_VLAN_PCP, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_DSCP, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_ECN, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IP_PROTO, false, 1}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_SRC, true, 8}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_IPV4_DST, true, 8}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_TCP_DST, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_UDP_DST, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_SRC, false, 2}
-                    , oxm_id{OFPXMC_OPENFLOW_BASIC, OFPXMT_OFB_SCTP_DST, false, 2}
+                      oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_DST, true, 12}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_SRC, true, 12}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_TYPE, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_VID, true, 4}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_VLAN_PCP, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_DSCP, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_ECN, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IP_PROTO, false, 1}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_SRC, true, 8}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV4_DST, true, 8}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TCP_DST, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_DST, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_SRC, false, 2}
+                    , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_DST, false, 2}
                   } // 4 + 4 * 16 = 68 => 72
               } // 40 + 16 + 72 + 72 + 88 + 72 + 72 = 432
         }; // 64 + 432 = 496
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto const sut = table_features_request{};
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REQUEST);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_MULTIPART_REQUEST);
         BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_request));
-        BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
+        BOOST_CHECK_EQUAL(sut.multipart_type(), protocol::OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }
 
@@ -137,10 +137,10 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
             features0, features1, features2, features3, features4, features5, features6, features7
         };
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REQUEST);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_MULTIPART_REQUEST);
         BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_request) + 496 * 8);
-        BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
+        BOOST_CHECK_EQUAL(sut.multipart_type(), protocol::OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }
 
@@ -174,10 +174,10 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto const sut = table_features_reply{{}};
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REPLY);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_MULTIPART_REPLY);
         BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_reply));
-        BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
+        BOOST_CHECK_EQUAL(sut.multipart_type(), protocol::OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }
 
@@ -187,10 +187,10 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
             features0, features1, features2, features3, features4, features5, features6, features7
         };
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_MULTIPART_REPLY);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_MULTIPART_REPLY);
         BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_multipart_reply) + 496 * 8);
-        BOOST_CHECK_EQUAL(sut.multipart_type(), OFPMP_TABLE_FEATURES);
+        BOOST_CHECK_EQUAL(sut.multipart_type(), protocol::OFPMP_TABLE_FEATURES);
         BOOST_CHECK_EQUAL(sut.flags(), 0);
     }
 
@@ -210,7 +210,7 @@ BOOST_FIXTURE_TEST_SUITE(encode_decode_test, encode_decode_fixture)
     BOOST_AUTO_TEST_CASE(decode_test)
     {
         // TODO
-        buffer[1] = OFPT_MULTIPART_REPLY;
+        buffer[1] = protocol::OFPT_MULTIPART_REPLY;
         auto it = buffer.begin();
 
         auto const decoded_msg = table_features_reply::decode(it, buffer.end());

@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto const sut = oxm_match{};
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPMT_OXM);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPMT_OXM);
         BOOST_CHECK_EQUAL(sut.length(), 4);
     }
 
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
             , lvalue, clvalue, std::move(rvalue), oxm_eth_type{0x0800}
         };
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPMT_OXM);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPMT_OXM);
         BOOST_CHECK_EQUAL(sut.length(), 4 + 34);
     }
 
@@ -129,7 +129,7 @@ BOOST_FIXTURE_TEST_SUITE(when_init_state_is_empty, empty_oxm_match_fixture)
         BOOST_CHECK_EQUAL(vlan_vid_field->oxm_value(), 1024);
         BOOST_REQUIRE(vlan_vid_field->oxm_mask());
         // TODO mask has OFPVID_PRESENT?
-        BOOST_CHECK_EQUAL(*vlan_vid_field->oxm_mask(), 0x111 | OFPVID_PRESENT);
+        BOOST_CHECK_EQUAL(*vlan_vid_field->oxm_mask(), 0x111 | protocol::OFPVID_PRESENT);
     }
 
     BOOST_AUTO_TEST_CASE(get_null_oxm_match_field)
@@ -186,7 +186,7 @@ BOOST_FIXTURE_TEST_SUITE(when_init_state_has_some_oxm_match_field, in_port_eth_t
 
     BOOST_AUTO_TEST_CASE(add_existing_field_then_the_field_is_updated)
     {
-        auto const in_port = oxm_in_port{OFPP_MAX, 0x1111};
+        auto const in_port = oxm_in_port{protocol::OFPP_MAX, 0x1111};
         auto const expected_length = sut.length();
 
         sut.add(in_port);
@@ -194,7 +194,7 @@ BOOST_FIXTURE_TEST_SUITE(when_init_state_has_some_oxm_match_field, in_port_eth_t
         BOOST_CHECK_EQUAL(sut.length(), expected_length + sizeof(std::uint32_t));
         auto const in_port_field = sut.get<oxm_in_port>();
         BOOST_REQUIRE(in_port_field);
-        BOOST_CHECK_EQUAL(in_port_field->oxm_value(), OFPP_MAX);
+        BOOST_CHECK_EQUAL(in_port_field->oxm_value(), protocol::OFPP_MAX);
         BOOST_REQUIRE(in_port_field->oxm_mask());
         BOOST_CHECK_EQUAL(*in_port_field->oxm_mask(), 0x1111);
     }

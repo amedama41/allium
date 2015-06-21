@@ -17,24 +17,24 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
         auto sut = hello{};
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_HELLO);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_HELLO);
         BOOST_CHECK_EQUAL(sut.length(), 8);
     }
 
     BOOST_AUTO_TEST_CASE(construct_by_uint32_vector_test)
     {
         auto sut = hello{std::vector<std::uint32_t>{0x00000012}};
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_HELLO);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_HELLO);
         BOOST_CHECK_EQUAL(sut.length(), 16);
     }
 
     BOOST_AUTO_TEST_CASE(construct_by_version_bitmap_vector_test)
     {
         auto sut = hello{{hello_elements::versionbitmap{{0x00000012}}, hello_elements::unknown_element{2}}};
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_HELLO);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_HELLO);
         BOOST_CHECK_EQUAL(sut.length(), 24);
     }
 
@@ -70,14 +70,14 @@ BOOST_FIXTURE_TEST_SUITE(no_elems_buffers_test, no_elems_buffers_fixture)
     {
         auto version = std::uint8_t{};
         std::memcpy(&version, buffer.data(), sizeof(version));
-        BOOST_CHECK_EQUAL(canard::ntoh(version), OFP_VERSION);
+        BOOST_CHECK_EQUAL(canard::ntoh(version), protocol::OFP_VERSION);
     }
 
     BOOST_AUTO_TEST_CASE(type_test)
     {
         auto type = std::uint8_t{};
         std::memcpy(&type, buffer.data() + offsetof(v13_detail::ofp_header, type), sizeof(type));
-        BOOST_CHECK_EQUAL(canard::ntoh(type), OFPT_HELLO);
+        BOOST_CHECK_EQUAL(canard::ntoh(type), protocol::OFPT_HELLO);
     }
 
     BOOST_AUTO_TEST_CASE(length_test)

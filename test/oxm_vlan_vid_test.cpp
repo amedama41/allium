@@ -46,39 +46,39 @@ BOOST_AUTO_TEST_SUITE(specific_vlan_vid_test)
 
 BOOST_AUTO_TEST_CASE(vlan_vid_is_OFPVID_NONE)
 {
-    auto const sut = oxm_vlan_vid{OFPVID_NONE};
+    auto const sut = oxm_vlan_vid{protocol::OFPVID_NONE};
 
     BOOST_CHECK(not sut.oxm_has_mask());
-    BOOST_CHECK_EQUAL(sut.oxm_value(), OFPVID_NONE);
+    BOOST_CHECK_EQUAL(sut.oxm_value(), protocol::OFPVID_NONE);
 }
 
 BOOST_AUTO_TEST_CASE(vlan_vid_is_OFPVID_PRESENT)
 {
-    auto const sut = oxm_vlan_vid{OFPVID_PRESENT};
+    auto const sut = oxm_vlan_vid{protocol::OFPVID_PRESENT};
 
     BOOST_CHECK(sut.oxm_has_mask());
     BOOST_CHECK_EQUAL(sut.oxm_length(), sizeof(std::uint16_t) * 2);
-    BOOST_CHECK_EQUAL(sut.oxm_value(), OFPVID_PRESENT);
+    BOOST_CHECK_EQUAL(sut.oxm_value(), protocol::OFPVID_PRESENT);
     BOOST_REQUIRE(sut.oxm_mask());
-    BOOST_CHECK_EQUAL(*sut.oxm_mask(), OFPVID_PRESENT);
+    BOOST_CHECK_EQUAL(*sut.oxm_mask(), protocol::OFPVID_PRESENT);
 }
 
 BOOST_AUTO_TEST_CASE(vlan_vid_and_mask_are_OFPVID_PRESENT)
 {
-    auto const sut = oxm_vlan_vid{OFPVID_PRESENT, OFPVID_PRESENT};
+    auto const sut = oxm_vlan_vid{protocol::OFPVID_PRESENT, protocol::OFPVID_PRESENT};
 
     BOOST_CHECK(sut.oxm_has_mask());
     BOOST_CHECK_EQUAL(sut.oxm_length(), sizeof(std::uint16_t) * 2);
-    BOOST_CHECK_EQUAL(sut.oxm_value(), OFPVID_PRESENT);
+    BOOST_CHECK_EQUAL(sut.oxm_value(), protocol::OFPVID_PRESENT);
     BOOST_REQUIRE(sut.oxm_mask());
-    BOOST_CHECK_EQUAL(*sut.oxm_mask(), OFPVID_PRESENT);
+    BOOST_CHECK_EQUAL(*sut.oxm_mask(), protocol::OFPVID_PRESENT);
 }
 
 BOOST_AUTO_TEST_CASE(vlan_vid_is_valid_with_OFPVID_PRESENT)
 {
     auto const vlan_vid = 0x0fff;
 
-    auto const sut = oxm_vlan_vid{vlan_vid | OFPVID_PRESENT};
+    auto const sut = oxm_vlan_vid{vlan_vid | protocol::OFPVID_PRESENT};
 
     BOOST_CHECK(not sut.oxm_has_mask());
     BOOST_CHECK_EQUAL(sut.oxm_value(), vlan_vid);

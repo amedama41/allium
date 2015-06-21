@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 {
     auto const sut = actions::push_vlan{0x8100};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPAT_PUSH_VLAN);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_PUSH_VLAN);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_push));
     BOOST_CHECK_EQUAL(sut.ethertype(), 0x8100);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);

@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 {
     auto const sut = actions::copy_ttl_in{};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPAT_COPY_TTL_IN);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_COPY_TTL_IN);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_header));
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }

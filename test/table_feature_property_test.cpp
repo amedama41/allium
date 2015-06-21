@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto const sut = table_feature_properties::prop_instructions{};
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPTFPT_INSTRUCTIONS);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPTFPT_INSTRUCTIONS);
         BOOST_CHECK_EQUAL(sut.length(), 4);
         BOOST_CHECK_EQUAL(std::distance(sut.begin(), sut.end()), 0);
     }
@@ -28,34 +28,34 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
         auto const sut = table_feature_properties::prop_instructions{
-              instruction_id{OFPIT_GOTO_TABLE}
-            , instruction_id{OFPIT_WRITE_METADATA}
-            , instruction_id{OFPIT_WRITE_ACTIONS}
-            , instruction_id{OFPIT_APPLY_ACTIONS}
-            , instruction_id{OFPIT_CLEAR_ACTIONS}
-            , instruction_id{OFPIT_METER}
+              instruction_id{protocol::OFPIT_GOTO_TABLE}
+            , instruction_id{protocol::OFPIT_WRITE_METADATA}
+            , instruction_id{protocol::OFPIT_WRITE_ACTIONS}
+            , instruction_id{protocol::OFPIT_APPLY_ACTIONS}
+            , instruction_id{protocol::OFPIT_CLEAR_ACTIONS}
+            , instruction_id{protocol::OFPIT_METER}
             , instruction_experimenter_id{32}
         };
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPTFPT_INSTRUCTIONS);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPTFPT_INSTRUCTIONS);
         BOOST_CHECK_EQUAL(sut.length(), 4 + 4 * 6 + 8);
         BOOST_CHECK_EQUAL(std::distance(sut.begin(), sut.end()), 7);
         auto it = sut.begin();
-        BOOST_CHECK_EQUAL(it->type(), OFPIT_GOTO_TABLE);
-        BOOST_CHECK_EQUAL((++it)->type(), OFPIT_WRITE_METADATA);
-        BOOST_CHECK_EQUAL((++it)->type(), OFPIT_WRITE_ACTIONS);
-        BOOST_CHECK_EQUAL((++it)->type(), OFPIT_APPLY_ACTIONS);
-        BOOST_CHECK_EQUAL((++it)->type(), OFPIT_CLEAR_ACTIONS);
-        BOOST_CHECK_EQUAL((++it)->type(), OFPIT_METER);
-        BOOST_CHECK_EQUAL((++it)->type(), OFPIT_EXPERIMENTER);
+        BOOST_CHECK_EQUAL(it->type(), protocol::OFPIT_GOTO_TABLE);
+        BOOST_CHECK_EQUAL((++it)->type(), protocol::OFPIT_WRITE_METADATA);
+        BOOST_CHECK_EQUAL((++it)->type(), protocol::OFPIT_WRITE_ACTIONS);
+        BOOST_CHECK_EQUAL((++it)->type(), protocol::OFPIT_APPLY_ACTIONS);
+        BOOST_CHECK_EQUAL((++it)->type(), protocol::OFPIT_CLEAR_ACTIONS);
+        BOOST_CHECK_EQUAL((++it)->type(), protocol::OFPIT_METER);
+        BOOST_CHECK_EQUAL((++it)->type(), protocol::OFPIT_EXPERIMENTER);
     }
 
     BOOST_AUTO_TEST_CASE(copy_constructor_test)
     {
         auto const sut = table_feature_properties::prop_instructions{
-              instruction_id{OFPIT_GOTO_TABLE}
-            , instruction_id{OFPIT_WRITE_ACTIONS}
-            , instruction_id{OFPIT_CLEAR_ACTIONS}
+              instruction_id{protocol::OFPIT_GOTO_TABLE}
+            , instruction_id{protocol::OFPIT_WRITE_ACTIONS}
+            , instruction_id{protocol::OFPIT_CLEAR_ACTIONS}
             , instruction_experimenter_id{0, {'A', 'B', 'C', 'D'}}
         };
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     BOOST_AUTO_TEST_CASE(move_constructor_test)
     {
         auto sut = table_feature_properties::prop_instructions{
-              instruction_id{OFPIT_GOTO_TABLE}
+              instruction_id{protocol::OFPIT_GOTO_TABLE}
         };
 
         auto const copy = std::move(sut);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
         BOOST_CHECK_EQUAL(std::distance(copy.begin(), copy.end()), 1);
         BOOST_CHECK_EQUAL(std::distance(sut.begin(), sut.end()), 0);
         auto copy_it = copy.begin();
-        BOOST_CHECK_EQUAL(copy_it->type(), OFPIT_GOTO_TABLE);
+        BOOST_CHECK_EQUAL(copy_it->type(), protocol::OFPIT_GOTO_TABLE);
     }
 
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
@@ -96,9 +96,9 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
     BOOST_AUTO_TEST_CASE(copy_assign_test)
     {
         auto const sut = table_feature_properties::prop_instructions{
-              instruction_id{OFPIT_GOTO_TABLE}
-            , instruction_id{OFPIT_WRITE_ACTIONS}
-            , instruction_id{OFPIT_CLEAR_ACTIONS}
+              instruction_id{protocol::OFPIT_GOTO_TABLE}
+            , instruction_id{protocol::OFPIT_WRITE_ACTIONS}
+            , instruction_id{protocol::OFPIT_CLEAR_ACTIONS}
             , instruction_experimenter_id{0, {'A', 'B', 'C', 'D'}}
         };
         auto copy = table_feature_properties::prop_instructions{};
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
         BOOST_CHECK_EQUAL(std::distance(copy.begin(), copy.end()), 1);
         BOOST_CHECK_EQUAL(std::distance(sut.begin(), sut.end()), 0);
         auto copy_it = copy.begin();
-        BOOST_CHECK_EQUAL(copy_it->type(), OFPIT_EXPERIMENTER);
+        BOOST_CHECK_EQUAL(copy_it->type(), protocol::OFPIT_EXPERIMENTER);
         BOOST_CHECK_EQUAL(copy_it->length(), 12);
     }
 
@@ -139,12 +139,12 @@ BOOST_AUTO_TEST_SUITE_END() // assignment_test
 
 struct encode_decode_fixture {
     table_feature_properties::prop_instructions sut{
-          instruction_id{OFPIT_GOTO_TABLE}
-        , instruction_id{OFPIT_WRITE_METADATA}
-        , instruction_id{OFPIT_WRITE_ACTIONS}
-        , instruction_id{OFPIT_APPLY_ACTIONS}
-        , instruction_id{OFPIT_CLEAR_ACTIONS}
-        , instruction_id{OFPIT_METER}
+          instruction_id{protocol::OFPIT_GOTO_TABLE}
+        , instruction_id{protocol::OFPIT_WRITE_METADATA}
+        , instruction_id{protocol::OFPIT_WRITE_ACTIONS}
+        , instruction_id{protocol::OFPIT_APPLY_ACTIONS}
+        , instruction_id{protocol::OFPIT_CLEAR_ACTIONS}
+        , instruction_id{protocol::OFPIT_METER}
         , instruction_experimenter_id{0x12345678, {'A', 'B'}}
     };
     std::vector<std::uint8_t> buffer{};
@@ -161,49 +161,49 @@ BOOST_FIXTURE_TEST_SUITE(encode_decode_test, encode_decode_fixture)
         auto length = std::uint16_t{};
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPTFPT_INSTRUCTIONS);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPTFPT_INSTRUCTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4 + (4 * 6) + (4 + 4 + 2));
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPIT_GOTO_TABLE);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_GOTO_TABLE);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPIT_WRITE_METADATA);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_WRITE_METADATA);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPIT_WRITE_ACTIONS);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_WRITE_ACTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPIT_APPLY_ACTIONS);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_APPLY_ACTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPIT_CLEAR_ACTIONS);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_CLEAR_ACTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPIT_METER);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_METER);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), OFPIT_EXPERIMENTER);
+        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_EXPERIMENTER);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
         BOOST_CHECK_EQUAL(ntoh(length), 4 + 4 + 2);
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto const sut = table_feature_properties::prop_next_tables{};
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPTFPT_NEXT_TABLES);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPTFPT_NEXT_TABLES);
         BOOST_CHECK_EQUAL(sut.length(), 4);
         BOOST_CHECK_EQUAL(std::distance(sut.begin(), sut.end()), 0);
     }
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
             1, 2, 3, 4, 5, 6, 7, 255
         };
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPTFPT_NEXT_TABLES);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPTFPT_NEXT_TABLES);
         BOOST_CHECK_EQUAL(sut.length(), 4 + 8);
         BOOST_CHECK_EQUAL(std::distance(sut.begin(), sut.end()), 8);
     }

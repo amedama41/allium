@@ -18,16 +18,16 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const port = std::uint32_t{1};
     auto const sut = actions::output{port};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPAT_OUTPUT);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_OUTPUT);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_output));
     BOOST_CHECK_EQUAL(sut.port(), port);
-    BOOST_CHECK_EQUAL(sut.max_length(), OFPCML_NO_BUFFER);
+    BOOST_CHECK_EQUAL(sut.max_length(), protocol::OFPCML_NO_BUFFER);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }
 
 BOOST_AUTO_TEST_CASE(copy_constructor_test)
 {
-    auto sut = actions::output{OFPP_MAX, 0};
+    auto sut = actions::output{protocol::OFPP_MAX, 0};
 
     auto const copy = sut;
 
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(port_no_is_zero)
 
 BOOST_AUTO_TEST_CASE(port_is_any)
 {
-    auto const port = OFPP_ANY;
+    auto const port = protocol::OFPP_ANY;
     BOOST_CHECK_THROW(actions::output{port}, int);
 }
 
@@ -55,12 +55,12 @@ BOOST_AUTO_TEST_SUITE_END() // bad_port_no_test
 
 BOOST_AUTO_TEST_CASE(to_controller_factory_test)
 {
-    auto const sut = actions::output::to_controller(OFPCML_MAX);
+    auto const sut = actions::output::to_controller(protocol::OFPCML_MAX);
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPAT_OUTPUT);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_OUTPUT);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_output));
-    BOOST_CHECK_EQUAL(sut.port(), OFPP_CONTROLLER);
-    BOOST_CHECK_EQUAL(sut.max_length(), OFPCML_MAX);
+    BOOST_CHECK_EQUAL(sut.port(), protocol::OFPP_CONTROLLER);
+    BOOST_CHECK_EQUAL(sut.max_length(), protocol::OFPCML_MAX);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 BOOST_AUTO_TEST_CASE(encode_decode_test)
 {
     auto buffer = std::vector<std::uint8_t>{};
-    auto const sut = actions::output{OFPP_IN_PORT};
+    auto const sut = actions::output{protocol::OFPP_IN_PORT};
 
     sut.encode(buffer);
 

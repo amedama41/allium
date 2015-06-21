@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 
     auto const sut = instructions::write_metadata{metadata};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_WRITE_METADATA);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_METADATA);
     BOOST_CHECK_EQUAL(sut.length(), 24);
     BOOST_CHECK_EQUAL(sut.metadata(), metadata);
     BOOST_CHECK_EQUAL(sut.metadata_mask(), std::numeric_limits<std::uint64_t>::max());
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(constructor_test_when_has_mask)
 
     auto const sut = instructions::write_metadata{metadata, metadata_mask};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_WRITE_METADATA);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_METADATA);
     BOOST_CHECK_EQUAL(sut.length(), 24);
     BOOST_CHECK_EQUAL(sut.metadata(), metadata);
     BOOST_CHECK_EQUAL(sut.metadata_mask(), metadata_mask);

@@ -19,8 +19,8 @@ struct echo_request_fixture
 BOOST_FIXTURE_TEST_SUITE(echo_request_test, echo_request_fixture)
 BOOST_AUTO_TEST_CASE(constructor_test)
 {
-    BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-    BOOST_CHECK_EQUAL(sut.type(), OFPT_ECHO_REQUEST);
+    BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_ECHO_REQUEST);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header));
     // BOOST_CHECK_EQUAL(sut.xid(), 0);
 }
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(lvalue_create_reply_test)
 {
     auto reply = sut.reply();
     BOOST_CHECK_EQUAL(reply.version(), sut.version());
-    BOOST_CHECK_EQUAL(reply.type(), OFPT_ECHO_REPLY);
+    BOOST_CHECK_EQUAL(reply.type(), protocol::OFPT_ECHO_REPLY);
     BOOST_CHECK_EQUAL(reply.length(), sut.length());
     BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
     BOOST_CHECK_EQUAL(sut.data().size(), 0);
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(rvalue_create_reply_test)
 {
     auto reply = std::move(sut).reply();
     BOOST_CHECK_EQUAL(reply.version(), sut.version());
-    BOOST_CHECK_EQUAL(reply.type(), OFPT_ECHO_REPLY);
+    BOOST_CHECK_EQUAL(reply.type(), protocol::OFPT_ECHO_REPLY);
     BOOST_CHECK_EQUAL(reply.length(), sut.length());
     BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
     BOOST_CHECK_EQUAL(sut.data().size(), 0);
@@ -88,8 +88,8 @@ struct has_data_echo_request_fixture
 BOOST_FIXTURE_TEST_SUITE(has_data_echo_request_test, has_data_echo_request_fixture)
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_ECHO_REQUEST);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_ECHO_REQUEST);
         BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header) + 7);
         // BOOST_CHECK_EQUAL(sut.xid(), 0);
     }
@@ -97,7 +97,7 @@ BOOST_FIXTURE_TEST_SUITE(has_data_echo_request_test, has_data_echo_request_fixtu
     {
         auto reply = sut.reply();
         BOOST_CHECK_EQUAL(reply.version(), sut.version());
-        BOOST_CHECK_EQUAL(reply.type(), OFPT_ECHO_REPLY);
+        BOOST_CHECK_EQUAL(reply.type(), protocol::OFPT_ECHO_REPLY);
         BOOST_CHECK_EQUAL(reply.length(), sut.length());
         BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
         BOOST_CHECK_EQUAL(sut.data().size(), 7);
@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_SUITE(has_data_echo_request_test, has_data_echo_request_fixtu
     {
         auto reply = std::move(sut).reply();
         BOOST_CHECK_EQUAL(reply.version(), sut.version());
-        BOOST_CHECK_EQUAL(reply.type(), OFPT_ECHO_REPLY);
+        BOOST_CHECK_EQUAL(reply.type(), protocol::OFPT_ECHO_REPLY);
         BOOST_CHECK_EQUAL(reply.length(), sizeof(v13_detail::ofp_header) + 7);
         BOOST_CHECK_EQUAL(reply.xid(), sut.xid());
         BOOST_CHECK_EQUAL(sut.data().size(), 0);
@@ -145,8 +145,8 @@ struct echo_reply_fixture
 };
 BOOST_FIXTURE_TEST_CASE(constructor_test, echo_reply_fixture)
 {
-    BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-    BOOST_CHECK_EQUAL(sut.type(), OFPT_ECHO_REPLY);
+    BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_ECHO_REPLY);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_header));
     // BOOST_CHECK_EQUAL(sut.xid(), 0);
 }

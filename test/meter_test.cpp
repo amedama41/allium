@@ -20,14 +20,14 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 
     auto const sut = instructions::meter{meter_id};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_METER);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_METER);
     BOOST_CHECK_EQUAL(sut.length(), 8);
     BOOST_CHECK_EQUAL(sut.meter_id(), meter_id);
 }
 
 BOOST_AUTO_TEST_CASE(copy_constructor_test)
 {
-    auto sut = instructions::meter{OFPM_MAX};
+    auto sut = instructions::meter{protocol::OFPM_MAX};
 
     auto const copy = sut;
 
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(move_constructor_test)
 
 BOOST_AUTO_TEST_CASE(bad_meter_id)
 {
-    BOOST_CHECK_THROW(instructions::meter{OFPM_MAX + 1}, int);
-    BOOST_CHECK_THROW(instructions::meter{OFPM_ALL}, int);
+    BOOST_CHECK_THROW(instructions::meter{protocol::OFPM_MAX + 1}, int);
+    BOOST_CHECK_THROW(instructions::meter{protocol::OFPM_ALL}, int);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 BOOST_AUTO_TEST_CASE(encode_decode_test)
 {
     auto buffer = std::vector<std::uint8_t>{};
-    auto const sut = instructions::meter{OFPM_MAX - 1};
+    auto const sut = instructions::meter{protocol::OFPM_MAX - 1};
 
     sut.encode(buffer);
 

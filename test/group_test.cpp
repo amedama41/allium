@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
     auto const id = std::uint32_t{0};
     auto const sut = actions::group{id};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPAT_GROUP);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_GROUP);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_group));
     BOOST_CHECK_EQUAL(sut.group_id(), id);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);

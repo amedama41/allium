@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto sut = hello_elements::versionbitmap{std::vector<std::uint32_t>{0x00000012}};
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPHET_VERSIONBITMAP);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPHET_VERSIONBITMAP);
         BOOST_CHECK_EQUAL(sut.length(), 8);
     }
 
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto const sut = hello_elements::versionbitmap{{0x00000012, 0x00010001}};
 
-        BOOST_CHECK_EQUAL(sut.type(), OFPHET_VERSIONBITMAP);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPHET_VERSIONBITMAP);
         BOOST_CHECK_EQUAL(sut.length(), 12);
     }
 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(version_support_test)
     {
         auto const sut = hello_elements::versionbitmap{{0x00000010}};
 
-        BOOST_CHECK(sut.support(v13::OFP_VERSION));
+        BOOST_CHECK(sut.support(v13::protocol::OFP_VERSION));
     }
 
     BOOST_AUTO_TEST_CASE(of11_and_13_support_test)
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_SUITE(version_support_test)
 
         auto const V10_OFP_VERSION = 0x1;
         BOOST_CHECK(sut.support(V10_OFP_VERSION));
-        BOOST_CHECK(sut.support(v13::OFP_VERSION));
+        BOOST_CHECK(sut.support(v13::protocol::OFP_VERSION));
     }
 
     BOOST_AUTO_TEST_CASE(multi_bitmaps_test)
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_SUITE(version_support_test)
 
         auto const V10_OFP_VERSION = 0x1;
         BOOST_CHECK(sut.support(V10_OFP_VERSION));
-        BOOST_CHECK(sut.support(v13::OFP_VERSION));
+        BOOST_CHECK(sut.support(v13::protocol::OFP_VERSION));
         BOOST_CHECK(sut.support(32));
         BOOST_CHECK(sut.support(48));
     }
@@ -76,14 +76,14 @@ BOOST_AUTO_TEST_SUITE(max_support_version_test)
     {
         auto const sut = hello_elements::versionbitmap{{0x00000010}};
 
-        BOOST_CHECK_EQUAL(sut.max_support_version(), v13::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.max_support_version(), v13::protocol::OFP_VERSION);
     }
 
     BOOST_AUTO_TEST_CASE(of11_and_13_support_test)
     {
         auto const sut = hello_elements::versionbitmap{{0x00000012}};
 
-        BOOST_CHECK_EQUAL(sut.max_support_version(), v13::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.max_support_version(), v13::protocol::OFP_VERSION);
     }
 
     BOOST_AUTO_TEST_CASE(multi_bitmaps_test)

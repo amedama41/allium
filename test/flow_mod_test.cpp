@@ -15,7 +15,7 @@ struct flow_entry_fixture {
     std::array<std::uint8_t, 6> eth_dst = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}};
     std::array<std::uint8_t, 6> eth_src = {{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}};
     flow_entry entry = {{
-        oxm_match{oxm_in_port{4}, oxm_eth_dst{eth_dst}, oxm_eth_src{eth_src}}, OFP_DEFAULT_PRIORITY // 4 + 8 + 10 + 10 = 32
+        oxm_match{oxm_in_port{4}, oxm_eth_dst{eth_dst}, oxm_eth_src{eth_src}}, protocol::OFP_DEFAULT_PRIORITY // 4 + 8 + 10 + 10 = 32
     }, {
           instructions::apply_actions{
             actions::set_field{oxm_eth_dst{eth_src}}, actions::set_field{oxm_eth_src{eth_dst}}, actions::output{4} // 8 + 16 + 16 + 16 = 56
@@ -32,12 +32,12 @@ BOOST_FIXTURE_TEST_SUITE(instantiation_test, flow_entry_fixture)
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
         std::uint8_t const table_id = 255;
-        std::uint16_t const flags = OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP;
+        std::uint16_t const flags = protocol::OFPFF_SEND_FLOW_REM | protocol::OFPFF_CHECK_OVERLAP;
 
         auto const sut = flow_mod_add{entry, table_id, flags};
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_FLOW_MOD);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_FLOW_MOD);
         BOOST_CHECK_EQUAL(sut.length(), 48 + 32 + 56 + 8 + 40);
         BOOST_CHECK_EQUAL(sut.table_id(), table_id);
         BOOST_CHECK_EQUAL(sut.flags(), flags);
@@ -59,7 +59,7 @@ BOOST_FIXTURE_TEST_SUITE(instantiation_test, flow_entry_fixture)
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 
 struct flow_mod_fixture : flow_entry_fixture {
-    flow_mod_add sut = {entry, 0, OFPFF_SEND_FLOW_REM};
+    flow_mod_add sut = {entry, 0, protocol::OFPFF_SEND_FLOW_REM};
 };
 BOOST_FIXTURE_TEST_SUITE(encode_decode_test, flow_mod_fixture)
 

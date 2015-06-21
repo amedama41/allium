@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 
     auto sut = actions::push_mpls{ethertype};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPAT_PUSH_MPLS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_PUSH_MPLS);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_push));
     BOOST_CHECK_EQUAL(sut.ethertype(), ethertype);
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);

@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 {
     auto const sut = actions::pop_pbb{};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPAT_POP_PBB);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_POP_PBB);
     BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_header));
     BOOST_CHECK_EQUAL(sut.length() % 8, 0);
 }

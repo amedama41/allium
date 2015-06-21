@@ -19,20 +19,20 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
         auto const group_id = 0;
-        auto const sut = group_mod_add{group_id, OFPGT_INDIRECT, {bucket{actions::output{4}}}};
+        auto const sut = group_mod_add{group_id, protocol::OFPGT_INDIRECT, {bucket{actions::output{4}}}};
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_GROUP_MOD);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_GROUP_MOD);
         BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_group_mod) + sizeof(v13_detail::ofp_bucket) + sizeof(v13_detail::ofp_action_output));
-        BOOST_CHECK_EQUAL(sut.command(), OFPGC_ADD);
+        BOOST_CHECK_EQUAL(sut.command(), protocol::OFPGC_ADD);
         BOOST_CHECK_EQUAL(sut.group_id(), group_id);
-        BOOST_CHECK_EQUAL(sut.group_type(), OFPGT_INDIRECT);
+        BOOST_CHECK_EQUAL(sut.group_type(), protocol::OFPGT_INDIRECT);
         BOOST_CHECK_EQUAL(sut.buckets().size(), 1);
     }
 
     BOOST_AUTO_TEST_CASE(move_constructor_test)
     {
-        auto sut = group_mod_add{OFPG_MAX, OFPGT_SELECT, {
+        auto sut = group_mod_add{protocol::OFPG_MAX, protocol::OFPGT_SELECT, {
               bucket{2, {actions::pop_vlan{}, actions::output{1}}} // 16 + 8 + 16 = 40
             , bucket{1, {actions::set_field{oxm_vlan_vid{4}}, actions::output{2}}} // 16 + 16 + 16 = 48
         }};
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 
 struct encode_decode_fixture {
-    group_mod_add const sut{1, OFPGT_ALL, {
+    group_mod_add const sut{1, protocol::OFPGT_ALL, {
           bucket{{actions::push_vlan{0x8100}, actions::set_field{oxm_vlan_vid{4095}}, actions::output{1}}}
         , bucket{{actions::set_field{oxm_ipv4_src{0x7f000001}}, actions::set_field{oxm_ipv4_dst{0x7f000002}}, actions::output{2}}}
     }};
@@ -96,13 +96,13 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
-        auto const group_id = OFPG_ANY;
+        auto const group_id = protocol::OFPG_ANY;
         auto const sut = group_mod_delete{group_id};
 
-        BOOST_CHECK_EQUAL(sut.version(), OFP_VERSION);
-        BOOST_CHECK_EQUAL(sut.type(), OFPT_GROUP_MOD);
+        BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_GROUP_MOD);
         BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_group_mod));
-        BOOST_CHECK_EQUAL(sut.command(), OFPGC_DELETE);
+        BOOST_CHECK_EQUAL(sut.command(), protocol::OFPGC_DELETE);
         BOOST_CHECK_EQUAL(sut.group_id(), group_id);
     }
 
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 
 struct encode_decode_fixture {
-    group_mod_delete const sut{OFPG_MAX};
+    group_mod_delete const sut{protocol::OFPG_MAX};
     std::vector<std::uint8_t> buffer;
 };
 BOOST_FIXTURE_TEST_SUITE(encode_decode_test, encode_decode_fixture)

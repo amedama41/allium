@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(variadic_templete_constructor_test)
         , actions::set_field{oxm_ipv4_src{0x0100007f}}
     };
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_WRITE_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + 48);
 }
 
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(constructed_by_lvalue)
 
     auto const sut = instructions::write_actions{set};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_WRITE_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + set.length());
 }
 
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(constructed_by_const_lvalue)
 
     auto const sut = instructions::write_actions{set};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_WRITE_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + set.length());
 }
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(constructed_by_xvalue)
 
     auto const sut = instructions::write_actions{std::move(set)};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_WRITE_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + set_length);
     BOOST_CHECK_EQUAL(set.length(), 0);
 }
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(constructed_by_prvalue)
         action_set{actions::copy_ttl_in{}, actions::set_field{oxm_udp_dst{3344}}}
     };
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_WRITE_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8 + 24);
 }
 

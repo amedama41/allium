@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(constructor_test)
 {
     auto const sut = instructions::clear_actions{};
 
-    BOOST_CHECK_EQUAL(sut.type(), OFPIT_CLEAR_ACTIONS);
+    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_CLEAR_ACTIONS);
     BOOST_CHECK_EQUAL(sut.length(), 8);
 }
 
