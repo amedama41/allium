@@ -1,4 +1,5 @@
 from future_builtins import map, filter
+import itertools
 
 def _maybe_qualify_std(type_name):
     return 'std::' + type_name if type_name.startswith('uint') else type_name
@@ -40,12 +41,15 @@ def _generate_struct_decls(struct_decls, is_skip_ofp_match=False):
     size=_struct_size(struct, is_skip_ofp_match))),
         struct_decls.items()))
 
-def _generate_enum_members(enum_members):
+def _generate_enum_members(enum_members, aliases):
     return '\n'.join(map(
-        lambda member: '            {} = {},'.format(member.displayname, member.enum_value),
+        lambda member: '\n'.join(itertools.chain(
+            ('            {} = {},'.format(member.displayname, member.enum_value),),
+            ('            {} = {},'.format(alias_name, member.displayname)
+                for alias_name in aliases.get(member.displayname, [])))),
         enum_members))
 
-def _generate_enum_decls(enum_decls):
+def _generate_enum_decls(enum_decls, alias_info):
     return '\n\n'.join(map(
             lambda (name, enum): (
 """\
@@ -53,7 +57,8 @@ def _generate_enum_decls(enum_decls):
         {{
 {members}
         }};\
-""".format(name=name, members=_generate_enum_members(enum.get_children()))),
+""".format(name=name, members=_generate_enum_members(
+    enum.get_children(), alias_info.get(name, {})))),
             enum_decls.items()))
 
 def _generate_constant_decls(macro_defs, macro_type_map):
@@ -73,6 +78,50 @@ def _generate_constant_defs(macro_defs, macro_type_map):
     if 'OFP_NO_BUFFER' not in macro_defs:
         return '\n'.join([constants, '        template <class T> std::uint32_t const static_data_member_initializer<T>::OFP_NO_BUFFER;'])
     return constants
+
+_alias_enumerations = {
+        10: {
+            'ofp_port': {
+                    'OFPP_NONE': ('OFPP_ANY',),
+            },
+            'ofp_type': {
+                    'OFPT_VENDOR': ('OFPT_EXPERIMENTER',),
+            },
+            'ofp_action_type': {
+                    'OFPAT_STRIP_VLAN': ('OFPAT_POP_VLAN',),
+                    'OFPAT_ENQUEUE': ('OFPAT_SET_QUEUE',),
+                    'OFPAT_VENDOR': ('OFPAT_EXPERIMENTER',),
+            },
+            'ofp_flow_wildcards': {
+                    'OFPFW_IN_PORT': ('OFPXMT_OFB_IN_PORT',),
+                    'OFPFW_DL_VLAN': ('OFPXMT_OFB_VLAN_VID',),
+                    'OFPFW_DL_SRC': ('OFPXMT_OFB_ETH_SRC',),
+                    'OFPFW_DL_DST': ('OFPXMT_OFB_ETH_DST',),
+                    'OFPFW_DL_TYPE': ('OFPXMT_OFB_ETH_TYPE',),
+                    'OFPFW_NW_PROTO': ('OFPXMT_OFB_IP_PROTO', 'OFPXMT_OFB_ARP_OP'),
+                    'OFPFW_TP_SRC': ('OFPXMT_OFB_TCP_SRC', 'OFPXMT_OFB_UDP_SRC', 'OFPXMT_OFB_ICMPV4_TYPE'),
+                    'OFPFW_TP_DST': ('OFPXMT_OFB_TCP_DST', 'OFPXMT_OFB_UDP_DST', 'OFPXMT_OFB_ICMPV4_CODE'),
+                    'OFPFW_NW_SRC_ALL': ('OFPXMT_OFB_IPV4_SRC', 'OFPXMT_OFB_ARP_SPA'),
+                    'OFPFW_NW_DST_ALL': ('OFPXMT_OFB_IPV4_DST', 'OFPXMT_OFB_ARP_TPA'),
+                    'OFPFW_DL_VLAN_PCP': ('OFPXMT_OFB_VLAN_PCP',),
+                    'OFPFW_NW_TOS': ('OFPXMT_OFB_IP_DSCP',),
+            },
+            'ofp_stats_types': {
+                    'OFPST_DESC': ('OFPMP_DESC',),
+                    'OFPST_FLOW': ('OFPMP_FLOW',),
+                    'OFPST_AGGREGATE': ('OFPMP_AGGREGATE',),
+                    'OFPST_TABLE': ('OFPMP_TABLE',),
+                    'OFPST_PORT': ('OFPMP_PORT_STATS',),
+                    'OFPST_QUEUE': ('OFPMP_QUEUE',),
+                    'OFPST_VENDOR': ('OFPMP_EXPERIMENTER',),
+            },
+            'ofp_stats_reply_flags': {
+                    'OFPSF_REPLY_MORE': ('OFPMPF_REPLY_MORE',),
+            },
+        },
+        13: {},
+}
+
 
 def generate(collector, macro_type_map):
     return (
@@ -121,5 +170,5 @@ namespace v{version} {{
     struct_decls=_generate_struct_decls(collector.struct_decls, collector.version == 13),
     constant_decls=_generate_constant_decls(collector.macro_defs, macro_type_map),
     constant_defs=_generate_constant_defs(collector.macro_defs, macro_type_map),
-    enum_decls=_generate_enum_decls(collector.enum_decls)))
+    enum_decls=_generate_enum_decls(collector.enum_decls, _alias_enumerations[collector.version])))
 
