@@ -15,6 +15,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class aggregate_stats_request
         : public v13_detail::basic_multipart_request<aggregate_stats_request>
@@ -113,6 +114,11 @@ namespace v13 {
     private:
         v13_detail::ofp_aggregate_stats_reply aggregate_stats_reply_;
     };
+
+} // namespace messages
+
+using messages::aggregate_stats_request;
+using messages::aggregate_stats_reply;
 
 } // namespace v13
 } // namespace openflow

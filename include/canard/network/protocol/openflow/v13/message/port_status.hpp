@@ -16,6 +16,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class port_status
         : public v13_detail::basic_openflow_message<port_status>
@@ -70,6 +71,10 @@ namespace v13 {
         std::uint8_t reason_;
         v13::port port_;
     };
+
+} // namespace messages
+
+using messages::port_status;
 
 } // namespace v13
 } // namespace openflow

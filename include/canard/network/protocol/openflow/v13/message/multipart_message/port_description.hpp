@@ -14,6 +14,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class port_description_request
         : public v13_detail::basic_multipart_request<port_description_request>
@@ -118,6 +119,11 @@ namespace v13 {
     private:
         std::vector<port> ports_;
     };
+
+} // namespace messages
+
+using messages::port_description_request;
+using messages::port_description_reply;
 
 } // namespace v13
 } // namespace openflow

@@ -12,6 +12,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class features_request
         : public v13_detail::basic_openflow_message<features_request>
@@ -148,6 +149,11 @@ namespace v13 {
     private:
         v13_detail::ofp_switch_features switch_features_;
     };
+
+} // namespace messages
+
+using messages::features_request;
+using messages::features_reply;
 
 } // namespace v13
 } // namespace openflow

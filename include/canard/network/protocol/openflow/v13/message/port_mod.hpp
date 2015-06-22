@@ -11,6 +11,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class port_mod
         : public v13_detail::basic_openflow_message<port_mod>
@@ -63,6 +64,10 @@ namespace v13 {
     private:
         v13_detail::ofp_port_mod port_mod_;
     };
+
+} // namespace messages
+
+using messages::port_mod;
 
 } // namespace v13
 } // namespace openflow

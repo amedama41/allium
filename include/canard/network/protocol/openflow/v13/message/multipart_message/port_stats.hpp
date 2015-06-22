@@ -132,6 +132,8 @@ namespace v13 {
         v13_detail::ofp_port_stats port_stats_;
     };
 
+namespace messages {
+
     class port_stats_request
         : public v13_detail::basic_multipart_request<port_stats_request>
     {
@@ -222,6 +224,11 @@ namespace v13 {
     private:
         port_stats_list port_stats_list_;
     };
+
+} // namespace messages
+
+using messages::port_stats_request;
+using messages::port_stats_reply;
 
 } // namespace v13
 } // namespace openflow

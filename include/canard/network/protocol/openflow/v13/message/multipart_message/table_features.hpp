@@ -134,6 +134,7 @@ namespace v13 {
         table_feature_property_set properties_;
     };
 
+namespace messages {
 
     class table_features_request
         : public v13_detail::basic_multipart_request<table_features_request>
@@ -253,6 +254,11 @@ namespace v13 {
     private:
         table_features_list features_;
     };
+
+} // namespace messages
+
+using messages::table_features_request;
+using messages::table_features_reply;
 
 } // namespace v13
 } // namespace openflow

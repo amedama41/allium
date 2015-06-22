@@ -17,6 +17,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class flow_removed
         : public v13_detail::basic_openflow_message<flow_removed>
@@ -136,6 +137,10 @@ namespace v13 {
         v13_detail::ofp_flow_removed flow_removed_;
         oxm_match match_;
     };
+
+} // namespace messages
+
+using messages::flow_removed;
 
 } // namespace v13
 } // namespace openflow

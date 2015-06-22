@@ -16,6 +16,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class packet_in
         : public v13_detail::basic_openflow_message<packet_in>
@@ -122,6 +123,10 @@ namespace v13 {
         oxm_match match_;
         std::vector<unsigned char> frame_;
     };
+
+} // namespace messages
+
+using messages::packet_in;
 
 } // namespace v13
 } // namespace openflow

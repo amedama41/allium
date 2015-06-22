@@ -10,6 +10,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class barrier_request
         : public v13_detail::basic_openflow_message<barrier_request>
@@ -113,6 +114,11 @@ namespace v13 {
     private:
         v13_detail::ofp_header header_;
     };
+
+} // namespace messages
+
+using messages::barrier_request;
+using messages::barrier_reply;
 
 } // namespace v13
 } // namespace openflow

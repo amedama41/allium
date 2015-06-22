@@ -129,6 +129,8 @@ namespace v13 {
         return os;
     }
 
+namespace messages {
+
     template <class OStream>
     auto operator<<(OStream& os, hello const& hello)
         -> OStream&
@@ -348,6 +350,7 @@ namespace v13 {
             ;
     }
 
+} // namespace messages
 } // namespace v13
 } // namespace openflow
 } // namespace network

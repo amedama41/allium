@@ -17,6 +17,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     template <class T>
     class basic_echo
@@ -209,6 +210,11 @@ namespace v13 {
         : basic_echo{std::move(request)}
     {
     }
+
+} // namespace messages
+
+using messages::echo_request;
+using messages::echo_reply;
 
 } // namespace v13
 } // namespace openflow

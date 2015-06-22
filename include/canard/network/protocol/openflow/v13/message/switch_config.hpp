@@ -11,6 +11,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class switch_config_request
         : public v13_detail::basic_openflow_message<switch_config_request>
@@ -59,7 +60,7 @@ namespace v13 {
         v13_detail::ofp_header header_;
     };
 
-    namespace v13_detail {
+    namespace switch_config_detail {
 
         template <class T>
         class basic_switch_config
@@ -126,7 +127,7 @@ namespace v13 {
     } // namespace v13_detail
 
     class switch_config_reply
-        : public v13_detail::basic_switch_config<switch_config_reply>
+        : public switch_config_detail::basic_switch_config<switch_config_reply>
     {
     public:
         static protocol::ofp_type const message_type
@@ -147,7 +148,7 @@ namespace v13 {
     };
 
     class set_switch_config
-        : public v13_detail::basic_switch_config<set_switch_config>
+        : public switch_config_detail::basic_switch_config<set_switch_config>
     {
     public:
         static protocol::ofp_type const message_type
@@ -166,6 +167,12 @@ namespace v13 {
         {
         }
     };
+
+} // namespace messages
+
+using messages::switch_config_request;
+using messages::switch_config_reply;
+using messages::set_switch_config;
 
 } // namespace v13
 } // namespace openflow

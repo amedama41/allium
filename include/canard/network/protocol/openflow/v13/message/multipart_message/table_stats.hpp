@@ -79,6 +79,8 @@ namespace v13 {
         v13_detail::ofp_table_stats table_stats_;
     };
 
+namespace messages {
+
     class table_stats_request
         : public v13_detail::basic_multipart_request<table_stats_request>
     {
@@ -143,6 +145,11 @@ namespace v13 {
     private:
         table_stats_list table_stats_list_;
     };
+
+} // namespace messages
+
+using messages::table_stats_request;
+using messages::table_stats_reply;
 
 } // namespace v13
 } // namespace openflow

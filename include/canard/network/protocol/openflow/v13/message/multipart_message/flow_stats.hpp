@@ -119,6 +119,8 @@ namespace v13 {
     };
 
 
+namespace messages {
+
     class flow_stats_request
         : public v13_detail::basic_multipart_request<flow_stats_request>
     {
@@ -240,6 +242,11 @@ namespace v13 {
     private:
         flow_stats_list flow_stats_list_;
     };
+
+} // namespace messages
+
+using messages::flow_stats_request;
+using messages::flow_stats_reply;
 
 } // namespace v13
 } // namespace openflow

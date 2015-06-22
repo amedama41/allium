@@ -19,6 +19,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class error_msg
         : public v13_detail::basic_openflow_message<error_msg>
@@ -113,6 +114,10 @@ namespace v13 {
         v13_detail::ofp_error_msg error_msg_;
         std::vector<unsigned char> data_;
     };
+
+} // namespace messages
+
+using messages::error_msg;
 
 } // namespace v13
 } // namespace openflow

@@ -23,6 +23,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     namespace hello_detail {
 
@@ -157,6 +158,10 @@ namespace v13 {
         v13_detail::ofp_hello hello_;
         std::vector<any_hello_element> elements_;
     };
+
+} // namespace messages
+
+using messages::hello;
 
 } // namespace v13
 } // namespace openflow

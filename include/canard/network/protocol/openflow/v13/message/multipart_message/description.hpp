@@ -12,6 +12,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class description_request
         : public v13_detail::basic_multipart_request<description_request>
@@ -113,6 +114,11 @@ namespace v13 {
     private:
         v13_detail::ofp_desc desc_;
     };
+
+} // namespace messages
+
+using messages::description_request;
+using messages::description_reply;
 
 } // namespace v13
 } // namespace openflow

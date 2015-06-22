@@ -16,6 +16,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
     class packet_out
         : public v13_detail::basic_openflow_message<packet_out>
@@ -113,6 +114,10 @@ namespace v13 {
         action_list action_list_;
         std::vector<std::uint8_t> data_;
     };
+
+} // namespace messages
+
+using messages::packet_out;
 
 } // namespace v13
 } // namespace openflow

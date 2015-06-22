@@ -18,12 +18,13 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
 
-    namespace v13_detail {
+    namespace group_mod_detail {
 
         template <class T>
         class basic_group_mod
-            : public basic_openflow_message<T>
+            : public v13_detail::basic_openflow_message<T>
         {
         public:
             static protocol::ofp_type const message_type
@@ -82,7 +83,7 @@ namespace v13 {
                 return buckets_;
             }
 
-            using basic_openflow_message<T>::encode;
+            using v13_detail::basic_openflow_message<T>::encode;
 
             template <class Container>
             auto encode(Container& container) const
@@ -126,10 +127,10 @@ namespace v13 {
             std::vector<bucket> buckets_;
         };
 
-    } // namespace v13_detail
+    } // namespace group_mod_detail
 
     class group_mod_add
-        : public v13_detail::basic_group_mod<group_mod_add>
+        : public group_mod_detail::basic_group_mod<group_mod_add>
     {
     public:
         static protocol::ofp_group_mod_command const command_type
@@ -153,7 +154,7 @@ namespace v13 {
     };
 
     class group_mod_modify
-        : public v13_detail::basic_group_mod<group_mod_modify>
+        : public group_mod_detail::basic_group_mod<group_mod_modify>
     {
     public:
         static protocol::ofp_group_mod_command const command_type
@@ -239,6 +240,12 @@ namespace v13 {
     private:
         v13_detail::ofp_group_mod group_mod_;
     };
+
+} // namespace messages
+
+using messages::group_mod_add;
+using messages::group_mod_modify;
+using messages::group_mod_delete;
 
 } // namespace v13
 } // namespace openflow
