@@ -4,7 +4,7 @@
 #include <tuple>
 #include <canard/network/protocol/openflow/v10/message/barrier.hpp>
 #include <canard/network/protocol/openflow/v10/message/echo.hpp>
-#include <canard/network/protocol/openflow/v10/message/error_msg.hpp>
+#include <canard/network/protocol/openflow/v10/message/error.hpp>
 #include <canard/network/protocol/openflow/v10/message/flow_add.hpp>
 #include <canard/network/protocol/openflow/v10/message/flow_modify.hpp>
 #include <canard/network/protocol/openflow/v10/message/flow_delete.hpp>
@@ -37,14 +37,14 @@ namespace v10 {
     >;
 
     using default_async_list = std::tuple<
-          messages::error_msg
+          messages::error
         , messages::packet_in
         , messages::flow_removed
         , messages::port_status
     >;
 
     using default_switch_message_list = std::tuple<
-          messages::error_msg
+          messages::error
         , messages::echo_request
         , messages::echo_reply
         , messages::features_reply
