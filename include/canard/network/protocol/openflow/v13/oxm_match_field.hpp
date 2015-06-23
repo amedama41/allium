@@ -17,6 +17,7 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace match {
 
     template <protocol::ofp_oxm_class OXMClass, std::uint8_t OXMField>
     class oxm_match_field
@@ -263,6 +264,49 @@ namespace v13 {
     using oxm_pbb_isid      = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_PBB_ISID>;
     using oxm_tunnel_id     = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_TUNNEL_ID>;
     using oxm_ipv6_exthdr   = oxm_match_field<protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IPV6_EXTHDR>;
+
+} // namespace match
+
+using oxm_in_port = match::oxm_in_port;
+using oxm_in_phy_port = match::oxm_in_phy_port;
+using oxm_metadata = match::oxm_metadata;
+using oxm_eth_dst = match::oxm_eth_dst;
+using oxm_eth_src = match::oxm_eth_src;
+using oxm_eth_type = match::oxm_eth_type;
+using oxm_vlan_vid = match::oxm_vlan_vid;
+using oxm_vlan_pcp = match::oxm_vlan_pcp;
+using oxm_ip_dscp = match::oxm_ip_dscp;
+using oxm_ip_ecn = match::oxm_ip_ecn;
+using oxm_ip_proto = match::oxm_ip_proto;
+using oxm_ipv4_src = match::oxm_ipv4_src;
+using oxm_ipv4_dst = match::oxm_ipv4_dst;
+using oxm_tcp_src = match::oxm_tcp_src;
+using oxm_tcp_dst = match::oxm_tcp_dst;
+using oxm_udp_src = match::oxm_udp_src;
+using oxm_udp_dst = match::oxm_udp_dst;
+using oxm_sctp_src = match::oxm_sctp_src;
+using oxm_sctp_dst = match::oxm_sctp_dst;
+using oxm_icmpv4_type = match::oxm_icmpv4_type;
+using oxm_icmpv4_code = match::oxm_icmpv4_code;
+using oxm_arp_op = match::oxm_arp_op;
+using oxm_arp_spa = match::oxm_arp_spa;
+using oxm_arp_tpa = match::oxm_arp_tpa;
+using oxm_arp_sha = match::oxm_arp_sha;
+using oxm_arp_tha = match::oxm_arp_tha;
+using oxm_ipv6_src = match::oxm_ipv6_src;
+using oxm_ipv6_dst = match::oxm_ipv6_dst;
+using oxm_ipv6_flabel = match::oxm_ipv6_flabel;
+using oxm_icmpv6_type = match::oxm_icmpv6_type;
+using oxm_icmpv6_code = match::oxm_icmpv6_code;
+using oxm_ipv6_nd_target = match::oxm_ipv6_nd_target;
+using oxm_ipv6_nd_sll = match::oxm_ipv6_nd_sll;
+using oxm_ipv6_nd_tll = match::oxm_ipv6_nd_tll;
+using oxm_mpls_label = match::oxm_mpls_label;
+using oxm_mpls_tc = match::oxm_mpls_tc;
+using oxm_mpls_bos = match::oxm_mpls_bos;
+using oxm_pbb_isid = match::oxm_pbb_isid;
+using oxm_tunnel_id = match::oxm_tunnel_id;
+using oxm_ipv6_exthdr = match::oxm_ipv6_exthdr;
 
 } // namespace v13
 } // namespace openflow
