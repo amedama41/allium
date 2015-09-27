@@ -15,7 +15,7 @@
 #include <boost/optional/optional.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/asio/async_result_init.hpp>
-#include <canard/asio/ordered_send_socket.hpp>
+#include <canard/asio/queueing_write_stream.hpp>
 #include <canard/network/protocol/openflow/v13/detail/dummy_handler.hpp>
 #include <canard/network/protocol/openflow/v13/detail/shared_buffer_handler.hpp>
 #include <canard/network/protocol/openflow/v13/messages.hpp>
@@ -252,7 +252,7 @@ namespace v13 {
         }
 
     protected:
-        canard::ordered_send_socket<Socket> stream_;
+        canard::queueing_write_stream<Socket> stream_;
         boost::asio::io_service::strand strand_;
         std::unordered_map<std::uint32_t, v13_detail::transaction_base<>*> reply_map_;
         boost::optional<endpoint_type> endpoint_;
