@@ -1,96 +1,86 @@
 #ifndef CANARD_ASIO_CONSUMING_BUFFERS_HPP
 #define CANARD_ASIO_CONSUMING_BUFFERS_HPP
 
+#include <cstddef>
+#include <iterator>
 #include <utility>
-#include <deque>
-#include <boost/asio/buffers_iterator.hpp>
-#include <boost/range/algorithm/find_if.hpp>
+#include <boost/asio/buffer.hpp>
+#include <boost/range/iterator_range.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/range/numeric.hpp>
 
 namespace canard {
 namespace detail {
 
-    template <class Buffer>
+    template <class BufferSequence>
     class consuming_buffers
     {
+        using const_iterator
+            = typename BufferSequence::const_iterator;
+        using value_type
+            = typename BufferSequence::value_type;
     public:
-        using value_type = Buffer;
-        using iterator = typename std::deque<Buffer>::iterator;
-        using const_iterator = typename std::deque<Buffer>::const_iterator;
+        explicit consuming_buffers(BufferSequence const& buffers)
+            : buffers_(buffers)
+            , begin_remainder_(buffers_.begin())
+            , consumed_size_{0}
+        {
+        }
 
-        consuming_buffers() = default;
-
-        template <class BufferSequence>
         explicit consuming_buffers(BufferSequence&& buffers)
-            : buffers_(boost::asio::buffers_begin(buffers), boost::asio::buffers_end(buffers))
+            : buffers_(std::move(buffers))
+            , begin_remainder_(buffers_.begin())
+            , consumed_size_{0}
         {
         }
 
-        auto consume(std::size_t const bytes_transferred)
-            -> std::size_t
-        {
-            auto bytes_consumed = std::size_t{0};
-            auto const it = boost::find_if(buffers_, [&](value_type& buffer) {
-                auto const buffer_size = boost::asio::buffer_size(buffer);
-                if (bytes_transferred - bytes_consumed < buffer_size) {
-                    return true;
-                }
-                bytes_consumed += buffer_size;
-                return false;
-            });
-
-            if (it != buffers_.end()) {
-                *it = *it + (bytes_transferred - bytes_consumed);
-                bytes_consumed = bytes_transferred;
-            }
-            buffers_.erase(buffers_.begin(), it);
-
-            return bytes_consumed;
-        }
-
-        void clear()
-        {
-            buffers_.clear();
-        }
-
-        auto empty() const
+        auto consume(std::size_t& size)
             -> bool
         {
-            return buffers_.empty();
+            for ( ; begin_remainder_ != buffers_.end(); ++begin_remainder_) {
+                auto const buffer_size
+                    = boost::asio::buffer_size(*begin_remainder_);
+                if (buffer_size > consumed_size_ + size) {
+                    consumed_size_ += size;
+                    size = 0;
+                    return false;
+                }
+                size -= buffer_size - consumed_size_;
+                consumed_size_ = 0;
+            }
+            return true;
         }
 
-        auto begin()
-            -> iterator
+        auto total_consumed_size() const
+            -> std::size_t
         {
-            return buffers_.begin();
+            using boost::adaptors::transformed;
+            return boost::accumulate(
+                      boost::make_iterator_range(buffers_.begin(), begin_remainder_)
+                    | transformed([](value_type const& buf) {
+                        return boost::asio::buffer_size(buf);
+                      })
+                    , consumed_size_);
         }
 
-        auto begin() const
-            -> const_iterator
+        template <class Container>
+        void push_back_to(Container& container) const
         {
-            return buffers_.begin();
-        }
-
-        auto end()
-            -> iterator
-        {
-            return buffers_.end();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return buffers_.end();
-        }
-
-        template <class... Args>
-        auto insert(Args&&... args)
-            -> decltype(static_cast<std::deque<Buffer>*>(nullptr)->insert(std::forward<Args>(args)...))
-        {
-            return buffers_.insert(std::forward<Args>(args)...);
+            if (begin_remainder_ == buffers_.end()) {
+                return;
+            }
+            container.push_back(*begin_remainder_ + consumed_size_);
+            auto it = begin_remainder_;
+            boost::push_back(
+                      container
+                    , boost::make_iterator_range(++it, buffers_.end()));
         }
 
     private:
-        std::deque<Buffer> buffers_;
+        BufferSequence buffers_;
+        const_iterator begin_remainder_;
+        std::size_t consumed_size_;
     };
 
 } // namespace detail

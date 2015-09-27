@@ -12,14 +12,13 @@
 #include <boost/asio/completion_condition.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/detail/consuming_buffers.hpp>
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/operation.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/detail/bind_handler.hpp>
+#include <canard/asio/detail/consuming_buffers.hpp>
 #include <canard/asio/detail/operation_holder.hpp>
 #include <canard/exception.hpp>
 #include <canard/type_traits.hpp>
@@ -75,7 +74,8 @@ namespace detail {
         using complete_func_type = boost::asio::detail::operation::func_type;
         using perform_func_type
             = void(*)(write_op_base*, Stream&, gather_buffers);
-        using consume_func_type = void(*)(write_op_base*, std::size_t);
+        using consume_func_type
+            = auto(*)(write_op_base*, std::size_t&) -> bool;
         using buffers_func_type
             = void(*)(write_op_base*, std::vector<boost::asio::const_buffer>&);
 
@@ -83,15 +83,12 @@ namespace detail {
                   complete_func_type const complete_func
                 , perform_func_type const perform_func
                 , consume_func_type const consume_func
-                , buffers_func_type const buffers_func
-                , std::size_t const buffers_size)
+                , buffers_func_type const buffers_func)
             : boost::asio::detail::operation{complete_func}
             , perform_func_(perform_func)
             , consume_func_(consume_func)
             , buffers_func_(buffers_func)
-            , buffers_size_(buffers_size)
             , ec_{}
-            , total_transferred_{0}
         {
         }
 
@@ -102,24 +99,14 @@ namespace detail {
         }
 
         auto consume(std::size_t& bytes_transferred)
-            -> std::size_t
+            -> bool
         {
-            auto const consumed_size = std::min(bytes_transferred, buffers_size());
-            consume_func_(this, bytes_transferred);
-            bytes_transferred -= consumed_size;
-            total_transferred_ += consumed_size;
-            return buffers_size();
+            return consume_func_(this, bytes_transferred);
         }
 
         void buffers(std::vector<boost::asio::const_buffer>& buffers)
         {
             buffers_func_(this, buffers);
-        }
-
-        auto buffers_size() const
-            -> std::size_t
-        {
-            return buffers_size_ - total_transferred_;
         }
 
         auto error_code() const
@@ -133,19 +120,11 @@ namespace detail {
             ec_ = ec;
         }
 
-        auto bytes_transferred() const
-            -> std::size_t
-        {
-            return total_transferred_;
-        }
-
     private:
         perform_func_type perform_func_;
         consume_func_type consume_func_;
         buffers_func_type buffers_func_;
-        std::size_t buffers_size_;
         boost::system::error_code ec_;
-        std::size_t total_transferred_;
     };
 
     template <class Stream, class Context>
@@ -213,7 +192,7 @@ namespace detail {
         {
             operation_queue ready_queue{};
             while (auto const op = waiting_queue_->front()) {
-                if (op->consume(bytes_transferred) != 0) {
+                if (!op->consume(bytes_transferred)) {
                     break;
                 }
                 if (bytes_transferred == 0) {
@@ -291,7 +270,6 @@ namespace detail {
         waiting_op(WriteHandler handler, ConstBufferSequence const& buffers)
             : write_op_base<Stream>{
                   &do_complete, &do_perform, &do_consume, &do_buffers
-                , boost::asio::buffer_size(buffers)
               }
             , handler_(std::move(handler))
             , buffers_(buffers)
@@ -318,7 +296,8 @@ namespace detail {
             };
 
             auto function = detail::bind(
-                    op->handler_, op->error_code(), op->bytes_transferred());
+                      op->handler_, op->error_code()
+                    , op->buffers_.total_consumed_size());
 
             holder.handler(function.handler());
             holder.reset();
@@ -340,11 +319,12 @@ namespace detail {
                     , queueing_write_handler<Stream, waiting_op>{stream, op});
         }
 
-        static void do_consume(
-                write_op_base<Stream>* base, std::size_t bytes_transferred)
+        static auto do_consume(
+                write_op_base<Stream>* base, std::size_t& bytes_transferred)
+            -> bool
         {
             auto const op = static_cast<waiting_op*>(base);
-            op->buffers_.consume(bytes_transferred);
+            return op->buffers_.consume(bytes_transferred);
         }
 
         static void do_buffers(
@@ -352,14 +332,12 @@ namespace detail {
                 , std::vector<boost::asio::const_buffer>& buffers)
         {
             auto const op = static_cast<waiting_op*>(base);
-            boost::push_back(buffers, op->buffers_);
+            op->buffers_.push_back_to(buffers);
         }
 
     private:
         WriteHandler handler_;
-        boost::asio::detail::consuming_buffers<
-            boost::asio::const_buffer, ConstBufferSequence
-        > buffers_;
+        canard::detail::consuming_buffers<ConstBufferSequence> buffers_;
     };
 
 } // namespace detail
