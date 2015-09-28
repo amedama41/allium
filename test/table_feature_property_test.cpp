@@ -3,6 +3,7 @@
 
 #include <canard/network/protocol/openflow/v13/message/multipart_message/table_feature_property.hpp>
 #include <iterator>
+#include <boost/endian/conversion.hpp>
 #include <canard/unit_test.hpp>
 
 namespace canard {
@@ -161,56 +162,56 @@ BOOST_FIXTURE_TEST_SUITE(encode_decode_test, encode_decode_fixture)
         auto length = std::uint16_t{};
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPTFPT_INSTRUCTIONS);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPTFPT_INSTRUCTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4 + (4 * 6) + (4 + 4 + 2));
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4 + (4 * 6) + (4 + 4 + 2));
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_GOTO_TABLE);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPIT_GOTO_TABLE);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_WRITE_METADATA);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPIT_WRITE_METADATA);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_WRITE_ACTIONS);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPIT_WRITE_ACTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_APPLY_ACTIONS);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPIT_APPLY_ACTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_CLEAR_ACTIONS);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPIT_CLEAR_ACTIONS);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_METER);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPIT_METER);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4);
         std::memcpy(&type, ptr, sizeof(type));
         ptr += sizeof(type);
-        BOOST_CHECK_EQUAL(ntoh(type), protocol::OFPIT_EXPERIMENTER);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPIT_EXPERIMENTER);
         std::memcpy(&length, ptr, sizeof(length));
         ptr += sizeof(length);
-        BOOST_CHECK_EQUAL(ntoh(length), 4 + 4 + 2);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), 4 + 4 + 2);
         auto experimenter = std::uint32_t{};
         std::memcpy(&experimenter, ptr, sizeof(experimenter));
         ptr += sizeof(experimenter);
-        BOOST_CHECK_EQUAL(ntoh(experimenter), 0x12345678);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(experimenter), 0x12345678);
         auto const expected = "AB\0\0";
         BOOST_CHECK_EQUAL_COLLECTIONS(ptr, ptr + 4, expected, expected + 4);
     }

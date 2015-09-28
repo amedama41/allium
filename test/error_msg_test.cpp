@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
+#include <boost/endian/conversion.hpp>
 #include <canard/unit_test.hpp>
 
 namespace canard {
@@ -17,7 +18,7 @@ struct error_data_fixture
     std::vector<std::uint8_t> data;
     error_data_fixture()
     {
-        auto header = v13_detail::hton(v13_detail::ofp_header{protocol::OFP_VERSION, protocol::OFPT_HELLO, 8, 50});
+        auto header = boost::endian::native_to_big(v13_detail::ofp_header{protocol::OFP_VERSION, protocol::OFPT_HELLO, 8, 50});
         data.assign(reinterpret_cast<unsigned char*>(&header), reinterpret_cast<unsigned char*>(&header + 1));
     }
 };

@@ -58,26 +58,26 @@ BOOST_FIXTURE_TEST_SUITE(buffer_test, buffer_fixture)
     {
         std::uint8_t version;
         std::memcpy(&version, buffer.data(), sizeof(version));
-        BOOST_CHECK_EQUAL(canard::ntoh(version), sut.version());
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(version), sut.version());
     }
     BOOST_AUTO_TEST_CASE(type_test)
     {
         std::uint8_t type;
         std::memcpy(&type, buffer.data() + offsetof(v13_detail::ofp_header, type), sizeof(type));
-        BOOST_CHECK_EQUAL(canard::ntoh(type), sut.type());
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), sut.type());
     }
     BOOST_AUTO_TEST_CASE(length_test)
     {
         std::uint16_t length;
         std::memcpy(&length, buffer.data() + offsetof(v13_detail::ofp_header, length), sizeof(length));
-        BOOST_CHECK_EQUAL(canard::ntoh(length), buffer.size());
-        BOOST_CHECK_EQUAL(canard::ntoh(length), sut.length());
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), buffer.size());
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), sut.length());
     }
     BOOST_AUTO_TEST_CASE(xid_test)
     {
         std::uint32_t xid;
         std::memcpy(&xid, buffer.data() + offsetof(v13_detail::ofp_header, xid), sizeof(xid));
-        BOOST_CHECK_EQUAL(canard::ntoh(xid), sut.xid());
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(xid), sut.xid());
     }
 BOOST_AUTO_TEST_SUITE_END() // buffer_test
 
