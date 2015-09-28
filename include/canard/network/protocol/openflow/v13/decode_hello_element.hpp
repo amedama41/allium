@@ -5,6 +5,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <tuple>
+#include <boost/endian/conversion.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <canard/as_byte_range.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
@@ -26,7 +27,8 @@ namespace v13 {
             }
             auto header = v13_detail::ofp_hello_elem_header{};
             std::copy_n(first, sizeof(header), canard::as_byte_range(header).begin());
-            return v13_detail::ntoh(header);
+            boost::endian::big_to_native_inplace(header);
+            return header;
         }
 
         template <class ReturnType, class Iterator, class Func>

@@ -13,6 +13,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/streambuf.hpp>
+#include <boost/endian/conversion.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -42,7 +43,8 @@ namespace v10 {
         {
             auto header = v10_detail::ofp_header{};
             std::memcpy(&header, boost::asio::buffer_cast<std::uint8_t const*>(streambuf.data()), sizeof(header));
-            return v10_detail::ntoh(header);
+            boost::endian::big_to_native_inplace(header);
+            return header;
         }
 
         template <class Data, class Iterator>
@@ -54,7 +56,8 @@ namespace v10 {
                       boost::make_iterator_range(first, last)
                     , sizeof(data)
                     , canard::as_byte_range(data).begin());
-            return v10_detail::ntoh(data);
+            boost::endian::big_to_native_inplace(data);
+            return data;
         }
 
     } // namespace secure_channel_detail

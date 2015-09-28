@@ -5,10 +5,10 @@
 #include <algorithm>
 #include <iterator>
 #include <tuple>
+#include <boost/endian/conversion.hpp>
 #include <boost/format.hpp>
 #include <canard/as_byte_range.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_match_field.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field_list.hpp>
@@ -26,7 +26,7 @@ namespace v13 {
 
         auto oxm_header = std::uint32_t{};
         std::copy_n(first, sizeof(oxm_header), canard::as_byte_range(oxm_header).begin());
-        oxm_header = v13_detail::ntoh(oxm_header);
+        boost::endian::big_to_native_inplace(oxm_header);
 
         switch (oxm_header >> 9) {
 #       define CANARD_NETWORK_OPENFLOW_V13_OXM_MATCH_FIELD_DECODE_CASE(z, N, _) \

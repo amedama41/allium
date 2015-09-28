@@ -11,6 +11,7 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/streambuf.hpp>
+#include <boost/endian/conversion.hpp>
 #include <boost/format.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/network/protocol/openflow/v13/disconnected_info.hpp>
@@ -35,7 +36,8 @@ namespace v13 {
             auto header = v13_detail::ofp_header{};
             std::memcpy(&header, boost::asio::buffer_cast<unsigned char const*>(buffer)
                       , sizeof(v13_detail::ofp_header));
-            return v13_detail::ntoh(header);
+            boost::endian::big_to_native_inplace(header);
+            return header;
         }
 
         template <class T>
@@ -315,7 +317,7 @@ namespace v13 {
     {
         auto multipart_reply = v13_detail::ofp_multipart_reply{};
         std::memcpy(&multipart_reply, boost::asio::buffer_cast<unsigned char const*>(streambuf_.data()), sizeof(multipart_reply));
-        multipart_reply = ntoh(multipart_reply);
+        boost::endian::native_to_big_inplace(multipart_reply);
         using multipart_list = std::tuple<
               description_reply
             , flow_stats_reply

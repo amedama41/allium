@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/overwrite.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <canard/network/protocol/openflow/v10/detail/basic_openflow_message.hpp>
@@ -42,7 +43,8 @@ namespace messages {
                       boost::make_iterator_range(first, pkt_in_last)
                     , packet_in_byte_range(pkt_in));
             first = pkt_in_last;
-            return v10_detail::ntoh(pkt_in);
+            boost::endian::big_to_native_inplace(pkt_in);
+            return pkt_in;
         }
 
     } // namespace packet_in_detail
@@ -93,8 +95,9 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            container.push_back(
-                    v10_detail::hton(packet_in_), packet_in_detail::pkt_in_size);
+            auto pkt_in = packet_in_;
+            boost::endian::native_to_big_inplace(pkt_in);
+            container.push_back(pkt_in, packet_in_detail::pkt_in_size);
             return container.push_back(data_.data(), data_.size());
         }
 

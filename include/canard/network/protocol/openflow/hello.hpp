@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <boost/asio/buffer.hpp>
+#include <boost/endian/conversion.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/message/hello.hpp>
@@ -25,7 +26,8 @@ namespace openflow {
         {
             auto header = ofp_header{};
             std::memcpy(&header, boost::asio::buffer_cast<std::uint8_t const*>(buffer), sizeof(header));
-            return v13::v13_detail::ntoh(header);
+            boost::endian::big_to_native_inplace(header);
+            return header;
         }
 
     } // namespace detail

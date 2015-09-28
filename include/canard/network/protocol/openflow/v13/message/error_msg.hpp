@@ -6,6 +6,7 @@
 #include <iterator>
 #include <utility>
 #include <vector>
+#include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/as_byte_range.hpp>
@@ -73,7 +74,8 @@ namespace messages {
         {
             auto header = v13_detail::ofp_header();
             boost::copy_n(data_, sizeof(header), canard::as_byte_range(header).begin());
-            return v13_detail::ntoh(header);
+            boost::endian::big_to_native_inplace(header);
+            return header;
         }
 
         using basic_openflow_message::encode;

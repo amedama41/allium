@@ -5,6 +5,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <tuple>
+#include <boost/endian/conversion.hpp>
 #include <boost/format.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <canard/as_byte_range.hpp>
@@ -27,7 +28,7 @@ namespace v13 {
             std::copy_n(first, sizeof(instruction), canard::as_byte_range(instruction).begin());
 
             static_assert(std::tuple_size<default_instruction_list>::value == 6, "");
-            switch (v13_detail::ntoh(instruction.type)) {
+            switch (boost::endian::big_to_native(instruction.type)) {
 #           define CANARD_NETWORK_OPENFLOW_V13_DECODE_INSTRUCTION_CASE(z, N, _) \
             case std::tuple_element<N, default_instruction_list>::type::instruction_type: \
                 return func(std::tuple_element<N, default_instruction_list>::type::decode(first, last));
@@ -35,9 +36,9 @@ namespace v13 {
 #           undef CANARD_NETWORK_OPENFLOW_V13_DECODE_INSTRUCTION_CASE
 
             default:
-                std::advance(first, v13_detail::ntoh(instruction.len));
+                std::advance(first, boost::endian::big_to_native(instruction.len));
                 throw std::runtime_error{(boost::format{"%1%: unknown instruction type %2%"}
-                        % __func__ % (v13_detail::ntoh(instruction.type))).str()
+                        % __func__ % (boost::endian::big_to_native(instruction.type))).str()
                 };
             }
         }

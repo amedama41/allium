@@ -2,6 +2,7 @@
 #define CANARD_NETWORK_OPENFLOW_V13_ENCODE_HPP
 
 #include <type_traits>
+#include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/as_byte_range.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
@@ -14,25 +15,24 @@ namespace v13 {
     namespace detail {
 
         template <class T>
-        auto encode_impl(T const& value, std::true_type)
-            -> T
+        void encode_impl(T& value, std::true_type)
         {
-            return v13_detail::hton(value);
+            boost::endian::native_to_big_inplace(value);
         }
 
         template <class T>
-        auto encode_impl(T&& value, std::false_type)
-            -> T&&
+        void encode_impl(T&, std::false_type)
         {
-            return value;
         }
 
         template <class T, class Container, class IsNWOrder = std::true_type>
-        auto encode(Container& container, T const& value, IsNWOrder = IsNWOrder{})
+        auto encode(Container& container, T value, IsNWOrder = IsNWOrder{})
             -> Container&
         {
-            return boost::push_back(container
-                    , canard::as_byte_range(encode_impl(value, IsNWOrder{})));
+            encode_impl(value, IsNWOrder{});
+            return boost::push_back(
+                      container
+                    , canard::as_byte_range(value));
         }
 
     } // namespace detail

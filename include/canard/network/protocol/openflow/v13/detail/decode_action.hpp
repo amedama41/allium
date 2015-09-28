@@ -6,6 +6,7 @@
 #include <iterator>
 #include <tuple>
 #include <utility>
+#include <boost/endian/conversion.hpp>
 #include <boost/format.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <canard/as_byte_range.hpp>
@@ -28,7 +29,7 @@ namespace v13 {
             std::copy_n(first, sizeof(header), canard::as_byte_range(header).begin());
 
             static_assert(std::tuple_size<default_action_list>::value == 16, "");
-            switch (v13_detail::ntoh(header.type)) {
+            switch (boost::endian::big_to_native(header.type)) {
 #           define CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE(z, N, _) \
             case std::tuple_element<N, default_action_list>::type::action_type: \
                 return function(std::tuple_element<N, default_action_list>::type::decode(first, last));
@@ -36,9 +37,9 @@ namespace v13 {
 #           undef CANARD_NETWORK_OPENFLOW_DECODE_ACTION_CASE
 
             default:
-                std::advance(first, v13_detail::ntoh(header.len));
+                std::advance(first, boost::endian::big_to_native(header.len));
                 throw std::runtime_error{(boost::format{"%1%: action_type(%2%) is unknwon"}
-                        % __func__ % (v13_detail::ntoh(header.type))).str()
+                        % __func__ % (boost::endian::big_to_native(header.type))).str()
                 };
             }
         }

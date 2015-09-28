@@ -6,6 +6,7 @@
 #include <iterator>
 #include <utility>
 #include <vector>
+#include <boost/endian/conversion.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/find_if.hpp>
@@ -125,7 +126,7 @@ namespace v13 {
                         , reinterpret_cast<unsigned char*>(&bitmaps[0]));
                 std::advance(first, bitmaps.size() * sizeof(std::uint32_t));
                 boost::for_each(bitmaps, [](std::uint32_t& bitmap) {
-                    bitmap = v13_detail::ntoh(bitmap);
+                    boost::endian::big_to_native_inplace(bitmap);
                 });
 
                 std::advance(first, detail::padding_length(vbitmap.length));

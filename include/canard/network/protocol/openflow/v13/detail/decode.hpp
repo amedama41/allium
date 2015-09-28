@@ -3,6 +3,7 @@
 
 #include <iterator>
 #include <type_traits>
+#include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/overwrite.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <canard/as_byte_range.hpp>
@@ -16,17 +17,14 @@ namespace v13 {
     namespace detail {
 
         template <class T>
-        auto decode_impl(T const& value, std::true_type)
-            -> T
+        void decode_impl(T& value, std::true_type)
         {
-            return v13_detail::ntoh(value);
+            boost::endian::big_to_native_inplace(value);
         }
 
         template <class T>
-        auto decode_impl(T&& value, std::false_type)
-            -> T&&
+        void decode_impl(T&, std::false_type)
         {
-            return value;
         }
 
         template <class T, class Iterator, class IsNWOrder = std::true_type>
@@ -34,10 +32,12 @@ namespace v13 {
             -> T
         {
             auto value = T{};
-            boost::overwrite(boost::make_iterator_range(first, std::next(first, sizeof(value)))
+            boost::overwrite(
+                      boost::make_iterator_range(first, std::next(first, sizeof(value)))
                     , canard::as_byte_range(value));
             std::advance(first, sizeof(value));
-            return decode_impl(value, IsNWOrder{});
+            decode_impl(value, IsNWOrder{});
+            return value;
         }
 
     } // namespace detail
