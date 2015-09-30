@@ -64,7 +64,7 @@ namespace v10 {
         auto send(Message const& msg, WriteHandler&& handler, MutableBufferSequence buffers)
             -> typename async_write_result_init<WriteHandler>::result_type
         {
-            auto init = async_write_result_init<WriteHandler>{
+            async_write_result_init<WriteHandler> init{
                 std::forward<WriteHandler>(handler)
             };
 
