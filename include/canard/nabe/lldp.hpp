@@ -6,11 +6,11 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <boost/endian/conversion.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/size.hpp>
 #include <canard/as_byte_range.hpp>
-#include <canard/byteorder.hpp>
 #include <canard/constant_range.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
 #include <canard/nabe/ether_header.hpp>
@@ -54,7 +54,9 @@ namespace nabe {
             auto encode(Container& container) const
                 -> Container&
             {
-                boost::push_back(container, canard::as_byte_range(canard::hton(tlv_header())));
+                boost::push_back(
+                          container
+                        , canard::as_byte_range(boost::endian::native_to_big(tlv_header())));
                 return boost::push_back(boost::push_back(container, canard::as_byte_range(subtype_)), chassis_id_);
             }
 
@@ -90,7 +92,9 @@ namespace nabe {
             auto encode(Container& container) const
                 -> Container&
             {
-                boost::push_back(container, canard::as_byte_range(canard::hton(tlv_header())));
+                boost::push_back(
+                          container
+                        , canard::as_byte_range(boost::endian::native_to_big(tlv_header())));
                 return boost::push_back(boost::push_back(container, canard::as_byte_range(subtype_)), port_id_);
             }
 
@@ -125,8 +129,12 @@ namespace nabe {
             auto encode(Container& container) const
                 -> Container&
             {
-                boost::push_back(container, canard::as_byte_range(canard::hton(tlv_header())));
-                return boost::push_back(container, canard::as_byte_range(canard::hton(time_to_live_)));
+                boost::push_back(
+                          container
+                        , canard::as_byte_range(boost::endian::native_to_big(tlv_header())));
+                return boost::push_back(
+                          container
+                        , canard::as_byte_range(boost::endian::native_to_big(time_to_live_)));
             }
 
         private:
@@ -148,7 +156,9 @@ namespace nabe {
             auto encode(Container& container) const
                 -> Container&
             {
-                return boost::push_back(container, canard::as_byte_range(canard::hton(tlv_header())));
+                return boost::push_back(
+                          container
+                        , canard::as_byte_range(boost::endian::native_to_big(tlv_header())));
             }
         };
 

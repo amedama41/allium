@@ -2,9 +2,9 @@
 #define CANARD_NABE_ETHER_HEADER_HPP
 
 #include <cstdint>
+#include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/as_byte_range.hpp>
-#include <canard/byteorder.hpp>
 #include <canard/mac_address.hpp>
 
 namespace canard {
@@ -30,7 +30,9 @@ namespace nabe {
         {
             boost::push_back(container, destination_.to_bytes());
             boost::push_back(container, source_.to_bytes());
-            return boost::push_back(container, canard::as_byte_range(canard::hton(ether_type_)));
+            return boost::push_back(
+                      container
+                    , canard::as_byte_range(boost::endian::native_to_big(ether_type_)));
         }
 
     private:
