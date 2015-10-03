@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
-#include <canard/byteorder.hpp>
+#include <boost/endian/conversion.hpp>
 
 namespace canard {
 namespace network {
@@ -70,28 +70,28 @@ BOOST_FIXTURE_TEST_SUITE(no_elems_buffers_test, no_elems_buffers_fixture)
     {
         auto version = std::uint8_t{};
         std::memcpy(&version, buffer.data(), sizeof(version));
-        BOOST_CHECK_EQUAL(canard::ntoh(version), protocol::OFP_VERSION);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(version), protocol::OFP_VERSION);
     }
 
     BOOST_AUTO_TEST_CASE(type_test)
     {
         auto type = std::uint8_t{};
         std::memcpy(&type, buffer.data() + offsetof(v13_detail::ofp_header, type), sizeof(type));
-        BOOST_CHECK_EQUAL(canard::ntoh(type), protocol::OFPT_HELLO);
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(type), protocol::OFPT_HELLO);
     }
 
     BOOST_AUTO_TEST_CASE(length_test)
     {
         auto length = std::uint16_t{};
         std::memcpy(&length, buffer.data() + offsetof(v13_detail::ofp_header, length), sizeof(length));
-        BOOST_CHECK_EQUAL(canard::ntoh(length), buffer.size());
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), buffer.size());
     }
 
     BOOST_AUTO_TEST_CASE(xid_test)
     {
         auto xid = std::uint32_t{};
         std::memcpy(&xid, buffer.data() + offsetof(v13_detail::ofp_header, xid), sizeof(xid));
-        BOOST_CHECK_EQUAL(canard::ntoh(xid), sut.xid());
+        BOOST_CHECK_EQUAL(boost::endian::big_to_native(xid), sut.xid());
     }
 
 BOOST_AUTO_TEST_SUITE_END() // no_elems_buffers_test
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(hello_length_test)
 {
     auto length = std::uint16_t{};
     std::memcpy(&length, buffer.data() + offsetof(v13_detail::ofp_header, length), sizeof(length));
-    BOOST_CHECK_EQUAL(canard::ntoh(length), buffer.size());
-    BOOST_CHECK_EQUAL(canard::ntoh(length) % 8, 0);
+    BOOST_CHECK_EQUAL(boost::endian::big_to_native(length), buffer.size());
+    BOOST_CHECK_EQUAL(boost::endian::big_to_native(length) % 8, 0);
 }
 BOOST_AUTO_TEST_SUITE_END() // versionbitmap_buffers_test
 
