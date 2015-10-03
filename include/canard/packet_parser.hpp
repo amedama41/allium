@@ -12,9 +12,9 @@
 #include <netinet/ip.h>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio/ip/address_v6.hpp>
+#include <boost/endian/conversion.hpp>
 #include <boost/range/iterator_range.hpp>
 #include "canard/as_byte_range.hpp"
-#include "canard/byteorder.hpp"
 #include "canard/mac_address.hpp"
 
 namespace canard {
@@ -57,7 +57,8 @@ namespace canard {
         auto ether_type() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::ether_header, ether_type)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::ether_header, ether_type)));
         }
 
         auto next() const
@@ -81,19 +82,22 @@ namespace canard {
         auto vid() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_)) & 0x0FFF;
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_)) & 0x0FFF;
         }
 
         auto pcp() const
             -> std::uint8_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_)) >> 5;
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_)) >> 5;
         }
 
         auto ether_type() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
         }
 
         auto next() const
@@ -123,13 +127,15 @@ namespace canard {
         auto hardware_type() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_hrd)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_hrd)));
         }
 
         auto protocol_type() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_pro)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_pro)));
         }
 
         auto hardware_length() const
@@ -147,7 +153,8 @@ namespace canard {
         auto operation() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_op)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_op)));
         }
 
         auto sender_hardware_address() const
@@ -193,7 +200,8 @@ namespace canard {
         auto chassis_id() const
             -> std::string
         {
-            auto const tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            auto const tlv_header
+                = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
             return std::string{
                   data_ + sizeof(std::uint16_t) + sizeof(std::uint8_t)
                 , data_ + sizeof(std::uint16_t) + tlv_length(tlv_header)
@@ -209,9 +217,11 @@ namespace canard {
         auto port_id() const
             -> std::string
         {
-            auto const chassis_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            auto const chassis_id_tlv_header
+                = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
             auto const first = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
-            auto const tlv_header = canard::ntoh(detail::decode<std::uint16_t>(first));
+            auto const tlv_header
+                = boost::endian::big_to_native(detail::decode<std::uint16_t>(first));
             return std::string{
                   first + sizeof(std::uint16_t) + sizeof(std::uint8_t)
                 , first + sizeof(std::uint16_t) + tlv_length(tlv_header)
@@ -221,7 +231,8 @@ namespace canard {
         auto port_id_subtype() const
             -> std::uint8_t
         {
-            auto const chassis_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            auto const chassis_id_tlv_header
+                = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
             auto const first = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
             return *(first + sizeof(std::uint16_t));
         }
@@ -229,11 +240,14 @@ namespace canard {
         auto time_to_live() const
             -> std::uint16_t
         {
-            auto const chassis_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(data_));
+            auto const chassis_id_tlv_header
+                = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
             auto first = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
-            auto const port_id_tlv_header = canard::ntoh(detail::decode<std::uint16_t>(first));
+            auto const port_id_tlv_header
+                = boost::endian::big_to_native(detail::decode<std::uint16_t>(first));
             first += sizeof(std::uint16_t) + tlv_length(port_id_tlv_header);
-            return canard::ntoh(detail::decode<std::uint16_t>(first + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(first + sizeof(std::uint16_t)));
         }
 
     private:
@@ -289,25 +303,29 @@ namespace canard {
         auto total_length() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_len)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_len)));
         }
 
         auto identification() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_id)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_id)));
         }
 
         auto flags() const
             -> std::uint8_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_off))) >> 13;
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_off))) >> 13;
         }
 
         auto fragment_offset() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_off))) & 0x1FFF;
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_off))) & 0x1FFF;
         }
 
         auto time_to_live() const
@@ -325,21 +343,26 @@ namespace canard {
         auto checksum() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_sum)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_sum)));
         }
 
         auto source() const
             -> boost::asio::ip::address_v4
         {
             auto addr = detail::decode<std::uint32_t>(data_ + offsetof(::ip, ip_src));
-            return boost::asio::ip::address_v4{canard::ntoh(addr)};
+            return boost::asio::ip::address_v4{
+                boost::endian::big_to_native(addr)
+            };
         }
 
         auto destination() const
             -> boost::asio::ip::address_v4
         {
             auto addr = detail::decode<std::uint32_t>(data_ + offsetof(::ip, ip_dst));
-            return boost::asio::ip::address_v4{canard::ntoh(addr)};
+            return boost::asio::ip::address_v4{
+                boost::endian::big_to_native(addr)
+            };
         }
 
         auto next() const
@@ -390,7 +413,8 @@ namespace canard {
         auto checksum() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
         }
 
         auto payload() const
@@ -442,7 +466,10 @@ namespace canard {
         auto gateway_address() const
             -> boost::asio::ip::address_v4
         {
-            return boost::asio::ip::address_v4{canard::ntoh(detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)))};
+            return boost::asio::ip::address_v4{
+                boost::endian::big_to_native(
+                        detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)))
+            };
         }
     };
 
@@ -472,19 +499,22 @@ namespace canard {
         auto originate_timestamp() const
             -> std::uint32_t
         {
-            return canard::ntoh(detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)));
         }
 
         auto receive_timestamp() const
             -> std::uint32_t
         {
-            return canard::ntoh(detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t)));
         }
 
         auto transmit_timestamp() const
             -> std::uint32_t
         {
-            return canard::ntoh(detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t)));
         }
     };
 
@@ -514,7 +544,10 @@ namespace canard {
         auto address_mask() const
             -> boost::asio::ip::address_v4
         {
-            return boost::asio::ip::address_v4{canard::ntoh(detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)))};
+            return boost::asio::ip::address_v4{
+                boost::endian::big_to_native(
+                        detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)))
+            };
         };
     };
 
@@ -529,13 +562,17 @@ namespace canard {
         auto version() const
             -> std::uint8_t
         {
-            return canard::ntoh(detail::decode<std::uint32_t>(data_)) >> 28;
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint32_t>(data_))
+                >> 28;
         }
 
         auto traffic_class() const
             -> std::uint8_t
         {
-            return (canard::ntoh(detail::decode<std::uint32_t>(data_)) >> 20) & 0x0FF;
+            return (boost::endian::big_to_native(
+                        detail::decode<std::uint32_t>(data_))
+                    >> 20) & 0x0FF;
         }
 
         auto dscp() const
@@ -553,13 +590,16 @@ namespace canard {
         auto flow_label() const
             -> std::uint32_t
         {
-            return canard::ntoh(detail::decode<std::uint32_t>(data_)) & 0x0FFFFF;
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint32_t>(data_))
+                & 0x0FFFFF;
         }
 
         auto payload_length() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint32_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint32_t)));
         }
 
         auto next_header() const
@@ -761,7 +801,8 @@ namespace canard {
         auto checksum() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint8_t>(data_ + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint8_t>(data_ + sizeof(std::uint16_t)));
         }
 
     protected:
@@ -832,25 +873,29 @@ namespace canard {
         auto source() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_));
         }
 
         auto destination() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
         }
 
         auto sequence_number() const
             -> std::uint32_t
         {
-            return canard::ntoh(detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)));
         }
 
         auto acknowledgement_number() const
             -> std::uint32_t
         {
-            return canard::ntoh(detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t)));
         }
 
         auto length() const
@@ -868,19 +913,22 @@ namespace canard {
         auto window() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t) + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t) + sizeof(std::uint16_t)));
         }
 
         auto checksum() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint64_t) * 2));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint64_t) * 2));
         }
 
         auto urgent_pointer() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint64_t) * 2 + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint64_t) * 2 + sizeof(std::uint16_t)));
         }
 
         auto next() const
@@ -917,25 +965,29 @@ namespace canard {
         auto source() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_));
         }
 
         auto destination() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
         }
 
         auto payload_length() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t) * 2));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t) * 2));
         }
 
         auto checksum() const
             -> std::uint16_t
         {
-            return canard::ntoh(detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t) * 3));
+            return boost::endian::big_to_native(
+                    detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t) * 3));
         }
 
         auto next() const
