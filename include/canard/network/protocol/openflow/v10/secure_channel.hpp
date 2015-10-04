@@ -71,8 +71,9 @@ namespace v10 {
             auto mutable_buffers = detail::make_buffer_sequence_adaptor(buffers);
             msg.encode(mutable_buffers);
             strand_.post(
-                    make_write_op(
-                          this->shared_from_this(), std::move(init.handler())
+                    make_send_func_in_channel_thread(
+                          this->shared_from_this()
+                        , std::move(init.handler())
                         , std::forward<MutableBufferSequence>(buffers)));
             return init.get();
         }
@@ -102,42 +103,59 @@ namespace v10 {
         }
 
     private:
-        template <class WriteHandler, class MutableBufferSequence>
-        struct write_op
+        template <class WriteHandler, class ConstBufferSequence>
+        struct send_in_channel_thread
         {
+            struct invoke_in_thread_pool
+            {
+                explicit invoke_in_thread_pool(send_in_channel_thread&& op)
+                    : channel_(std::move(op.channel_))
+                    , handler_(std::move(op.handler_))
+                {
+                }
+
+                void operator()(
+                          boost::system::error_code const& ec
+                        , std::size_t const bytes_transferred)
+                {
+                    channel_->thread_pool().post(
+                            canard::detail::bind(
+                                std::move(handler_), ec, bytes_transferred));
+                }
+
+                std::shared_ptr<secure_channel> channel_;
+                WriteHandler handler_;
+            };
+
             void operator()()
             {
                 auto const channel = channel_.get();
-                auto buffers = std::move(buffers_);
-                channel->async_send(std::move(buffers), std::move(*this));
-            }
-
-            void operator()(boost::system::error_code const& ec, std::size_t const bytes_transferred)
-            {
-                channel_->thread_pool().post(
-                        canard::detail::bind(std::move(handler_), ec, bytes_transferred));
+                channel->async_send(
+                          std::move(buffers_)
+                        , invoke_in_thread_pool{std::move(*this)});
             }
 
             std::shared_ptr<secure_channel> channel_;
             WriteHandler handler_;
-            MutableBufferSequence buffers_;
+            ConstBufferSequence buffers_;
         };
 
-        template <class WriteHandler, class MutableBufferSequence>
-        static auto make_write_op(
-                  std::shared_ptr<secure_channel> c, WriteHandler&& h
-                , MutableBufferSequence&& buf)
-            -> write_op<
+        template <class WriteHandler, class ConstBufferSequence>
+        static auto make_send_func_in_channel_thread(
+                  std::shared_ptr<secure_channel> c
+                , WriteHandler&& h
+                , ConstBufferSequence&& buf)
+            -> send_in_channel_thread<
                       canard::remove_cv_and_reference_t<WriteHandler>
-                    , canard::remove_cv_and_reference_t<MutableBufferSequence>
+                    , canard::remove_cv_and_reference_t<ConstBufferSequence>
                >
         {
-            return write_op<
+            return send_in_channel_thread<
                   canard::remove_cv_and_reference_t<WriteHandler>
-                , canard::remove_cv_and_reference_t<MutableBufferSequence>
+                , canard::remove_cv_and_reference_t<ConstBufferSequence>
             >{
                   std::move(c), std::forward<WriteHandler>(h)
-                , std::forward<MutableBufferSequence>(buf)
+                , std::forward<ConstBufferSequence>(buf)
             };
         }
 
