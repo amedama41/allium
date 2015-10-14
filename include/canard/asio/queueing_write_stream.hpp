@@ -139,9 +139,9 @@ namespace detail {
         {
             ~on_do_complete_exit()
             {
-                if (auto const write_op = handler_.waiting_queue_->front()) {
+                if (perform_op_) {
                     try {
-                        write_op->perform(
+                        perform_op_->perform(
                                   handler_.stream_
                                 , handler_.stream_.buffers_.gather(*handler_.waiting_queue_));
                     }
@@ -161,8 +161,10 @@ namespace detail {
                         set_error_code(make_error_code(canard::has_any_exception));
                     }
                 }
-                if (!ready_queue_.empty()) {
-                    io_service_.post_deferred_completions(ready_queue_);
+
+                while (auto const op = ready_queue_.front()) {
+                    io_service_.post_immediate_completion(op, true);
+                    ready_queue_.pop();
                 }
             }
 
@@ -178,6 +180,7 @@ namespace detail {
             queueing_write_handler& handler_;
             operation_queue& ready_queue_;
             boost::asio::detail::io_service_impl& io_service_;
+            write_op_base<Stream>* perform_op_;
         };
 
     public:
@@ -214,7 +217,7 @@ namespace detail {
                 boost::asio::detail::io_service_impl
             >(stream_.get_io_service());
 
-            on_do_complete_exit on_exit{*this, ready_queue, io_service};
+            on_do_complete_exit on_exit{*this, ready_queue, io_service, waiting_queue_->front()};
 
             while (auto const op = ready_queue.front()) {
                 ready_queue.pop();
