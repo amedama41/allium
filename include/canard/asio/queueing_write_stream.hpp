@@ -11,6 +11,7 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/completion_condition.hpp>
 #include <boost/asio/error.hpp>
+#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/operation.hpp>
