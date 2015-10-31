@@ -66,7 +66,7 @@ namespace detail {
                     op;
                     op = boost::asio::detail::op_queue_access::next(op)) {
                 op->buffers(*buffers_);
-                if (buffers_->size() > asio_limiting_params::max_buffers) {
+                if (buffers_->size() >= asio_limiting_params::max_buffers) {
                     break;
                 }
             }
