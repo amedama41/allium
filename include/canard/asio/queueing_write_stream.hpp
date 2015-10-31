@@ -13,6 +13,7 @@
 #include <boost/asio/error.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/detail/buffer_sequence_adapter.hpp>
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/operation.hpp>
 #include <boost/system/error_code.hpp>
@@ -29,6 +30,12 @@ namespace detail {
 
     class gather_buffers
     {
+        struct asio_limiting_params
+            : private boost::asio::detail::buffer_sequence_adapter_base
+        {
+            using buffer_sequence_adapter_base::max_buffers;
+        };
+
     public:
         using value_type = boost::asio::const_buffer;
         using const_iterator = std::vector<value_type>::const_iterator;
@@ -59,6 +66,9 @@ namespace detail {
                     op;
                     op = boost::asio::detail::op_queue_access::next(op)) {
                 op->buffers(*buffers_);
+                if (buffers_->size() > asio_limiting_params::max_buffers) {
+                    break;
+                }
             }
             return *this;
         }
