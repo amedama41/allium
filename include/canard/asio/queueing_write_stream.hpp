@@ -163,8 +163,8 @@ namespace detail {
                 }
 
                 while (auto const op = ready_queue_.front()) {
-                    io_service_.post_immediate_completion(op, true);
                     ready_queue_.pop();
+                    io_service_.post_immediate_completion(op, true);
                 }
             }
 
