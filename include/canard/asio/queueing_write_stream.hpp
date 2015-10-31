@@ -430,7 +430,7 @@ public:
     auto async_write_some(ConstBufferSequence&& buffers, WriteHandler&& handler)
         -> typename write_result_init<WriteHandler>::result_type
     {
-        auto init = write_result_init<WriteHandler>{
+        write_result_init<WriteHandler> init{
             std::forward<WriteHandler>(handler)
         };
 
