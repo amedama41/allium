@@ -381,7 +381,10 @@ public:
     using lowest_layer_type = typename next_layer_type::lowest_layer_type;
     using native_handle_type = typename next_layer_type::native_handle_type;
 
-    explicit queueing_write_stream(boost::asio::io_service& io_service)
+    template <class... Args>
+    explicit queueing_write_stream(
+              boost::asio::io_service& io_service
+            , Args&&... args)
         : stream_{io_service}
         , waiting_queue_{std::make_shared<write_op_queue>()}
     {
