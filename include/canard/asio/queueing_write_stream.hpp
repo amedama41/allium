@@ -471,6 +471,12 @@ public:
         return next_layer().get_io_service();
     }
 
+    auto get_context()
+        -> Context
+    {
+        return *impl_;
+    }
+
     auto native_handle()
         -> native_handle_type
     {
