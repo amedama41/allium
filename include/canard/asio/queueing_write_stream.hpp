@@ -16,6 +16,7 @@
 #include <boost/asio/detail/buffer_sequence_adapter.hpp>
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/operation.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 #include <canard/asio/async_result_init.hpp>
@@ -27,6 +28,116 @@
 
 namespace canard {
 namespace detail {
+
+    class write_op_base
+        : public boost::asio::detail::operation
+    {
+    protected:
+        using complete_func_type = boost::asio::detail::operation::func_type;
+        using consume_func_type
+            = auto(*)(write_op_base*, std::size_t&) -> bool;
+        using buffers_func_type
+            = void(*)(write_op_base*, std::vector<boost::asio::const_buffer>&);
+
+        write_op_base(
+                  complete_func_type const complete_func
+                , consume_func_type const consume_func
+                , buffers_func_type const buffers_func)
+            : boost::asio::detail::operation{complete_func}
+            , consume_func_(consume_func)
+            , buffers_func_(buffers_func)
+            , ec_{}
+        {
+        }
+
+    public:
+        auto consume(std::size_t& bytes_transferred)
+            -> bool
+        {
+            return consume_func_(this, bytes_transferred);
+        }
+
+        void buffers(std::vector<boost::asio::const_buffer>& buffers)
+        {
+            buffers_func_(this, buffers);
+        }
+
+        auto error_code() const
+            -> boost::system::error_code const&
+        {
+            return ec_;
+        }
+
+        void error_code(boost::system::error_code const ec)
+        {
+            ec_ = ec;
+        }
+
+    private:
+        consume_func_type consume_func_;
+        buffers_func_type buffers_func_;
+        boost::system::error_code ec_;
+    };
+
+    template <class WriteHandler, class ConstBufferSequence>
+    class waiting_op
+        : public write_op_base
+    {
+    public:
+        waiting_op(WriteHandler handler, ConstBufferSequence const& buffers)
+            : write_op_base{&do_complete, &do_consume, &do_buffers}
+            , handler_(std::move(handler))
+            , buffers_(buffers)
+        {
+        }
+
+    private:
+        static void do_complete(
+                  boost::asio::detail::io_service_impl* owner
+                , boost::asio::detail::operation* base
+                , boost::system::error_code const& ec
+                , std::size_t bytes_transferred)
+        {
+            auto const op = static_cast<waiting_op*>(base);
+
+            detail::op_holder<WriteHandler, waiting_op> holder{
+                op->handler_, op
+            };
+
+            auto function = detail::bind(
+                      op->handler_, op->error_code()
+                    , op->buffers_.total_consumed_size());
+
+            holder.handler(function.handler());
+            holder.reset();
+
+            if (owner)
+            {
+                using boost::asio::asio_handler_invoke;
+                asio_handler_invoke(function, std::addressof(function.handler()));
+            }
+        }
+
+        static auto do_consume(
+                write_op_base* base, std::size_t& bytes_transferred)
+            -> bool
+        {
+            auto const op = static_cast<waiting_op*>(base);
+            return op->buffers_.consume(bytes_transferred);
+        }
+
+        static void do_buffers(
+                  write_op_base* base
+                , std::vector<boost::asio::const_buffer>& buffers)
+        {
+            auto const op = static_cast<waiting_op*>(base);
+            op->buffers_.push_back_to(buffers);
+        }
+
+    private:
+        WriteHandler handler_;
+        canard::detail::consuming_buffers<ConstBufferSequence> buffers_;
+    };
 
     class gather_buffers
     {
@@ -77,72 +188,79 @@ namespace detail {
         std::shared_ptr<std::vector<value_type>> buffers_;
     };
 
-    template <class Stream>
-    class write_op_base
-        : public boost::asio::detail::operation
+    struct null_context
     {
-    protected:
-        using complete_func_type = boost::asio::detail::operation::func_type;
-        using perform_func_type
-            = void(*)(write_op_base*, Stream&, gather_buffers);
-        using consume_func_type
-            = auto(*)(write_op_base*, std::size_t&) -> bool;
-        using buffers_func_type
-            = void(*)(write_op_base*, std::vector<boost::asio::const_buffer>&);
-
-        write_op_base(
-                  complete_func_type const complete_func
-                , perform_func_type const perform_func
-                , consume_func_type const consume_func
-                , buffers_func_type const buffers_func)
-            : boost::asio::detail::operation{complete_func}
-            , perform_func_(perform_func)
-            , consume_func_(consume_func)
-            , buffers_func_(buffers_func)
-            , ec_{}
-        {
-        }
-
-    public:
-        void perform(Stream& stream, gather_buffers buffers)
-        {
-            perform_func_(this, stream, std::move(buffers));
-        }
-
-        auto consume(std::size_t& bytes_transferred)
-            -> bool
-        {
-            return consume_func_(this, bytes_transferred);
-        }
-
-        void buffers(std::vector<boost::asio::const_buffer>& buffers)
-        {
-            buffers_func_(this, buffers);
-        }
-
-        auto error_code() const
-            -> boost::system::error_code const&
-        {
-            return ec_;
-        }
-
-        void error_code(boost::system::error_code const ec)
-        {
-            ec_ = ec;
-        }
-
-    private:
-        perform_func_type perform_func_;
-        consume_func_type consume_func_;
-        buffers_func_type buffers_func_;
-        boost::system::error_code ec_;
+        void operator()() const {}
     };
+
+    template <class Stream, class Context>
+    class queueing_write_handler;
+
+    template <class Context>
+    struct queueing_write_stream_impl
+        : Context
+    {
+        explicit queueing_write_stream_impl(Context&& context)
+            : Context(std::move(context))
+        {
+        }
+
+        template <class Stream>
+        void do_write(
+                  Stream& stream
+                , std::shared_ptr<queueing_write_stream_impl> ptr)
+        {
+            stream.next_layer().async_write_some(
+                      buffers_.gather(waiting_queue)
+                    , queueing_write_handler<Stream, Context>{
+                            stream, std::move(ptr)
+                      });
+        }
+
+        boost::asio::detail::op_queue<detail::write_op_base> waiting_queue;
+        gather_buffers buffers_;
+    };
+
+    template <class Function, class Context>
+    void queueing_write_stream_handler_invoke(
+            Function&& function, Context* const context)
+    {
+        using boost::asio::asio_handler_invoke;
+        asio_handler_invoke(std::forward<Function>(function), context);
+    }
+
+    template <class Function>
+    void queueing_write_stream_handler_invoke(
+            Function&& function, boost::asio::io_service::strand* const strand)
+    {
+        auto context = strand->wrap(null_context{});
+        queueing_write_stream_handler_invoke(
+                  std::forward<Function>(function)
+                , std::addressof(context));
+    }
+
+    template <class Context>
+    auto queueing_write_stream_handler_allocate(
+            std::size_t const size, Context* const context)
+        -> void*
+    {
+        using boost::asio::asio_handler_allocate;
+        return asio_handler_allocate(size, context);
+    }
+
+    template <class Context>
+    void queueing_write_stream_handler_deallocate(
+              void* const pointer, std::size_t const size
+            , Context* const context)
+    {
+        using boost::asio::asio_handler_deallocate;
+        asio_handler_deallocate(pointer, size, context);
+    }
 
     template <class Stream, class Context>
     class queueing_write_handler
     {
     private:
-        using write_op_queue = boost::asio::detail::op_queue<write_op_base<Stream>>;
         using operation_queue
             = boost::asio::detail::op_queue<boost::asio::detail::operation>;
 
@@ -150,11 +268,9 @@ namespace detail {
         {
             ~on_do_complete_exit()
             {
-                if (perform_op_) {
+                if (need_write) {
                     try {
-                        perform_op_->perform(
-                                  handler_.stream_
-                                , handler_.stream_.buffers_.gather(*handler_.waiting_queue_));
+                        impl->do_write(stream, impl);
                     }
                     catch (boost::system::system_error const& e) {
                         set_error_code(e.code());
@@ -173,52 +289,54 @@ namespace detail {
                     }
                 }
 
-                while (auto const op = ready_queue_.front()) {
-                    ready_queue_.pop();
-                    io_service_.post_immediate_completion(op, true);
+                while (auto const op = ready_queue.front()) {
+                    ready_queue.pop();
+                    io_service.post_immediate_completion(op, true);
                 }
             }
 
             void set_error_code(boost::system::error_code const& ec)
             {
-                while (auto const op = handler_.waiting_queue_->front()) {
-                    handler_.waiting_queue_->pop();
+                while (auto const op = impl->waiting_queue.front()) {
+                    impl->waiting_queue.pop();
                     op->error_code(ec);
-                    ready_queue_.push(op);
+                    ready_queue.push(op);
                 }
             }
 
-            queueing_write_handler& handler_;
-            operation_queue& ready_queue_;
-            boost::asio::detail::io_service_impl& io_service_;
-            write_op_base<Stream>* perform_op_;
+            Stream& stream;
+            std::shared_ptr<queueing_write_stream_impl<Context>> impl;
+            operation_queue& ready_queue;
+            boost::asio::detail::io_service_impl& io_service;
+            bool need_write;
         };
 
     public:
-        queueing_write_handler(Stream& stream, Context* const context)
+        queueing_write_handler(
+                  Stream& stream
+                , std::shared_ptr<queueing_write_stream_impl<Context>>&& impl)
             : stream_(stream)
-            , waiting_queue_(stream_.waiting_queue_)
-            , context_(context)
+            , impl_(std::move(impl))
         {
         }
 
         void operator()(boost::system::error_code const ec, std::size_t bytes_transferred)
         {
             operation_queue ready_queue{};
-            while (auto const op = waiting_queue_->front()) {
+            while (auto const op = impl_->waiting_queue.front()) {
                 if (!op->consume(bytes_transferred)) {
                     break;
                 }
                 if (bytes_transferred == 0) {
                     op->error_code(ec);
                 }
-                waiting_queue_->pop();
+                impl_->waiting_queue.pop();
                 ready_queue.push(op);
             }
 
             if (ec) {
-                while (auto const op = waiting_queue_->front()) {
-                    waiting_queue_->pop();
+                while (auto const op = impl_->waiting_queue.front()) {
+                    impl_->waiting_queue.pop();
                     op->error_code(ec);
                     ready_queue.push(op);
                 }
@@ -228,7 +346,10 @@ namespace detail {
                 boost::asio::detail::io_service_impl
             >(stream_.get_io_service());
 
-            on_do_complete_exit on_exit{*this, ready_queue, io_service, waiting_queue_->front()};
+            on_do_complete_exit on_exit{
+                  stream_, impl_
+                , ready_queue, io_service, !impl_->waiting_queue.empty()
+            };
 
             while (auto const op = ready_queue.front()) {
                 ready_queue.pop();
@@ -240,28 +361,26 @@ namespace detail {
         friend void asio_handler_invoke(
                 Function&& function, queueing_write_handler* const handler)
         {
-            using boost::asio::asio_handler_invoke;
-            asio_handler_invoke(
+            queueing_write_stream_handler_invoke(
                       std::forward<Function>(function)
-                    , std::addressof(handler->context_->handler()));
+                    , static_cast<Context*>(handler->impl_.get()));
         }
 
         friend auto asio_handler_allocate(
                 std::size_t const size, queueing_write_handler* const handler)
             -> void*
         {
-            using boost::asio::asio_handler_allocate;
-            return asio_handler_allocate(
-                    size, std::addressof(handler->context_->handler()));
+            return queueing_write_stream_handler_allocate(
+                      size, static_cast<Context*>(handler->impl_.get()));
         }
 
         friend void asio_handler_deallocate(
                   void* const pointer, std::size_t const size
                 , queueing_write_handler* const handler)
         {
-            using boost::asio::asio_handler_deallocate;
-            asio_handler_deallocate(
-                    pointer, size, std::addressof(handler->context_->handler()));
+            queueing_write_stream_handler_deallocate(
+                      pointer, size
+                    , static_cast<Context*>(handler->impl_.get()));
         }
 
         friend auto asio_handler_is_continuation(queueing_write_handler*)
@@ -272,105 +391,30 @@ namespace detail {
 
     private:
         Stream& stream_;
-        std::shared_ptr<write_op_queue> waiting_queue_;
-        Context* context_;
-    };
-
-    template <class Stream, class WriteHandler, class ConstBufferSequence>
-    class waiting_op
-        : public write_op_base<Stream>
-    {
-    public:
-        waiting_op(WriteHandler handler, ConstBufferSequence const& buffers)
-            : write_op_base<Stream>{
-                  &do_complete, &do_perform, &do_consume, &do_buffers
-              }
-            , handler_(std::move(handler))
-            , buffers_(buffers)
-        {
-        }
-
-        auto handler()
-            -> WriteHandler&
-        {
-            return handler_;
-        }
-
-    private:
-        static void do_complete(
-                  boost::asio::detail::io_service_impl* owner
-                , boost::asio::detail::operation* base
-                , boost::system::error_code const& ec
-                , std::size_t bytes_transferred)
-        {
-            auto const op = static_cast<waiting_op*>(base);
-
-            detail::op_holder<WriteHandler, waiting_op> holder{
-                op->handler_, op
-            };
-
-            auto function = detail::bind(
-                      op->handler_, op->error_code()
-                    , op->buffers_.total_consumed_size());
-
-            holder.handler(function.handler());
-            holder.reset();
-
-            if (owner)
-            {
-                using boost::asio::asio_handler_invoke;
-                asio_handler_invoke(function, std::addressof(function.handler()));
-            }
-        }
-
-        static void do_perform(
-                  write_op_base<Stream>* base, Stream& stream
-                , gather_buffers buffers)
-        {
-            auto const op = static_cast<waiting_op*>(base);
-            stream.next_layer().async_write_some(
-                      std::move(buffers)
-                    , queueing_write_handler<Stream, waiting_op>{stream, op});
-        }
-
-        static auto do_consume(
-                write_op_base<Stream>* base, std::size_t& bytes_transferred)
-            -> bool
-        {
-            auto const op = static_cast<waiting_op*>(base);
-            return op->buffers_.consume(bytes_transferred);
-        }
-
-        static void do_buffers(
-                  write_op_base<Stream>* base
-                , std::vector<boost::asio::const_buffer>& buffers)
-        {
-            auto const op = static_cast<waiting_op*>(base);
-            op->buffers_.push_back_to(buffers);
-        }
-
-    private:
-        WriteHandler handler_;
-        canard::detail::consuming_buffers<ConstBufferSequence> buffers_;
+        std::shared_ptr<queueing_write_stream_impl<Context>> impl_;
     };
 
 } // namespace detail
 
-template <class Stream = boost::asio::ip::tcp::socket>
+template <
+      class Stream = boost::asio::ip::tcp::socket
+    , class Context = detail::null_context
+>
 class queueing_write_stream
 {
 private:
-    using write_op_queue = boost::asio::detail::op_queue<
-        detail::write_op_base<queueing_write_stream>
-    >;
+    using impl_type = detail::queueing_write_stream_impl<Context>;
 
     using read_handler_type = void(boost::system::error_code, std::size_t);
     template <class ReadHandler>
+
     using read_result_init = async_result_init<
         canard::remove_cv_and_reference_t<ReadHandler>, read_handler_type
     >;
+
     using write_handler_type = void(boost::system::error_code, std::size_t);
     template <class WriteHandler>
+
     using write_result_init = async_result_init<
         canard::remove_cv_and_reference_t<WriteHandler>, write_handler_type
     >;
@@ -380,10 +424,10 @@ private:
         ~queue_cleanup()
         {
             if (!commit) {
-                queue_->pop();
+                queue->pop();
             }
         }
-        write_op_queue* queue_;
+        boost::asio::detail::op_queue<detail::write_op_base>* queue;
         bool commit;
     };
 
@@ -392,18 +436,32 @@ public:
     using lowest_layer_type = typename next_layer_type::lowest_layer_type;
     using native_handle_type = typename next_layer_type::native_handle_type;
 
+    explicit queueing_write_stream(Stream stream)
+        : queueing_write_stream{std::move(stream), Context{}}
+    {
+    }
+
+    queueing_write_stream(Stream stream, Context context)
+        : stream_(std::move(stream))
+        , impl_{std::make_shared<impl_type>(std::move(context))}
+    {
+    }
+
     template <class... Args>
     explicit queueing_write_stream(
               boost::asio::io_service& io_service
             , Args&&... args)
-        : stream_{io_service}
-        , waiting_queue_{std::make_shared<write_op_queue>()}
+        : queueing_write_stream{
+              Context{}
+            , io_service, std::forward<Args>(args)...
+          }
     {
     }
 
-    explicit queueing_write_stream(Stream stream)
-        : stream_(std::move(stream))
-        , waiting_queue_{std::make_shared<write_op_queue>()}
+    template <class... Args>
+    queueing_write_stream(Context context, Args&&... args)
+        : stream_{std::forward<Args>(args)...}
+        , impl_{std::make_shared<impl_type>(std::move(context))}
     {
     }
 
@@ -452,7 +510,7 @@ public:
             = typename write_result_init<WriteHandler>::handler_type;
 
         using operation_type = detail::waiting_op<
-              queueing_write_stream, handler_type
+              handler_type
             , canard::remove_cv_and_reference_t<ConstBufferSequence>
         >;
 
@@ -462,11 +520,13 @@ public:
         auto const write_op = holder.construct(
                 init.handler(), std::forward<ConstBufferSequence>(buffers));
 
-        auto const enable_to_send = waiting_queue_->empty();
-        waiting_queue_->push(write_op);
+        auto const enable_to_send = impl_->waiting_queue.empty();
+        impl_->waiting_queue.push(write_op);
         if (enable_to_send) {
-            queue_cleanup on_exit{waiting_queue_.get(), false};
-            write_op->perform(*this, buffers_.gather(*waiting_queue_));
+            queue_cleanup on_exit{
+                std::addressof(impl_->waiting_queue), false
+            };
+            impl_->do_write(*this, impl_);
             on_exit.commit = true;
         }
 
@@ -476,10 +536,8 @@ public:
     }
 
 private:
-    template <class, class> friend class detail::queueing_write_handler;
     Stream stream_;
-    std::shared_ptr<write_op_queue> waiting_queue_;
-    detail::gather_buffers buffers_;
+    std::shared_ptr<impl_type> impl_;
 };
 
 } // namespace canard
