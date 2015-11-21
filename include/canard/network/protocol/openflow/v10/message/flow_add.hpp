@@ -24,7 +24,7 @@ namespace messages {
         static protocol::ofp_flow_mod_command const command_type
             = protocol::OFPFC_ADD;
 
-        explicit flow_add(flow_entry entry
+        explicit flow_add(flow_entry&& entry
                 , std::uint16_t const flags
                 , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
@@ -39,6 +39,24 @@ namespace messages {
                 , entry.priority(), buffer_id, 0, flags
               }
             , actions_(std::move(entry).actions())
+        {
+        }
+
+        explicit flow_add(flow_entry const& entry
+                , std::uint16_t const flags
+                , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
+                , std::uint32_t const xid = get_xid())
+            : flow_mod_{
+                  v10_detail::ofp_header{
+                      protocol::OFP_VERSION, message_type
+                    , std::uint16_t(sizeof(flow_mod_) + entry.actions().length())
+                    , xid
+                  }
+                , entry.ofp_match(), entry.cookie(), command_type
+                , entry.idle_timeout(), entry.hard_timeout()
+                , entry.priority(), buffer_id, 0, flags
+              }
+            , actions_(entry.actions())
         {
         }
 
