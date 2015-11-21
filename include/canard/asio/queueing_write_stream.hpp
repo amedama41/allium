@@ -208,7 +208,7 @@ namespace detail {
             stream.next_layer().async_write_some(
                       buffers_.gather(waiting_queue)
                     , queueing_write_handler<Stream, Context>{
-                            stream, std::move(ptr)
+                            stream, stream.get_io_service(), std::move(ptr)
                       });
         }
 
@@ -273,8 +273,10 @@ namespace detail {
     public:
         queueing_write_handler(
                   Stream& stream
+                , boost::asio::io_service& io_service
                 , std::shared_ptr<queueing_write_stream_impl<Context>>&& impl)
             : stream_(stream)
+            , io_service_(io_service)
             , impl_(std::move(impl))
         {
         }
@@ -304,7 +306,7 @@ namespace detail {
 
             auto& io_service = boost::asio::use_service<
                 boost::asio::detail::io_service_impl
-            >(stream_.get_io_service());
+            >(io_service_);
 
             on_do_complete_exit on_exit{
                   stream_, impl_
@@ -354,6 +356,7 @@ namespace detail {
 
     private:
         Stream& stream_;
+        boost::asio::io_service& io_service_;
         std::shared_ptr<queueing_write_stream_impl<Context>> impl_;
     };
 
