@@ -16,7 +16,7 @@
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/options.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel_impl.hpp>
-#include <canard/network/utils/thread_pool.hpp>
+#include <canard/network/utils/io_service_pool.hpp>
 
 #include <iostream>
 
@@ -37,7 +37,10 @@ namespace openflow {
             : io_service_{options.io_service() ? options.io_service() : std::make_shared<boost::asio::io_service>()}
             , acceptor_{*io_service_}
             , controller_handler_{options.handler()}
-            , thread_pool_(options.thread_pool() ? options.thread_pool() : std::make_shared<utils::thread_pool>(1))
+            , io_service_pool_(
+                      options.io_service_pool()
+                    ? options.io_service_pool()
+                    : std::make_shared<utils::io_service_pool>(1))
             , address_(options.address())
             , port_(options.port().empty() ? "6653" : options.port())
             , listening_mutex_{}
@@ -48,6 +51,7 @@ namespace openflow {
         void run()
         {
             listen();
+            io_service_pool_->run();
             io_service_->run();
         }
 
@@ -56,6 +60,7 @@ namespace openflow {
             std::lock_guard<std::mutex> lock{listening_mutex_};
             if (listening_) {
                 io_service_->stop();
+                io_service_pool_->stop();
             }
         }
 
@@ -73,7 +78,8 @@ namespace openflow {
     private:
         void async_accept()
         {
-            auto socket = std::make_shared<tcp::socket>(*io_service_);
+            auto socket = std::make_shared<tcp::socket>(
+                    io_service_pool_->get_io_service());
             acceptor_.async_accept(*socket, [=](boost::system::error_code const& error) mutable {
                 if (!error) {
                     send_hello(std::move(socket));
@@ -148,8 +154,9 @@ namespace openflow {
                     receive_hello(std::move(socket), std::move(buffer), header.length - buffer->size());
                     return;
                 }
-                auto channel = std::make_shared<v10::secure_channel_impl<ControllerHandler>>(
-                        std::move(*socket), controller_handler_, *thread_pool_);
+                auto channel = std::make_shared<
+                    v10::secure_channel_impl<ControllerHandler>
+                >(std::move(*socket), controller_handler_);
                 auto it = buffer->begin();
                 channel->run(hello::decode(it, buffer->end()));
             });
@@ -159,7 +166,7 @@ namespace openflow {
         std::shared_ptr<boost::asio::io_service> io_service_;
         tcp::acceptor acceptor_;
         ControllerHandler& controller_handler_;
-        std::shared_ptr<utils::thread_pool> thread_pool_;
+        std::shared_ptr<utils::io_service_pool> io_service_pool_;
         std::string address_;
         std::string port_;
         std::mutex listening_mutex_;

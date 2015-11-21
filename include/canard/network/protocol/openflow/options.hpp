@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 #include <boost/asio/io_service.hpp>
-#include <canard/network/utils/thread_pool.hpp>
+#include <canard/network/utils/io_service_pool.hpp>
 
 namespace canard {
 namespace network {
@@ -39,16 +39,17 @@ namespace openflow {
             return *this;
         }
 
-        auto thread_pool() const
-            -> std::shared_ptr<utils::thread_pool>
+        auto io_service_pool() const
+            -> std::shared_ptr<utils::io_service_pool>
         {
-            return thread_pool_;
+            return io_service_pool_;
         }
 
-        auto thread_pool(std::shared_ptr<utils::thread_pool> thread_pool_ptr)
+        auto io_service_pool(
+                std::shared_ptr<utils::io_service_pool> io_service_pool)
             -> controller_options&
         {
-            thread_pool_ = std::move(thread_pool_ptr);
+            io_service_pool_ = std::move(io_service_pool);
             return *this;
         }
 
@@ -83,7 +84,7 @@ namespace openflow {
         ControllerHandler& handler_;
         std::string address_;
         std::string port_;
-        std::shared_ptr<utils::thread_pool> thread_pool_;
+        std::shared_ptr<utils::io_service_pool> io_service_pool_;
     };
 
 } // namespace openflow

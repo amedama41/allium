@@ -27,7 +27,6 @@
 #include <canard/network/protocol/openflow/v10/messages.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel.hpp>
-#include <canard/network/utils/thread_pool.hpp>
 
 #include <iostream>
 
@@ -71,9 +70,8 @@ namespace v10 {
     public:
         secure_channel_impl(
                   Socket socket
-                , ControllerHandler& controller_handler
-                , utils::thread_pool& thread_pool)
-            : base_type{std::move(socket), thread_pool}
+                , ControllerHandler& controller_handler)
+            : base_type{std::move(socket)}
             , controller_handler_(controller_handler)
         {
         }
@@ -85,14 +83,12 @@ namespace v10 {
 
         void run(openflow::hello&& hello)
         {
+            handle(std::move(hello));
             auto channel = base_type::shared_from_this();
-            this->thread_pool().post([=]() mutable {
-                handle(std::move(hello));
-                auto loop = message_loop{
-                    std::static_pointer_cast<secure_channel_impl>(channel)
-                };
-                loop.run();
-            });
+            auto loop = message_loop{
+                std::static_pointer_cast<secure_channel_impl>(channel)
+            };
+            loop.run();
         }
 
     private:
@@ -165,44 +161,34 @@ namespace v10 {
     private:
         struct message_loop
         {
-            void run(std::size_t const least_size = sizeof(v10_detail::ofp_header))
+            void run()
             {
                 auto const channel = channel_.get();
-                channel->strand_.post(
+                auto const least_size = sizeof(v10_detail::ofp_header);
+                channel->strand_.dispatch(
                         canard::detail::bind(std::move(*this), least_size));
-            }
-
-            void operator()()
-            {
-                auto const least_size = channel_->handle_read();
-                run(least_size);
-            }
-
-            void operator()(boost::system::error_code const ec)
-            {
-                channel_->handle_read();
-                channel_->handle(openflow::goodbye{ec});
-                channel_->close();
-                std::cout << "connection closed: " << ec.message() << " " << channel_.use_count() << std::endl;
             }
 
             void operator()(std::size_t const least_size)
             {
                 auto const channel = channel_.get();
-                boost::asio::async_read(channel->stream_, channel->streambuf_
+                boost::asio::async_read(
+                          channel->stream_, channel->streambuf_
                         , boost::asio::transfer_at_least(least_size)
-                        , channel->strand_.wrap(std::move(*this)));
+                        , channel_->strand_.wrap(std::move(*this)));
             }
 
             void operator()(boost::system::error_code const& ec, std::size_t)
             {
-                auto const channel = channel_.get();
                 if (ec) {
-                    channel->thread_pool().post(
-                            canard::detail::bind(std::move(*this), ec));
+                    channel_->handle_read();
+                    channel_->handle(openflow::goodbye{ec});
+                    channel_->close();
+                    std::cout << "connection closed: " << ec.message() << " " << channel_.use_count() << std::endl;
                     return;
                 }
-                channel->thread_pool().post(std::move(*this));
+                auto const least_size = channel_->handle_read();
+                (*this)(least_size);
             }
 
             std::shared_ptr<secure_channel_impl> channel_;
