@@ -34,7 +34,11 @@ namespace openflow {
         using options = controller_options<ControllerHandler>;
 
         controller(controller_options<ControllerHandler> const& options)
-            : io_service_{options.io_service() ? options.io_service() : std::make_shared<boost::asio::io_service>()}
+            : io_service_{
+                      options.io_service()
+                    ? options.io_service()
+                    : std::make_shared<boost::asio::io_service>()
+              }
             , acceptor_{*io_service_}
             , controller_handler_{options.handler()}
             , io_service_pool_(
@@ -80,12 +84,13 @@ namespace openflow {
         {
             auto socket = std::make_shared<tcp::socket>(
                     io_service_pool_->get_io_service());
-            acceptor_.async_accept(*socket, [=](boost::system::error_code const& error) mutable {
-                if (!error) {
+            acceptor_.async_accept(
+                    *socket, [=](boost::system::error_code const& ec) mutable {
+                if (!ec) {
                     send_hello(std::move(socket));
                 }
                 else {
-                    std::cout << "accept error: " << error.message() << std::endl;
+                    std::cout << "accept error: " << ec.message() << std::endl;
                 }
                 async_accept();
             });
@@ -95,9 +100,12 @@ namespace openflow {
         {
             auto ec = boost::system::error_code{};
             tcp::resolver resolver{*io_service_};
-            auto const endpoint_iterator = resolver.resolve({address_, port_}, ec);
+            auto const endpoint_iterator
+                = resolver.resolve({address_, port_}, ec);
             if (ec) {
-                std::cout << "resolve(" << address_ << ", " << port_ << ") error: " << ec.message() << std::endl;
+                std::cout
+                    << "resolve(" << address_ << ", " << port_ << ")"
+                    << " error: " << ec.message() << std::endl;
                 return;
             }
             auto const endpoint = (*endpoint_iterator).endpoint();
@@ -120,8 +128,12 @@ namespace openflow {
         void send_hello(std::shared_ptr<tcp::socket> socket)
         {
             auto buffer = std::make_shared<std::vector<std::uint8_t>>();
-            boost::asio::async_write(*socket, boost::asio::buffer(hello{v10::protocol::OFP_VERSION}.encode(*buffer))
-                    , [=](boost::system::error_code const& ec, std::size_t const) mutable {
+            auto const hello_msg = hello{v10::protocol::OFP_VERSION};
+            boost::asio::async_write(
+                      *socket
+                    , boost::asio::buffer(hello_msg.encode(*buffer))
+                    , [=](boost::system::error_code const& ec
+                        , std::size_t const) mutable {
                 if (ec) {
                     std::cout << "send error: " << ec.message() << std::endl;
                     return;
@@ -137,21 +149,26 @@ namespace openflow {
         {
             auto const read_head = buffer->size();
             buffer->resize(read_head + read_size);
-            boost::asio::async_read(*socket
+            boost::asio::async_read(
+                      *socket
                     , boost::asio::buffer(&(*buffer)[read_head], read_size)
                     , boost::asio::transfer_exactly(read_size)
-                    , [=](boost::system::error_code const& ec, std::size_t const) {
+                    , [=](boost::system::error_code const& ec
+                        , std::size_t const) {
                 if (ec) {
                     std::cout << "read error: " << ec.message() << std::endl;
                     return;
                 }
-                auto const header = detail::read_ofp_header(boost::asio::buffer(*buffer));
+                auto const header
+                    = detail::read_ofp_header(boost::asio::buffer(*buffer));
                 if (header.type != hello::message_type) {
                     std::cout << "not hello message" << std::endl;
                     return;
                 }
                 if (header.length != buffer->size()) {
-                    receive_hello(std::move(socket), std::move(buffer), header.length - buffer->size());
+                    receive_hello(std::move(socket)
+                                , std::move(buffer)
+                                , header.length - buffer->size());
                     return;
                 }
                 auto channel = std::make_shared<
