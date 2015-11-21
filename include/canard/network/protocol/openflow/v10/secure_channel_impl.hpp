@@ -42,7 +42,9 @@ namespace v10 {
             -> v10_detail::ofp_header
         {
             auto header = v10_detail::ofp_header{};
-            std::memcpy(&header, boost::asio::buffer_cast<std::uint8_t const*>(streambuf.data()), sizeof(header));
+            std::memcpy(&header
+                      , boost::asio::buffer_cast<std::uint8_t const*>(
+                          streambuf.data()), sizeof(header));
             boost::endian::big_to_native_inplace(header);
             return header;
         }
@@ -62,7 +64,10 @@ namespace v10 {
 
     } // namespace secure_channel_detail
 
-    template <class ControllerHandler, class Socket = boost::asio::ip::tcp::socket>
+    template <
+          class ControllerHandler
+        , class Socket = boost::asio::ip::tcp::socket
+    >
     class secure_channel_impl
         : public secure_channel<Socket>
     {
