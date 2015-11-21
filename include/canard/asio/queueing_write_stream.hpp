@@ -14,6 +14,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/detail/buffer_sequence_adapter.hpp>
+#include <boost/asio/detail/fenced_block.hpp>
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/operation.hpp>
 #include <boost/asio/strand.hpp>
@@ -113,6 +114,9 @@ namespace detail {
 
             if (owner)
             {
+                boost::asio::detail::fenced_block b{
+                    boost::asio::detail::fenced_block::half
+                };
                 using boost::asio::asio_handler_invoke;
                 asio_handler_invoke(function, std::addressof(function.handler()));
             }
