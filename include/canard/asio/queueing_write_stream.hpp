@@ -188,11 +188,6 @@ namespace detail {
         std::shared_ptr<std::vector<value_type>> buffers_;
     };
 
-    struct null_context
-    {
-        void operator()() const {}
-    };
-
     template <class Stream, class Context>
     class queueing_write_handler;
 
@@ -220,42 +215,6 @@ namespace detail {
         boost::asio::detail::op_queue<detail::write_op_base> waiting_queue;
         gather_buffers buffers_;
     };
-
-    template <class Function, class Context>
-    void queueing_write_stream_handler_invoke(
-            Function&& function, Context* const context)
-    {
-        using boost::asio::asio_handler_invoke;
-        asio_handler_invoke(std::forward<Function>(function), context);
-    }
-
-    template <class Function>
-    void queueing_write_stream_handler_invoke(
-            Function&& function, boost::asio::io_service::strand* const strand)
-    {
-        auto context = strand->wrap(null_context{});
-        queueing_write_stream_handler_invoke(
-                  std::forward<Function>(function)
-                , std::addressof(context));
-    }
-
-    template <class Context>
-    auto queueing_write_stream_handler_allocate(
-            std::size_t const size, Context* const context)
-        -> void*
-    {
-        using boost::asio::asio_handler_allocate;
-        return asio_handler_allocate(size, context);
-    }
-
-    template <class Context>
-    void queueing_write_stream_handler_deallocate(
-              void* const pointer, std::size_t const size
-            , Context* const context)
-    {
-        using boost::asio::asio_handler_deallocate;
-        asio_handler_deallocate(pointer, size, context);
-    }
 
     template <class Stream, class Context>
     class queueing_write_handler
@@ -361,7 +320,8 @@ namespace detail {
         friend void asio_handler_invoke(
                 Function&& function, queueing_write_handler* const handler)
         {
-            queueing_write_stream_handler_invoke(
+            using boost::asio::asio_handler_invoke;
+            asio_handler_invoke(
                       std::forward<Function>(function)
                     , static_cast<Context*>(handler->impl_.get()));
         }
@@ -370,7 +330,8 @@ namespace detail {
                 std::size_t const size, queueing_write_handler* const handler)
             -> void*
         {
-            return queueing_write_stream_handler_allocate(
+            using boost::asio::asio_handler_allocate;
+            return asio_handler_allocate(
                       size, static_cast<Context*>(handler->impl_.get()));
         }
 
@@ -378,7 +339,8 @@ namespace detail {
                   void* const pointer, std::size_t const size
                 , queueing_write_handler* const handler)
         {
-            queueing_write_stream_handler_deallocate(
+            using boost::asio::asio_handler_deallocate;
+            asio_handler_deallocate(
                       pointer, size
                     , static_cast<Context*>(handler->impl_.get()));
         }
@@ -394,6 +356,51 @@ namespace detail {
         std::shared_ptr<queueing_write_stream_impl<Context>> impl_;
     };
 
+    struct null_context
+    {
+        void operator()() const {}
+    };
+
+    template <class Context>
+    struct queueing_stream_context
+    {
+        using type = Context;
+
+        static auto convert(Context& context)
+            -> Context&&
+        {
+            return std::move(context);
+        }
+    };
+
+    template <>
+    struct queueing_stream_context<boost::asio::io_service::strand>
+    {
+        using original_context = boost::asio::io_service::strand;
+        using type = decltype(
+                std::declval<original_context>().wrap(null_context{}));
+
+        static auto convert(original_context& strand)
+            -> type
+        {
+            return strand.wrap(null_context{});
+        }
+    };
+
+    template <>
+    struct queueing_stream_context<boost::asio::io_service>
+    {
+        using original_context = boost::asio::io_service;
+        using type = decltype(
+                std::declval<original_context>().wrap(null_context{}));
+
+        static auto convert(original_context& io_service)
+            -> type
+        {
+            return io_service.wrap(null_context{});
+        }
+    };
+
 } // namespace detail
 
 template <
@@ -403,7 +410,10 @@ template <
 class queueing_write_stream
 {
 private:
-    using impl_type = detail::queueing_write_stream_impl<Context>;
+    using context_helper = detail::queueing_stream_context<Context>;
+    using impl_type = detail::queueing_write_stream_impl<
+        typename context_helper::type
+    >;
 
     using read_handler_type = void(boost::system::error_code, std::size_t);
     template <class ReadHandler>
@@ -443,7 +453,7 @@ public:
 
     queueing_write_stream(Stream stream, Context context)
         : stream_(std::move(stream))
-        , impl_{std::make_shared<impl_type>(std::move(context))}
+        , impl_{std::make_shared<impl_type>(context_helper::convert(context))}
     {
     }
 
@@ -461,7 +471,7 @@ public:
     template <class... Args>
     queueing_write_stream(Context context, Args&&... args)
         : stream_{std::forward<Args>(args)...}
-        , impl_{std::make_shared<impl_type>(std::move(context))}
+        , impl_{std::make_shared<impl_type>(context_helper::convert(context))}
     {
     }
 
@@ -469,12 +479,6 @@ public:
         -> boost::asio::io_service&
     {
         return next_layer().get_io_service();
-    }
-
-    auto get_context()
-        -> Context
-    {
-        return *impl_;
     }
 
     auto native_handle()
