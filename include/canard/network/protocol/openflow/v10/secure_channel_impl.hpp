@@ -86,79 +86,21 @@ namespace v10 {
 
         void run(openflow::hello&& hello)
         {
-            handle(std::move(hello));
-            auto channel = base_type::shared_from_this();
+            auto base_channel = base_type::shared_from_this();
+            handle(base_channel, std::move(hello));
+            auto read_channel
+                = std::static_pointer_cast<secure_channel_impl>(base_channel);
             auto loop = message_loop{
-                std::static_pointer_cast<secure_channel_impl>(channel)
+                std::move(read_channel), std::move(base_channel)
             };
             loop.run();
         }
 
     private:
-        auto handle_read()
-            -> std::size_t
-        {
-            while (streambuf_.size() >= sizeof(v10_detail::ofp_header)) {
-                auto const header = secure_channel_detail::read_ofp_header(streambuf_);
-                if (streambuf_.size() < header.length) {
-                    return header.length - streambuf_.size();
-                }
-                handle_message(header);
-                streambuf_.consume(header.length);
-            }
-            return sizeof(v10_detail::ofp_header) - streambuf_.size();
-        }
-
-        void handle_message(v10_detail::ofp_header const& header)
-        {
-            std::cout
-                << "version: " << std::uint16_t{header.version} << "\n"
-                << "type:    " << v10::to_string(protocol::ofp_type(header.type)) << "\n"
-                << "length:  " << header.length << "\n"
-                << "xid:     " << header.xid << "\n"
-                << std::endl;
-            auto first = boost::asio::buffer_cast<unsigned char const*>(streambuf_.data());
-            auto const last = std::next(first, header.length);
-            switch (header.type) {
-#           define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
-            using msg ## N = std::tuple_element<N, default_switch_message_list>::type; \
-            case msg ## N::message_type: \
-                handle(msg ## N::decode(first, last)); \
-                break;
-            static_assert(std::tuple_size<default_switch_message_list>::value == 10, "");
-            BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
-#           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
-            case protocol::OFPT_STATS_REPLY:
-                handle_stats_reply(first, last);
-                break;
-            default:
-                break;
-            }
-        }
-
         template <class Message>
-        void handle(Message&& msg)
+        void handle(std::shared_ptr<base_type> const& channel, Message&& msg)
         {
-            controller_handler_.handle(
-                    base_type::shared_from_this(), std::forward<Message>(msg));
-        }
-
-        template <class Iterator>
-        void handle_stats_reply(Iterator first, Iterator last)
-        {
-            auto const stats_reply = secure_channel_detail::read<v10_detail::ofp_stats_reply>(first, last);
-            switch (stats_reply.type) {
-#           define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
-            using msg ## N = std::tuple_element<N, default_stats_reply_list>::type; \
-            case msg ## N::stats_type_value: \
-                handle(msg ## N::decode(first, last)); \
-                break;
-            static_assert(std::tuple_size<default_stats_reply_list>::value == 6, "");
-            BOOST_PP_REPEAT(6, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
-#           undef  CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE
-            default:
-                break;
-            }
+            controller_handler_.handle(channel, std::forward<Message>(msg));
         }
 
     private:
@@ -184,17 +126,93 @@ namespace v10 {
             void operator()(boost::system::error_code const& ec, std::size_t)
             {
                 if (ec) {
-                    channel_->handle_read();
-                    channel_->handle(openflow::goodbye{ec});
+                    handle_read(channel_->streambuf_);
+                    channel_->handle(base_channel_, openflow::goodbye{ec});
                     channel_->close();
-                    std::cout << "connection closed: " << ec.message() << " " << channel_.use_count() << std::endl;
+                    std::cout
+                        << "connection closed: " << ec.message()
+                        << " " << channel_.use_count() << std::endl;
                     return;
                 }
-                auto const least_size = channel_->handle_read();
+                auto const least_size = handle_read(channel_->streambuf_);
                 (*this)(least_size);
             }
 
+            auto handle_read(boost::asio::streambuf& streambuf)
+            -> std::size_t
+            {
+                while (streambuf.size() >= sizeof(v10_detail::ofp_header)) {
+                    auto const header
+                        = secure_channel_detail::read_ofp_header(streambuf);
+                    if (streambuf.size() < header.length) {
+                        return header.length - streambuf.size();
+                    }
+
+                    auto first = boost::asio::buffer_cast<
+                        unsigned char const*
+                    >(streambuf.data());
+                    auto const last = std::next(first, header.length);
+                    handle_message(header, first, last);
+
+                    streambuf.consume(header.length);
+                }
+                return sizeof(v10_detail::ofp_header) - streambuf.size();
+            }
+
+            template <class Iterator>
+            void handle_message(
+                      v10_detail::ofp_header const& header
+                    , Iterator first, Iterator last)
+            {
+                // std::cout
+                //     << "version: " << std::uint16_t{header.version} << "\n"
+                //     << "type:    " << v10::to_string(protocol::ofp_type(header.type)) << "\n"
+                //     << "length:  " << header.length << "\n"
+                //     << "xid:     " << header.xid << "\n"
+                //     << std::endl;
+                switch (header.type) {
+#               define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
+                using msg ## N = std::tuple_element<N, default_switch_message_list>::type; \
+                case msg ## N::message_type: \
+                    channel_->handle(base_channel_, msg ## N::decode(first, last)); \
+                    break;
+                static_assert(
+                          std::tuple_size<default_switch_message_list>::value == 10
+                        , "");
+                BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
+#               undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
+                case protocol::OFPT_STATS_REPLY:
+                    handle_stats_reply(first, last);
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            template <class Iterator>
+            void handle_stats_reply(Iterator first, Iterator last)
+            {
+                auto const stats_reply = secure_channel_detail::read<
+                    v10_detail::ofp_stats_reply
+                >(first, last);
+                switch (stats_reply.type) {
+#               define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
+                using msg ## N = std::tuple_element<N, default_stats_reply_list>::type; \
+                case msg ## N::stats_type_value: \
+                    channel_->handle(base_channel_, msg ## N::decode(first, last)); \
+                    break;
+                static_assert(
+                          std::tuple_size<default_stats_reply_list>::value == 6
+                        , "");
+                BOOST_PP_REPEAT(6, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
+#               undef  CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE
+                default:
+                    break;
+                }
+            }
+
             std::shared_ptr<secure_channel_impl> channel_;
+            std::shared_ptr<base_type> base_channel_;
         };
 
     private:
