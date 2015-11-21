@@ -168,7 +168,7 @@ namespace v10 {
             void run(std::size_t const least_size = sizeof(v10_detail::ofp_header))
             {
                 auto const channel = channel_.get();
-                channel->strand_.post(
+                channel->stream_.invoke(
                         canard::detail::bind(std::move(*this), least_size));
             }
 
@@ -189,9 +189,10 @@ namespace v10 {
             void operator()(std::size_t const least_size)
             {
                 auto const channel = channel_.get();
-                boost::asio::async_read(channel->stream_, channel->streambuf_
+                boost::asio::async_read(
+                          channel->stream_, channel->streambuf_
                         , boost::asio::transfer_at_least(least_size)
-                        , channel->strand_.wrap(std::move(*this)));
+                        , std::move(*this));
             }
 
             void operator()(boost::system::error_code const& ec, std::size_t)

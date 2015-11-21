@@ -36,10 +36,21 @@ namespace v10 {
         >;
 
     public:
-        secure_channel(Socket socket, utils::thread_pool& thread_pool)
-            : stream_{std::move(socket)}
-            , strand_{stream_.next_layer().get_io_service()}
+        secure_channel(
+                  Socket& socket
+                , boost::asio::io_service::strand strand
+                , utils::thread_pool& thread_pool)
+            : stream_{std::move(socket), std::move(strand)}
             , thread_pool_(thread_pool)
+        {
+        }
+
+        secure_channel(Socket socket, utils::thread_pool& thread_pool)
+            : secure_channel{
+                  socket
+                , boost::asio::io_service::strand{socket.get_io_service()}
+                , thread_pool
+            }
         {
         }
 
@@ -52,7 +63,7 @@ namespace v10 {
         void close()
         {
             auto channel = this->shared_from_this();
-            strand_.post([channel]{
+            stream_.invoke([channel]{
                 if (channel->stream_.lowest_layer().is_open()) {
                     auto ignore = boost::system::error_code{};
                     channel->stream_.lowest_layer().close(ignore);
@@ -70,7 +81,7 @@ namespace v10 {
 
             auto mutable_buffers = detail::make_buffer_sequence_adaptor(buffers);
             msg.encode(mutable_buffers);
-            strand_.post(
+            stream_.invoke(
                     make_send_func_in_channel_thread(
                           this->shared_from_this()
                         , std::move(init.handler())
@@ -99,7 +110,7 @@ namespace v10 {
         {
             return stream_.async_write_some(
                       std::forward<ConstBufferSequence>(buffers)
-                    , strand_.wrap(std::forward<WriteHandler>(handler)));
+                    , std::forward<WriteHandler>(handler));
         }
 
     private:
@@ -160,8 +171,9 @@ namespace v10 {
         }
 
     protected:
-        canard::queueing_write_stream<Socket> stream_;
-        boost::asio::io_service::strand strand_;
+        canard::queueing_write_stream<
+            Socket, boost::asio::io_service::strand
+        > stream_;
         utils::thread_pool& thread_pool_;
     };
 
