@@ -216,6 +216,17 @@ namespace detail {
         gather_buffers buffers_;
     };
 
+    void set_error_code(
+              boost::system::error_code const& ec
+            , boost::asio::detail::op_queue<detail::write_op_base>& queue)
+    {
+        for (auto op = queue.front();
+             op;
+             op = boost::asio::detail::op_queue_access::next(op)) {
+            op->error_code(ec);
+        }
+    }
+
     template <class Stream, class Context>
     class queueing_write_handler
     {
@@ -232,19 +243,17 @@ namespace detail {
                         impl->do_write(stream, impl);
                     }
                     catch (boost::system::system_error const& e) {
-                        set_error_code(e.code());
+                        set_error_to_ready_queue(e.code());
                     }
                     catch (std::system_error const& e) {
-                        set_error_code(boost::system::error_code{
-                                e.code().value(), boost::system::system_category()
+                        set_error_to_ready_queue(boost::system::error_code{
+                                  e.code().value()
+                                , boost::system::system_category()
                         });
                     }
-                    catch (std::bad_alloc const&) {
-                        set_error_code(make_error_code(
-                                    boost::system::errc::not_enough_memory));
-                    }
                     catch (std::exception const&) {
-                        set_error_code(make_error_code(canard::has_any_exception));
+                        set_error_to_ready_queue(
+                                make_error_code(canard::has_any_exception));
                     }
                 }
 
@@ -254,13 +263,10 @@ namespace detail {
                 }
             }
 
-            void set_error_code(boost::system::error_code const& ec)
+            void set_error_to_ready_queue(boost::system::error_code const& ec)
             {
-                while (auto const op = impl->waiting_queue.front()) {
-                    impl->waiting_queue.pop();
-                    op->error_code(ec);
-                    ready_queue.push(op);
-                }
+                set_error_code(ec, impl->waiting_queue);
+                ready_queue.push(impl->waiting_queue);
             }
 
             Stream& stream;
@@ -297,11 +303,8 @@ namespace detail {
             }
 
             if (ec) {
-                while (auto const op = impl_->waiting_queue.front()) {
-                    impl_->waiting_queue.pop();
-                    op->error_code(ec);
-                    ready_queue.push(op);
-                }
+                set_error_code(ec, impl_->waiting_queue);
+                ready_queue.push(impl_->waiting_queue);
             }
 
             auto& io_service = boost::asio::use_service<
