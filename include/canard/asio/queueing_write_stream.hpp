@@ -511,6 +511,7 @@ public:
         completion_result_init<CompletionHandler> init{
             std::forward<CompletionHandler>(handler)
         };
+        using boost::asio::asio_handler_invoke;
         asio_handler_invoke(
                   std::move(init.handler())
                 , static_cast<typename context_helper::type*>(impl_.get()));
