@@ -12,6 +12,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/preprocessor/repeat.hpp>
@@ -70,9 +71,11 @@ namespace v10 {
     public:
         secure_channel_impl(
                   Socket socket
+                , boost::asio::io_service::strand strand
                 , ControllerHandler& controller_handler)
-            : base_type{std::move(socket)}
+            : base_type{std::move(socket), strand}
             , controller_handler_(controller_handler)
+            , strand_{std::move(strand)}
         {
         }
 
@@ -175,7 +178,7 @@ namespace v10 {
                 boost::asio::async_read(
                           channel->stream_, channel->streambuf_
                         , boost::asio::transfer_at_least(least_size)
-                        , std::move(*this));
+                        , channel->strand_.wrap(std::move(*this)));
             }
 
             void operator()(boost::system::error_code const& ec, std::size_t)
@@ -196,6 +199,7 @@ namespace v10 {
 
     private:
         ControllerHandler& controller_handler_;
+        boost::asio::io_service::strand strand_;
         boost::asio::streambuf streambuf_;
     };
 

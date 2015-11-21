@@ -36,17 +36,9 @@ namespace v10 {
 
     public:
         secure_channel(
-                  Socket& socket
+                  Socket socket
                 , boost::asio::io_service::strand strand)
             : stream_{std::move(socket), std::move(strand)}
-        {
-        }
-
-        explicit secure_channel(Socket socket)
-            : secure_channel{
-                  socket
-                , boost::asio::io_service::strand{socket.get_io_service()}
-            }
         {
         }
 

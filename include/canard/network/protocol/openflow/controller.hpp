@@ -11,6 +11,7 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
@@ -171,9 +172,11 @@ namespace openflow {
                                 , header.length - buffer->size());
                     return;
                 }
+                auto strand
+                    = boost::asio::io_service::strand{socket->get_io_service()};
                 auto channel = std::make_shared<
                     v10::secure_channel_impl<ControllerHandler>
-                >(std::move(*socket), controller_handler_);
+                >(std::move(*socket), strand, controller_handler_);
                 auto it = buffer->begin();
                 channel->run(hello::decode(it, buffer->end()));
             });
