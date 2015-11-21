@@ -279,7 +279,8 @@ namespace detail {
         {
         }
 
-        void operator()(boost::system::error_code const ec, std::size_t bytes_transferred)
+        void operator()(boost::system::error_code const ec
+                      , std::size_t bytes_transferred)
         {
             operation_queue ready_queue{};
             while (auto const op = impl_->waiting_queue.front()) {
