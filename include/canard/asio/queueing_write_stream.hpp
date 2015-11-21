@@ -415,18 +415,22 @@ private:
         typename context_helper::type
     >;
 
-    using read_handler_type = void(boost::system::error_code, std::size_t);
     template <class ReadHandler>
-
     using read_result_init = async_result_init<
-        canard::remove_cv_and_reference_t<ReadHandler>, read_handler_type
+          canard::remove_cv_and_reference_t<ReadHandler>
+        , void(boost::system::error_code, std::size_t)
     >;
 
-    using write_handler_type = void(boost::system::error_code, std::size_t);
     template <class WriteHandler>
-
     using write_result_init = async_result_init<
-        canard::remove_cv_and_reference_t<WriteHandler>, write_handler_type
+          canard::remove_cv_and_reference_t<WriteHandler>
+        , void(boost::system::error_code, std::size_t)
+    >;
+
+    template <class CompletionHandler>
+    using completion_result_init = async_result_init<
+          canard::remove_cv_and_reference_t<CompletionHandler>
+        , void()
     >;
 
     struct queue_cleanup
@@ -497,6 +501,19 @@ public:
         -> lowest_layer_type&
     {
         return stream_.lowest_layer();
+    }
+
+    template <class CompletionHandler>
+    auto invoke(CompletionHandler&& handler)
+        -> typename completion_result_init<CompletionHandler>::result_type
+    {
+        completion_result_init<CompletionHandler> init{
+            std::forward<CompletionHandler>(handler)
+        };
+        asio_handler_invoke(
+                  std::move(init.handler())
+                , static_cast<typename context_helper::type*>(impl_.get()));
+        return init.get();
     }
 
     template <class MutableBufferSequence, class ReadHandler>
