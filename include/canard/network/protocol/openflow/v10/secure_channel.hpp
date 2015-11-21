@@ -17,7 +17,6 @@
 #include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
 #include <canard/network/protocol/openflow/detail/null_handler.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
-#include <canard/network/utils/thread_pool.hpp>
 #include <canard/type_traits.hpp>
 
 namespace canard {
@@ -38,26 +37,17 @@ namespace v10 {
     public:
         secure_channel(
                   Socket& socket
-                , boost::asio::io_service::strand strand
-                , utils::thread_pool& thread_pool)
+                , boost::asio::io_service::strand strand)
             : stream_{std::move(socket), std::move(strand)}
-            , thread_pool_(thread_pool)
         {
         }
 
-        secure_channel(Socket socket, utils::thread_pool& thread_pool)
+        explicit secure_channel(Socket socket)
             : secure_channel{
                   socket
                 , boost::asio::io_service::strand{socket.get_io_service()}
-                , thread_pool
             }
         {
-        }
-
-        auto thread_pool()
-            -> utils::thread_pool&
-        {
-            return thread_pool_;
         }
 
         void close()
@@ -117,33 +107,12 @@ namespace v10 {
         template <class WriteHandler, class ConstBufferSequence>
         struct send_in_channel_thread
         {
-            struct invoke_in_thread_pool
-            {
-                explicit invoke_in_thread_pool(send_in_channel_thread&& op)
-                    : channel_(std::move(op.channel_))
-                    , handler_(std::move(op.handler_))
-                {
-                }
-
-                void operator()(
-                          boost::system::error_code const& ec
-                        , std::size_t const bytes_transferred)
-                {
-                    channel_->thread_pool().post(
-                            canard::detail::bind(
-                                std::move(handler_), ec, bytes_transferred));
-                }
-
-                std::shared_ptr<secure_channel> channel_;
-                WriteHandler handler_;
-            };
-
             void operator()()
             {
                 auto const channel = channel_.get();
                 channel->async_send(
                           std::move(buffers_)
-                        , invoke_in_thread_pool{std::move(*this)});
+                        , std::move(handler_));
             }
 
             std::shared_ptr<secure_channel> channel_;
@@ -174,7 +143,6 @@ namespace v10 {
         canard::queueing_write_stream<
             Socket, boost::asio::io_service::strand
         > stream_;
-        utils::thread_pool& thread_pool_;
     };
 
 } // namespace v10
