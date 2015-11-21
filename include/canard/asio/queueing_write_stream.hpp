@@ -84,9 +84,16 @@ namespace detail {
         : public write_op_base
     {
     public:
-        waiting_op(WriteHandler handler, ConstBufferSequence const& buffers)
+        waiting_op(WriteHandler& handler, ConstBufferSequence&& buffers)
             : write_op_base{&do_complete, &do_consume, &do_buffers}
-            , handler_(std::move(handler))
+            , handler_(handler)
+            , buffers_(std::move(buffers))
+        {
+        }
+
+        waiting_op(WriteHandler& handler, ConstBufferSequence const& buffers)
+            : write_op_base{&do_complete, &do_consume, &do_buffers}
+            , handler_(handler)
             , buffers_(buffers)
         {
         }
