@@ -54,7 +54,9 @@ namespace v10 {
         }
 
         template <class Message, class WriteHandler, class MutableBufferSequence>
-        auto send(Message const& msg, WriteHandler&& handler, MutableBufferSequence buffers)
+        auto send(Message const& msg
+                , WriteHandler&& handler
+                , MutableBufferSequence&& buffers)
             -> typename async_write_result_init<WriteHandler>::result_type
         {
             async_write_result_init<WriteHandler> init{
@@ -76,7 +78,9 @@ namespace v10 {
             -> typename async_write_result_init<WriteHandler>::result_type
         {
             auto buffer = canard::shared_buffer{msg.length()};
-            return send(msg, std::forward<WriteHandler>(handler), std::move(buffer));
+            return send(msg
+                      , std::forward<WriteHandler>(handler)
+                      , std::move(buffer));
         }
 
         template <class Message>
