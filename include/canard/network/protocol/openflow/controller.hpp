@@ -56,7 +56,8 @@ namespace openflow {
         void run()
         {
             listen();
-            io_service_pool_->run();
+            auto work = utils::io_service_pool::work{*io_service_pool_};
+            io_service_pool_->run(false);
             io_service_->run();
         }
 
