@@ -17,7 +17,6 @@
 #include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
 #include <canard/network/protocol/openflow/detail/null_handler.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
-#include <canard/network/utils/thread_pool.hpp>
 #include <canard/type_traits.hpp>
 
 namespace canard {
@@ -36,23 +35,17 @@ namespace v10 {
         >;
 
     public:
-        secure_channel(Socket socket, utils::thread_pool& thread_pool)
-            : stream_{std::move(socket)}
-            , strand_{stream_.next_layer().get_io_service()}
-            , thread_pool_(thread_pool)
+        secure_channel(
+                  Socket socket
+                , boost::asio::io_service::strand strand)
+            : stream_{std::move(socket), std::move(strand)}
         {
-        }
-
-        auto thread_pool()
-            -> utils::thread_pool&
-        {
-            return thread_pool_;
         }
 
         void close()
         {
             auto channel = this->shared_from_this();
-            strand_.post([channel]{
+            stream_.invoke([channel]{
                 if (channel->stream_.lowest_layer().is_open()) {
                     auto ignore = boost::system::error_code{};
                     channel->stream_.lowest_layer().close(ignore);
@@ -61,7 +54,9 @@ namespace v10 {
         }
 
         template <class Message, class WriteHandler, class MutableBufferSequence>
-        auto send(Message const& msg, WriteHandler&& handler, MutableBufferSequence buffers)
+        auto send(Message const& msg
+                , WriteHandler&& handler
+                , MutableBufferSequence&& buffers)
             -> typename async_write_result_init<WriteHandler>::result_type
         {
             async_write_result_init<WriteHandler> init{
@@ -70,7 +65,7 @@ namespace v10 {
 
             auto mutable_buffers = detail::make_buffer_sequence_adaptor(buffers);
             msg.encode(mutable_buffers);
-            strand_.post(
+            stream_.invoke(
                     make_send_func_in_channel_thread(
                           this->shared_from_this()
                         , std::move(init.handler())
@@ -83,7 +78,9 @@ namespace v10 {
             -> typename async_write_result_init<WriteHandler>::result_type
         {
             auto buffer = canard::shared_buffer{msg.length()};
-            return send(msg, std::forward<WriteHandler>(handler), std::move(buffer));
+            return send(msg
+                      , std::forward<WriteHandler>(handler)
+                      , std::move(buffer));
         }
 
         template <class Message>
@@ -99,40 +96,19 @@ namespace v10 {
         {
             return stream_.async_write_some(
                       std::forward<ConstBufferSequence>(buffers)
-                    , strand_.wrap(std::forward<WriteHandler>(handler)));
+                    , std::forward<WriteHandler>(handler));
         }
 
     private:
         template <class WriteHandler, class ConstBufferSequence>
         struct send_in_channel_thread
         {
-            struct invoke_in_thread_pool
-            {
-                explicit invoke_in_thread_pool(send_in_channel_thread&& op)
-                    : channel_(std::move(op.channel_))
-                    , handler_(std::move(op.handler_))
-                {
-                }
-
-                void operator()(
-                          boost::system::error_code const& ec
-                        , std::size_t const bytes_transferred)
-                {
-                    channel_->thread_pool().post(
-                            canard::detail::bind(
-                                std::move(handler_), ec, bytes_transferred));
-                }
-
-                std::shared_ptr<secure_channel> channel_;
-                WriteHandler handler_;
-            };
-
             void operator()()
             {
                 auto const channel = channel_.get();
                 channel->async_send(
                           std::move(buffers_)
-                        , invoke_in_thread_pool{std::move(*this)});
+                        , std::move(handler_));
             }
 
             std::shared_ptr<secure_channel> channel_;
@@ -160,9 +136,9 @@ namespace v10 {
         }
 
     protected:
-        canard::queueing_write_stream<Socket> stream_;
-        boost::asio::io_service::strand strand_;
-        utils::thread_pool& thread_pool_;
+        canard::queueing_write_stream<
+            Socket, boost::asio::io_service::strand
+        > stream_;
     };
 
 } // namespace v10

@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <iterator>
-#include <vector>
 #include <net/ethernet.h>
 #include <net/if_arp.h>
 #include <netinet/ip.h>
@@ -1293,10 +1292,10 @@ namespace canard {
         }
     }
 
-    template <class Function>
-    inline void for_each_header(std::vector<std::uint8_t> const& frame, Function f)
+    template <class Range, class Function>
+    inline void for_each_header(Range& frame, Function f)
     {
-        parse_ether_frame(frame.data(), frame.data() + frame.size(), f);
+        parse_ether_frame(std::begin(frame), std::end(frame), f);
     }
 
     template <class Function, class T>
@@ -1322,8 +1321,14 @@ namespace canard {
     class packet
     {
     public:
-        explicit packet(std::vector<std::uint8_t> const& frame)
-            : first_{frame.data()}, last_{frame.data() + frame.size()}
+        packet(std::uint8_t const* const first, std::uint8_t const* const last)
+            : first_{first}, last_{last}
+        {
+        }
+
+        template <class Range>
+        explicit packet(Range const& frame)
+            : first_{std::begin(frame)}, last_{std::end(frame)}
         {
         }
 

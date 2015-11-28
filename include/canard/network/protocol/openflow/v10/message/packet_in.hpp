@@ -3,10 +3,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <algorithm>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 #include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/overwrite.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -23,7 +24,8 @@ namespace messages {
     namespace packet_in_detail {
 
         auto const pkt_in_size
-            = offsetof(v10_detail::ofp_packet_in, pad) + sizeof(v10_detail::ofp_packet_in::pad);
+            = offsetof(v10_detail::ofp_packet_in, pad)
+            + sizeof(v10_detail::ofp_packet_in::pad);
 
         auto packet_in_byte_range(v10_detail::ofp_packet_in& pkt_in)
             -> boost::iterator_range<unsigned char*>
@@ -52,8 +54,41 @@ namespace messages {
     class packet_in
         : public v10_detail::basic_openflow_message<packet_in>
     {
+        struct array_deleter
+        {
+            void operator()(unsigned char* ptr) const
+            {
+                delete [] ptr;
+            }
+        };
+
+        using data_type = std::unique_ptr<unsigned char[], array_deleter>;
+
     public:
         static protocol::ofp_type const message_type = protocol::OFPT_PACKET_IN;
+
+        packet_in(packet_in const& other)
+            : packet_in_(other.packet_in_)
+            , data_{new unsigned char[other.length() - other.frame_length()]}
+        {
+            std::copy(other.data_.get()
+                    , other.data_.get() + other.frame_length()
+                    , data_.get());
+        }
+
+        packet_in(packet_in&&) = default;
+
+        auto operator=(packet_in const& other)
+            -> packet_in&
+        {
+            auto pkt_in = other;
+            packet_in_ = pkt_in.packet_in_;
+            data_.swap(pkt_in.data_);
+            return *this;
+        }
+
+        auto operator=(packet_in&&)
+            -> packet_in& = default;
 
         auto header() const
             -> v10_detail::ofp_header
@@ -86,9 +121,16 @@ namespace messages {
         }
 
         auto frame() const
-            -> std::vector<std::uint8_t>
+            -> boost::iterator_range<unsigned char*>
         {
-            return data_;
+            return boost::make_iterator_range(
+                    data_.get(), data_.get() + frame_length());
+        }
+
+        auto frame_length() const
+            -> std::uint16_t
+        {
+            return length() - packet_in_detail::pkt_in_size;
         }
 
         template <class Container>
@@ -98,7 +140,7 @@ namespace messages {
             auto pkt_in = packet_in_;
             boost::endian::native_to_big_inplace(pkt_in);
             container.push_back(pkt_in, packet_in_detail::pkt_in_size);
-            return container.push_back(data_.data(), data_.size());
+            return container.push_back(data_.get(), frame_length());
         }
 
         template <class Iterator>
@@ -106,12 +148,14 @@ namespace messages {
             -> packet_in
         {
             auto const pkt_in = packet_in_detail::decode_packet_in(first, last);
-            auto data = std::vector<std::uint8_t>(first, last);
+            auto data
+                = data_type{new unsigned char[std::distance(first, last)]};
+            std::copy(first, last, data.get());
             return packet_in{pkt_in, std::move(data)};
         }
 
     private:
-        packet_in(v10_detail::ofp_packet_in const& pkt_in, std::vector<std::uint8_t> data)
+        packet_in(v10_detail::ofp_packet_in const& pkt_in, data_type data)
             : packet_in_(pkt_in)
             , data_(std::move(data))
         {
@@ -125,7 +169,7 @@ namespace messages {
 
     private:
         v10_detail::ofp_packet_in packet_in_;
-        std::vector<std::uint8_t> data_;
+        data_type data_;
     };
 
 } // namespace message
