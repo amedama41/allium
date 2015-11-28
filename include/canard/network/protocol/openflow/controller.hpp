@@ -35,17 +35,13 @@ namespace openflow {
         using options = controller_options<ControllerHandler>;
 
         controller(controller_options<ControllerHandler> const& options)
-            : io_service_{
-                      options.io_service()
-                    ? options.io_service()
-                    : std::make_shared<boost::asio::io_service>()
-              }
-            , acceptor_{*io_service_}
-            , controller_handler_{options.handler()}
-            , io_service_pool_(
+            : io_service_pool_(
                       options.io_service_pool()
                     ? options.io_service_pool()
                     : std::make_shared<utils::io_service_pool>(1))
+            , io_service_{options.io_service()}
+            , acceptor_{get_io_service()}
+            , controller_handler_{options.handler()}
             , address_(options.address())
             , port_(options.port().empty() ? "6653" : options.port())
             , listening_mutex_{}
@@ -57,15 +53,22 @@ namespace openflow {
         {
             listen();
             auto work = utils::io_service_pool::work{*io_service_pool_};
-            io_service_pool_->run(false);
-            io_service_->run();
+            if (io_service_) {
+                io_service_pool_->run(false);
+                io_service_->run();
+            }
+            else {
+                io_service_pool_->run(true);
+            }
         }
 
         void stop()
         {
             std::lock_guard<std::mutex> lock{listening_mutex_};
             if (listening_) {
-                io_service_->stop();
+                if (io_service_) {
+                    io_service_->stop();
+                }
                 io_service_pool_->stop();
             }
         }
@@ -82,6 +85,15 @@ namespace openflow {
         }
 
     private:
+        auto get_io_service()
+            -> boost::asio::io_service&
+        {
+            if (io_service_) {
+                return *io_service_;
+            }
+            return io_service_pool_->get_io_service();
+        }
+
         void async_accept()
         {
             auto socket = std::make_shared<tcp::socket>(
@@ -101,7 +113,7 @@ namespace openflow {
         void start_listening()
         {
             auto ec = boost::system::error_code{};
-            tcp::resolver resolver{*io_service_};
+            tcp::resolver resolver{get_io_service()};
             auto const endpoint_iterator
                 = resolver.resolve({address_, port_}, ec);
             if (ec) {
@@ -184,10 +196,10 @@ namespace openflow {
         }
 
     private:
+        std::shared_ptr<utils::io_service_pool> io_service_pool_;
         std::shared_ptr<boost::asio::io_service> io_service_;
         tcp::acceptor acceptor_;
         ControllerHandler& controller_handler_;
-        std::shared_ptr<utils::io_service_pool> io_service_pool_;
         std::string address_;
         std::string port_;
         std::mutex listening_mutex_;
