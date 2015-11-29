@@ -14,6 +14,7 @@
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/queueing_write_stream.hpp>
 #include <canard/asio/shared_buffer.hpp>
+#include <canard/asio/suppress_asio_async_result_propagation.hpp>
 #include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
 #include <canard/network/protocol/openflow/detail/null_handler.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
@@ -109,7 +110,9 @@ namespace v10 {
             void operator()()
             {
                 channel_->async_write_some(
-                        std::move(buffers_), std::move(handler_));
+                          std::move(buffers_)
+                        , canard::suppress_asio_async_result_propagation(
+                              std::move(handler_)));
             }
 
             std::shared_ptr<secure_channel> channel_;
