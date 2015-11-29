@@ -2,7 +2,6 @@
 #define CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_IMPL_HPP
 
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <tuple>
@@ -17,15 +16,11 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/preprocessor/repeat.hpp>
-#include <boost/range/algorithm_ext/copy_n.hpp>
-#include <boost/range/iterator_range.hpp>
 #include <boost/system/error_code.hpp>
-#include <canard/as_byte_range.hpp>
 #include <canard/asio/detail/bind_handler.hpp>
 #include <canard/network/protocol/openflow/goodbye.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v10/io/enum_to_string.hpp>
 #include <canard/network/protocol/openflow/v10/messages.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel.hpp>

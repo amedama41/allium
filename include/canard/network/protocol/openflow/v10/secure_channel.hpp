@@ -2,22 +2,18 @@
 #define CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_HPP
 
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <utility>
-#include <boost/asio/buffer.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/system/error_code.hpp>
-#include <canard/asio/detail/bind_handler.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/queueing_write_stream.hpp>
 #include <canard/asio/shared_buffer.hpp>
 #include <canard/asio/suppress_asio_async_result_propagation.hpp>
 #include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
 #include <canard/network/protocol/openflow/detail/null_handler.hpp>
-#include <canard/network/protocol/openflow/v10/openflow.hpp>
 #include <canard/type_traits.hpp>
 
 namespace canard {
