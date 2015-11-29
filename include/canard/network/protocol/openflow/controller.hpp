@@ -114,8 +114,8 @@ namespace openflow {
         {
             auto ec = boost::system::error_code{};
             tcp::resolver resolver{get_io_service()};
-            auto const endpoint_iterator
-                = resolver.resolve({address_, port_}, ec);
+            auto const endpoint_iterator = resolver.resolve(
+                    {address_, port_, tcp::resolver::query::passive}, ec);
             if (ec) {
                 std::cout
                     << "resolve(" << address_ << ", " << port_ << ")"
