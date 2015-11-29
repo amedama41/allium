@@ -69,7 +69,7 @@ namespace messages {
 
         packet_in(packet_in const& other)
             : packet_in_(other.packet_in_)
-            , data_{new unsigned char[other.length() - other.frame_length()]}
+            , data_{new unsigned char[other.frame_length()]}
         {
             std::copy(other.data_.get()
                     , other.data_.get() + other.frame_length()
