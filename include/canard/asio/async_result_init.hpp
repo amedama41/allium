@@ -14,7 +14,13 @@ namespace canard {
         using handler_type = typename boost::asio::handler_type<Handler, Signature>::type;
         using result_type = typename boost::asio::async_result<handler_type>::type;
 
-        explicit async_result_init(Handler handler)
+        explicit async_result_init(Handler& handler)
+            : handler_(handler)
+            , result_{handler_}
+        {
+        }
+
+        explicit async_result_init(Handler&& handler)
             : handler_(std::move(handler))
             , result_{handler_}
         {
