@@ -6,6 +6,7 @@
 #include <cstring>
 #include <memory>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/completion_condition.hpp>
@@ -215,6 +216,29 @@ namespace v10 {
                 }
             }
 
+            friend auto asio_handler_allocate(
+                    std::size_t const size, message_loop* const loop)
+                -> void*
+            {
+                auto& storage = loop->channel_->storage_;
+                if (!storage.used && size <= sizeof(storage.memory)) {
+                    storage.used = true;
+                    return std::addressof(storage.memory);
+                }
+                return operator new(size);
+            }
+
+            friend void asio_handler_deallocate(
+                    void* const pointer, std::size_t, message_loop* const loop)
+            {
+                auto& storage = loop->channel_->storage_;
+                if (pointer == std::addressof(storage.memory)) {
+                    storage.used = false;
+                    return;
+                }
+                operator delete(pointer);
+            }
+
             std::shared_ptr<secure_channel_impl> channel_;
             std::shared_ptr<base_type> base_channel_;
         };
@@ -222,6 +246,11 @@ namespace v10 {
     private:
         ControllerHandler& controller_handler_;
         boost::asio::streambuf streambuf_;
+        struct read_handler_storage
+        {
+            typename std::aligned_storage<256>::type memory;
+            bool used = false;
+        } storage_;
     };
 
 } // namespace v10
