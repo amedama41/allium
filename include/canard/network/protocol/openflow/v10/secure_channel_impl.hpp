@@ -187,6 +187,10 @@ namespace v10 {
                 BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
 #               undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
                 case protocol::OFPT_STATS_REPLY:
+                    if (header.length < sizeof(v10_detail::ofp_stats_reply)) {
+                        // TODO needs error handling
+                        break;
+                    }
                     handle_stats_reply(first, last);
                     break;
                 default:
