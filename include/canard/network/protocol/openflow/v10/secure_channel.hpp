@@ -44,6 +44,18 @@ namespace v10 {
         {
         }
 
+        auto get_io_service()
+            -> boost::asio::io_service&
+        {
+            return stream_.get_io_service();
+        }
+
+        auto get_context()
+            -> boost::asio::io_service::strand
+        {
+            return strand_;
+        }
+
         void close()
         {
             auto channel = this->shared_from_this();
