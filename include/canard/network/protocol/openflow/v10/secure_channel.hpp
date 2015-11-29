@@ -67,7 +67,7 @@ namespace v10 {
             auto mutable_buffers = detail::make_buffer_sequence_adaptor(buffers);
             msg.encode(mutable_buffers);
             strand_.dispatch(
-                    make_send_func_in_channel_thread(
+                    make_async_write_functor(
                           this->shared_from_this()
                         , std::move(init.handler())
                         , std::forward<MutableBufferSequence>(buffers)));
@@ -93,7 +93,9 @@ namespace v10 {
 
     protected:
         template <class ConstBufferSequence, class WriteHandler>
-        void async_send(ConstBufferSequence&& buffers, WriteHandler&& handler)
+        auto async_write_some(
+                ConstBufferSequence&& buffers, WriteHandler&& handler)
+            -> typename async_write_result_init<WriteHandler>::result_type
         {
             return stream_.async_write_some(
                       std::forward<ConstBufferSequence>(buffers)
@@ -102,14 +104,12 @@ namespace v10 {
 
     private:
         template <class WriteHandler, class ConstBufferSequence>
-        struct send_in_channel_thread
+        struct async_write_functor
         {
             void operator()()
             {
-                auto const channel = channel_.get();
-                channel->async_send(
-                          std::move(buffers_)
-                        , std::move(handler_));
+                channel_->async_write_some(
+                        std::move(buffers_), std::move(handler_));
             }
 
             std::shared_ptr<secure_channel> channel_;
@@ -118,21 +118,21 @@ namespace v10 {
         };
 
         template <class WriteHandler, class ConstBufferSequence>
-        static auto make_send_func_in_channel_thread(
-                  std::shared_ptr<secure_channel> c
+        static auto make_async_write_functor(
+                  std::shared_ptr<secure_channel>&& c
                 , WriteHandler&& h
-                , ConstBufferSequence&& buf)
-            -> send_in_channel_thread<
+                , ConstBufferSequence&& cb)
+            -> async_write_functor<
                       canard::remove_cv_and_reference_t<WriteHandler>
                     , canard::remove_cv_and_reference_t<ConstBufferSequence>
                >
         {
-            return send_in_channel_thread<
+            return async_write_functor<
                   canard::remove_cv_and_reference_t<WriteHandler>
                 , canard::remove_cv_and_reference_t<ConstBufferSequence>
             >{
                   std::move(c), std::forward<WriteHandler>(h)
-                , std::forward<ConstBufferSequence>(buf)
+                , std::forward<ConstBufferSequence>(cb)
             };
         }
 

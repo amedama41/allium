@@ -157,22 +157,20 @@ namespace v10 {
                     , unsigned char const* first
                     , unsigned char const* const last)
             {
-                // std::cout
-                //     << "version: " << std::uint16_t{header.version} << "\n"
-                //     << "type:    " << v10::to_string(protocol::ofp_type(header.type)) << "\n"
-                //     << "length:  " << header.length << "\n"
-                //     << "xid:     " << header.xid << "\n"
-                //     << std::endl;
                 switch (header.type) {
 #               define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
-                using msg ## N = std::tuple_element<N, default_switch_message_list>::type; \
+                using msg ## N \
+                    = std::tuple_element<N, default_switch_message_list>::type; \
                 case msg ## N::message_type: \
-                    channel_->handle(base_channel_, msg ## N::decode(first, last)); \
+                    channel_->handle( \
+                            base_channel_, msg ## N::decode(first, last)); \
                     break;
                 static_assert(
-                          std::tuple_size<default_switch_message_list>::value == 10
-                        , "");
-                BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
+                          std::tuple_size<default_switch_message_list>::value
+                          == 10
+                        , "not match to the number of message types");
+                BOOST_PP_REPEAT(
+                        10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
 #               undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
                 case protocol::OFPT_STATS_REPLY:
                     if (header.length < sizeof(v10_detail::ofp_stats_reply)) {
@@ -195,14 +193,17 @@ namespace v10 {
                 >(first);
                 switch (stats_reply.type) {
 #               define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
-                using msg ## N = std::tuple_element<N, default_stats_reply_list>::type; \
+                using msg ## N \
+                    = std::tuple_element<N, default_stats_reply_list>::type; \
                 case msg ## N::stats_type_value: \
-                    channel_->handle(base_channel_, msg ## N::decode(first, last)); \
+                    channel_->handle( \
+                            base_channel_, msg ## N::decode(first, last)); \
                     break;
                 static_assert(
                           std::tuple_size<default_stats_reply_list>::value == 6
-                        , "");
-                BOOST_PP_REPEAT(6, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
+                        , "not match to the number of stats reply types");
+                BOOST_PP_REPEAT(
+                        6, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
 #               undef  CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE
                 default:
                     break;
