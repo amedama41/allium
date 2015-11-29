@@ -39,26 +39,12 @@ namespace v10 {
 
     namespace secure_channel_detail {
 
-        auto read_ofp_header(boost::asio::streambuf& streambuf)
-            -> v10_detail::ofp_header
-        {
-            auto header = v10_detail::ofp_header{};
-            std::memcpy(&header
-                      , boost::asio::buffer_cast<std::uint8_t const*>(
-                          streambuf.data()), sizeof(header));
-            boost::endian::big_to_native_inplace(header);
-            return header;
-        }
-
-        template <class Data, class Iterator>
-        auto read(Iterator first, Iterator last)
+        template <class Data>
+        auto read(unsigned char const* const src)
             -> Data
         {
             auto data = Data{};
-            boost::copy_n(
-                      boost::make_iterator_range(first, last)
-                    , sizeof(data)
-                    , canard::as_byte_range(data).begin());
+            std::memcpy(&data, src, sizeof(data));
             boost::endian::big_to_native_inplace(data);
             return data;
         }
@@ -147,15 +133,17 @@ namespace v10 {
             -> std::size_t
             {
                 while (streambuf.size() >= sizeof(v10_detail::ofp_header)) {
-                    auto const header
-                        = secure_channel_detail::read_ofp_header(streambuf);
+                    auto first = boost::asio::buffer_cast<
+                        unsigned char const*
+                    >(streambuf.data());
+
+                    auto const header = secure_channel_detail::read<
+                        v10_detail::ofp_header
+                    >(first);
                     if (streambuf.size() < header.length) {
                         return header.length - streambuf.size();
                     }
 
-                    auto first = boost::asio::buffer_cast<
-                        unsigned char const*
-                    >(streambuf.data());
                     auto const last = std::next(first, header.length);
                     handle_message(header, first, last);
 
@@ -203,7 +191,7 @@ namespace v10 {
             {
                 auto const stats_reply = secure_channel_detail::read<
                     v10_detail::ofp_stats_reply
-                >(first, last);
+                >(first);
                 switch (stats_reply.type) {
 #               define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
                 using msg ## N = std::tuple_element<N, default_stats_reply_list>::type; \
