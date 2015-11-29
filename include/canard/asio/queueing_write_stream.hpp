@@ -521,20 +521,6 @@ public:
         return stream_.lowest_layer();
     }
 
-    template <class CompletionHandler>
-    auto invoke(CompletionHandler&& handler)
-        -> typename completion_result_init<CompletionHandler>::result_type
-    {
-        completion_result_init<CompletionHandler> init{
-            std::forward<CompletionHandler>(handler)
-        };
-        using boost::asio::asio_handler_invoke;
-        asio_handler_invoke(
-                  std::move(init.handler())
-                , static_cast<typename context_helper::type*>(impl_.get()));
-        return init.get();
-    }
-
     template <class MutableBufferSequence, class ReadHandler>
     auto async_read_some(MutableBufferSequence&& buffers, ReadHandler&& handler)
         -> typename read_result_init<ReadHandler>::result_type
