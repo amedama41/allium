@@ -152,10 +152,10 @@ namespace v10 {
                 return sizeof(v10_detail::ofp_header) - streambuf.size();
             }
 
-            template <class Iterator>
             void handle_message(
                       v10_detail::ofp_header const& header
-                    , Iterator first, Iterator last)
+                    , unsigned char const* first
+                    , unsigned char const* const last)
             {
                 // std::cout
                 //     << "version: " << std::uint16_t{header.version} << "\n"
@@ -186,8 +186,9 @@ namespace v10 {
                 }
             }
 
-            template <class Iterator>
-            void handle_stats_reply(Iterator first, Iterator last)
+            void handle_stats_reply(
+                      unsigned char const* first
+                    , unsigned char const* const last)
             {
                 auto const stats_reply = secure_channel_detail::read<
                     v10_detail::ofp_stats_reply
