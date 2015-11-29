@@ -38,14 +38,15 @@ namespace v10 {
         secure_channel(
                   Socket socket
                 , boost::asio::io_service::strand strand)
-            : stream_{std::move(socket), std::move(strand)}
+            : stream_{std::move(socket), strand}
+            , strand_{std::move(strand)}
         {
         }
 
         void close()
         {
             auto channel = this->shared_from_this();
-            stream_.invoke([channel]{
+            strand_.dispatch([channel]{
                 if (channel->stream_.lowest_layer().is_open()) {
                     auto ignore = boost::system::error_code{};
                     channel->stream_.lowest_layer().close(ignore);
@@ -65,7 +66,7 @@ namespace v10 {
 
             auto mutable_buffers = detail::make_buffer_sequence_adaptor(buffers);
             msg.encode(mutable_buffers);
-            stream_.invoke(
+            strand_.dispatch(
                     make_send_func_in_channel_thread(
                           this->shared_from_this()
                         , std::move(init.handler())
@@ -139,6 +140,7 @@ namespace v10 {
         canard::queueing_write_stream<
             Socket, boost::asio::io_service::strand
         > stream_;
+        boost::asio::io_service::strand strand_;
     };
 
 } // namespace v10

@@ -78,9 +78,8 @@ namespace v10 {
                   Socket socket
                 , boost::asio::io_service::strand strand
                 , ControllerHandler& controller_handler)
-            : base_type{std::move(socket), strand}
+            : base_type{std::move(socket), std::move(strand)}
             , controller_handler_(controller_handler)
-            , strand_{std::move(strand)}
         {
         }
 
@@ -115,7 +114,7 @@ namespace v10 {
             {
                 auto const channel = channel_.get();
                 auto const least_size = sizeof(v10_detail::ofp_header);
-                channel->stream_.invoke(
+                channel->strand_.dispatch(
                         canard::detail::bind(std::move(*this), least_size));
             }
 
@@ -222,7 +221,6 @@ namespace v10 {
 
     private:
         ControllerHandler& controller_handler_;
-        boost::asio::io_service::strand strand_;
         boost::asio::streambuf streambuf_;
     };
 
