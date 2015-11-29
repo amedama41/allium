@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <iterator>
 #include <memory>
 #include <tuple>
 #include <type_traits>
