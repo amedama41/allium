@@ -1,8 +1,8 @@
 #ifndef CANARD_NETWORK_OPENFLOW_DECODE_HPP
 #define CANARD_NETWORK_OPENFLOW_DECODE_HPP
 
+#include <cstddef>
 #include <iterator>
-#include <type_traits>
 #include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/overwrite.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -15,14 +15,15 @@ namespace openflow {
     namespace detail {
 
         template <class T, class Iterator>
-        auto decode(Iterator& first, Iterator last)
+        auto decode(Iterator& first, Iterator last
+                  , std::size_t const size = sizeof(T))
             -> T
         {
             auto value = T{};
             boost::overwrite(
-                      boost::make_iterator_range(first, std::next(first, sizeof(value)))
+                      boost::make_iterator_range_n(first, size)
                     , canard::as_byte_range(value));
-            std::advance(first, sizeof(value));
+            std::advance(first, size);
             boost::endian::big_to_native_inplace(value);
             return value;
         }

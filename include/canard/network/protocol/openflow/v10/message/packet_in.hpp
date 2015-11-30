@@ -27,28 +27,6 @@ namespace messages {
             = offsetof(v10_detail::ofp_packet_in, pad)
             + sizeof(v10_detail::ofp_packet_in::pad);
 
-        auto packet_in_byte_range(v10_detail::ofp_packet_in& pkt_in)
-            -> boost::iterator_range<unsigned char*>
-        {
-            return boost::make_iterator_range(
-                      reinterpret_cast<unsigned char*>(&pkt_in)
-                    , reinterpret_cast<unsigned char*>(&pkt_in) + pkt_in_size);
-        }
-
-        template <class Iterator>
-        auto decode_packet_in(Iterator& first, Iterator last)
-            -> v10_detail::ofp_packet_in
-        {
-            auto pkt_in = v10_detail::ofp_packet_in{};
-            auto const pkt_in_last = std::next(first, pkt_in_size);
-            boost::overwrite(
-                      boost::make_iterator_range(first, pkt_in_last)
-                    , packet_in_byte_range(pkt_in));
-            first = pkt_in_last;
-            boost::endian::big_to_native_inplace(pkt_in);
-            return pkt_in;
-        }
-
     } // namespace packet_in_detail
 
     class packet_in
@@ -137,19 +115,21 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            auto pkt_in = packet_in_;
-            boost::endian::native_to_big_inplace(pkt_in);
-            container.push_back(pkt_in, packet_in_detail::pkt_in_size);
-            return container.push_back(data_.get(), frame_length());
+            detail::encode(
+                    container, packet_in_, packet_in_detail::pkt_in_size);
+            return detail::encode_byte_array(
+                    container, data_.get(), frame_length());
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> packet_in
         {
-            auto const pkt_in = packet_in_detail::decode_packet_in(first, last);
-            auto data
-                = data_type{new unsigned char[std::distance(first, last)]};
+            auto const pkt_in = detail::decode<v10_detail::ofp_packet_in>(
+                    first, last, packet_in_detail::pkt_in_size);
+            auto data = data_type{
+                new unsigned char[std::distance(first, last)]
+            };
             std::copy(first, last, data.get());
             return packet_in{pkt_in, std::move(data)};
         }

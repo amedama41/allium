@@ -10,10 +10,10 @@
 #include <boost/system/error_code.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/queueing_write_stream.hpp>
-#include <canard/asio/shared_buffer.hpp>
 #include <canard/asio/suppress_asio_async_result_propagation.hpp>
-#include <canard/network/protocol/openflow/detail/buffer_sequence_adaptor.hpp>
 #include <canard/network/protocol/openflow/detail/null_handler.hpp>
+#include <canard/network/protocol/openflow/shared_buffer_generator.hpp>
+#include <canard/network/protocol/openflow/with_buffer.hpp>
 #include <canard/type_traits.hpp>
 
 namespace canard {
@@ -63,41 +63,36 @@ namespace v10 {
             });
         }
 
-        template <class Message, class WriteHandler, class MutableBufferSequence>
-        auto send(Message const& msg
-                , WriteHandler&& handler
-                , MutableBufferSequence&& buffers)
+        template <class Message, class Buffer, class WriteHandler>
+        auto async_send(
+                  detail::message_with_buffer<Message, Buffer> const& msg
+                , WriteHandler&& handler)
             -> typename async_write_result_init<WriteHandler>::result_type
         {
             async_write_result_init<WriteHandler> init{
                 std::forward<WriteHandler>(handler)
             };
-
-            auto mutable_buffers = detail::make_buffer_sequence_adaptor(buffers);
-            msg.encode(mutable_buffers);
             strand_.dispatch(
                     make_async_write_functor(
                           this->shared_from_this()
                         , std::move(init.handler())
-                        , std::forward<MutableBufferSequence>(buffers)));
+                        , msg.encode()));
             return init.get();
         }
 
         template <class Message, class WriteHandler>
-        auto send(Message const& msg, WriteHandler&& handler)
+        auto async_send(Message const& msg, WriteHandler&& handler)
             -> typename async_write_result_init<WriteHandler>::result_type
         {
-            auto buffer = canard::shared_buffer{msg.length()};
-            return send(msg
-                      , std::forward<WriteHandler>(handler)
-                      , std::move(buffer));
+            return async_send(with_buffer(msg, shared_buffer_generator{})
+                      , std::forward<WriteHandler>(handler));
         }
 
         template <class Message>
-        auto send(Message const& msg)
+        auto async_send(Message const& msg)
             -> typename async_write_result_init<detail::null_handler>::result_type
         {
-            return send(msg, detail::null_handler{});
+            return async_send(msg, detail::null_handler{});
         }
 
     protected:

@@ -76,6 +76,12 @@ namespace canard {
             return const_iterator{this + 1};
         }
 
+        auto data() noexcept
+            -> unsigned char*
+        {
+            return data_.get();
+        }
+
         auto size() const noexcept
             -> std::size_t
         {

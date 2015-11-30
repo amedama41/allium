@@ -117,7 +117,8 @@ namespace messages {
         {
             detail::encode(container, packet_out_);
             actions_.encode(container);
-            return container.push_back(data_.data(), data_.size());
+            return detail::encode_byte_array(
+                    container, data_.data(), data_.size());
         }
 
         template <class Iterator>

@@ -59,7 +59,8 @@ namespace messages {
             -> Container&
         {
             detail::encode(container, error_);
-            return container.push_back(data_.data(), data_.size());
+            return detail::encode_byte_array(
+                    container, data_.data(), data_.size());
         }
 
         template <class Iterator>
