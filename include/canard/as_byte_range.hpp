@@ -1,41 +1,38 @@
 #ifndef CANARD_AS_BYTE_RANGE_HPP
 #define CANARD_AS_BYTE_RANGE_HPP
 
+#include <memory>
+#include <type_traits>
 #include <boost/range/iterator_range.hpp>
 
 namespace canard {
 
     namespace byte_range_detail {
 
-        template <class CharT>
-        class byte_range
-            : public boost::iterator_range<CharT*>
+        template <
+              class T
+            , class = typename std::enable_if<
+                            std::is_standard_layout<T>::value>::type
+        >
+        auto as_byte_range(T& t, std::size_t const size = sizeof(T))
+            -> boost::iterator_range<unsigned char*>
         {
-        public:
-            byte_range(CharT* first, CharT* last)
-                : boost::iterator_range<CharT*>{first, last}
-            {
-            }
-        };
-
-        template <class T, typename std::enable_if<std::is_trivially_copyable<T>::value>::type* = nullptr>
-        auto as_byte_range(T& t)
-            -> byte_range<char>
-        {
-            return {
-                  reinterpret_cast<char*>(&t)
-                , reinterpret_cast<char*>(&t) + sizeof(t)
-            };
+            return boost::make_iterator_range_n(
+                      reinterpret_cast<unsigned char*>(std::addressof(t))
+                    , size);
         }
 
-        template <class T, typename std::enable_if<std::is_trivially_copyable<T>::value>::type* = nullptr>
-        auto as_byte_range(T const& t)
-            -> byte_range<const char>
+        template <
+              class T
+            , class = typename std::enable_if<
+                            std::is_standard_layout<T>::value>::type
+        >
+        auto as_byte_range(T const& t, std::size_t const size = sizeof(T))
+            -> boost::iterator_range<unsigned char const*>
         {
-            return {
-                  reinterpret_cast<char const*>(&t)
-                , reinterpret_cast<char const*>(&t) + sizeof(t)
-            };
+            return boost::make_iterator_range_n(
+                    reinterpret_cast<unsigned char const*>(std::addressof(t))
+                  , size);
         }
 
     } // namespace byte_range_detail
