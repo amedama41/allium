@@ -12,26 +12,28 @@ namespace canard {
         template <
               class T
             , class = typename std::enable_if<
-                            std::is_standard_layout<T>::value>::type
+                            std::is_trivially_copyable<T>::value>::type
         >
         auto as_byte_range(T& t, std::size_t const size = sizeof(T))
             -> boost::iterator_range<unsigned char*>
         {
             return boost::make_iterator_range_n(
-                      reinterpret_cast<unsigned char*>(std::addressof(t))
+                      static_cast<unsigned char*>(
+                          static_cast<void*>(std::addressof(t)))
                     , size);
         }
 
         template <
               class T
             , class = typename std::enable_if<
-                            std::is_standard_layout<T>::value>::type
+                            std::is_trivially_copyable<T>::value>::type
         >
         auto as_byte_range(T const& t, std::size_t const size = sizeof(T))
             -> boost::iterator_range<unsigned char const*>
         {
             return boost::make_iterator_range_n(
-                    reinterpret_cast<unsigned char const*>(std::addressof(t))
+                    static_cast<unsigned char const*>(
+                        static_cast<void const*>(std::addressof(t)))
                   , size);
         }
 
