@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <memory>
 #include <utility>
+#include <boost/asio/handler_alloc_hook.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
@@ -116,6 +117,24 @@ namespace v10 {
                           std::move(buffers_)
                         , canard::suppress_asio_async_result_propagation(
                               std::move(handler_)));
+            }
+
+            friend auto asio_handler_allocate(
+                    std::size_t const size, async_write_functor* const func)
+                -> void*
+            {
+                using boost::asio::asio_handler_allocate;
+                return asio_handler_allocate(
+                        size, std::addressof(func->handler_));
+            }
+
+            friend void asio_handler_deallocate(
+                    void* const pointer, std::size_t const size
+                    , async_write_functor* const func)
+            {
+                using boost::asio::asio_handler_deallocate;
+                asio_handler_deallocate(
+                        pointer, size, std::addressof(func->handler_));
             }
 
             std::shared_ptr<secure_channel> channel_;
