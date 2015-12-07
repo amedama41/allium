@@ -55,7 +55,7 @@ namespace v13 {
         auto length() const
             -> std::uint16_t
         {
-            return detail::exact_length(sizeof(v13_detail::ofp_flow_stats)
+            return v13_detail::exact_length(sizeof(v13_detail::ofp_flow_stats)
                     + entry().match().length() + entry().instructions().length());
         }
 
@@ -63,7 +63,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, v13_detail::ofp_flow_stats{
+            v13_detail::encode(container, v13_detail::ofp_flow_stats{
                       length()
                     , table_id_
                     , 0
@@ -86,7 +86,7 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_stats
         {
-            auto const stats = detail::decode<v13_detail::ofp_flow_stats>(first, last);
+            auto const stats = v13_detail::decode<v13_detail::ofp_flow_stats>(first, last);
             last = std::next(first, stats.length - sizeof(v13_detail::ofp_flow_stats));
             auto match = oxm_match::decode(first, last);
             auto instructions = instruction_set::decode(first, last);
@@ -130,7 +130,7 @@ namespace messages {
 
         explicit flow_stats_request(oxm_match match)
             : basic_multipart_request{
-                  detail::exact_length(sizeof(v13_detail::ofp_flow_stats_request) + match.length())
+                  v13_detail::exact_length(sizeof(v13_detail::ofp_flow_stats_request) + match.length())
                 , 0
               }
             , flow_stats_request_{
@@ -149,7 +149,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_request::encode(container);
-            detail::encode(container, flow_stats_request_);
+            v13_detail::encode(container, flow_stats_request_);
             return match_.encode(container);
         }
 
@@ -158,7 +158,7 @@ namespace messages {
             -> flow_stats_request
         {
             auto const request = basic_multipart_request::decode(first, last);
-            auto const stats_reqeust = detail::decode<v13_detail::ofp_flow_stats_request>(first, last);
+            auto const stats_reqeust = v13_detail::decode<v13_detail::ofp_flow_stats_request>(first, last);
             auto match = oxm_match::decode(first, last);
             return flow_stats_request{request, stats_reqeust, std::move(match)};
         }

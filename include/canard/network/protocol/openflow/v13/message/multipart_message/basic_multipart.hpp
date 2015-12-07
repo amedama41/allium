@@ -75,14 +75,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, request_);
+                return v13_detail::encode(container, request_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> v13_detail::ofp_multipart_request
             {
-                return detail::decode<v13_detail::ofp_multipart_request>(first, last);
+                return v13_detail::decode<v13_detail::ofp_multipart_request>(first, last);
             }
 
         protected:
@@ -146,14 +146,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, reply_);
+                return v13_detail::encode(container, reply_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> v13_detail::ofp_multipart_reply
             {
-                return detail::decode<v13_detail::ofp_multipart_reply>(first, last);
+                return v13_detail::decode<v13_detail::ofp_multipart_reply>(first, last);
             }
 
         protected:

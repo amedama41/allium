@@ -9,7 +9,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class Unsigned = std::uint32_t>
         class transaction_id_assignor
@@ -28,7 +28,7 @@ namespace v13 {
         template <class Unsigned>
         std::atomic<Unsigned> transaction_id_assignor<Unsigned>::xid{0};
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

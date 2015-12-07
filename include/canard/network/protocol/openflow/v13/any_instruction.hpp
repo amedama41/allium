@@ -8,6 +8,7 @@
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -71,7 +72,7 @@ namespace v13 {
         friend auto instruction_order(any_instruction const& instruction)
             -> std::uint64_t
         {
-            auto visitor = detail::instruction_order_visitor{};
+            auto visitor = v13_detail::instruction_order_visitor{};
             return boost::apply_visitor(visitor, instruction.variant_);
         }
 

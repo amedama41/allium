@@ -14,7 +14,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class T>
         void decode_impl(T& value, std::true_type)
@@ -40,7 +40,7 @@ namespace v13 {
             return value;
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

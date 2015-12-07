@@ -8,7 +8,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class To>
         struct construct
@@ -21,7 +21,7 @@ namespace v13 {
             }
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

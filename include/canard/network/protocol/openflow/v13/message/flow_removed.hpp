@@ -35,7 +35,7 @@ namespace messages {
             : flow_removed_{
                   v13_detail::ofp_header{
                       protocol::OFP_VERSION, message_type
-                    , detail::exact_length(sizeof(v13_detail::ofp_flow_removed) + entry.match().length())
+                    , v13_detail::exact_length(sizeof(v13_detail::ofp_flow_removed) + entry.match().length())
                     , get_xid()
                   }
                 , entry.cookie()
@@ -109,7 +109,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, flow_removed_);
+            v13_detail::encode(container, flow_removed_);
             return match_.encode(container);
         }
 
@@ -118,7 +118,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_removed
         {
-            auto const flow_rm = detail::decode<v13_detail::ofp_flow_removed>(first, last);
+            auto const flow_rm = v13_detail::decode<v13_detail::ofp_flow_removed>(first, last);
             if (std::distance(first, last) != flow_rm.header.length - sizeof(v13_detail::ofp_flow_removed)) {
                 throw 2;
             }

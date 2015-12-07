@@ -47,14 +47,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, pop_mpls_);
+                return v13_detail::encode(container, pop_mpls_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> pop_mpls
             {
-                auto const action_pop_mpls = detail::decode<v13_detail::ofp_action_pop_mpls>(first, last);
+                auto const action_pop_mpls = v13_detail::decode<v13_detail::ofp_action_pop_mpls>(first, last);
                 if (action_pop_mpls.type != action_type) {
                     throw 1;
                 }

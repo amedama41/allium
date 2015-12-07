@@ -42,14 +42,14 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    return detail::encode(container, header_);
+                    return v13_detail::encode(container, header_);
                 }
 
                 template <class Iterator>
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const header = detail::decode<v13_detail::ofp_action_header>(first, last);
+                    auto const header = v13_detail::decode<v13_detail::ofp_action_header>(first, last);
                     if (header.type != T::action_type) {
                         throw 1;
                     }

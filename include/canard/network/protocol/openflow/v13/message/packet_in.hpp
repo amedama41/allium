@@ -84,7 +84,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, packet_in_);
+            v13_detail::encode(container, packet_in_);
             match_.encode(container);
             return frame_.empty()
                 ? container
@@ -95,7 +95,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> packet_in
         {
-            auto const pkt_in = detail::decode<v13_detail::ofp_packet_in>(first, last);
+            auto const pkt_in = v13_detail::decode<v13_detail::ofp_packet_in>(first, last);
             if (std::distance(first, last) != pkt_in.header.length - sizeof(v13_detail::ofp_packet_in)) {
                 throw 2;
             }

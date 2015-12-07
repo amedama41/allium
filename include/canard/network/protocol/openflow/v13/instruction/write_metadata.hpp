@@ -61,14 +61,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, write_metadata_);
+                return v13_detail::encode(container, write_metadata_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> write_metadata
             {
-                auto const instruction_write_metadata = detail::decode<v13_detail::ofp_instruction_write_metadata>(first, last);
+                auto const instruction_write_metadata = v13_detail::decode<v13_detail::ofp_instruction_write_metadata>(first, last);
                 if (instruction_write_metadata.type != instruction_type) {
                     throw 1;
                 }

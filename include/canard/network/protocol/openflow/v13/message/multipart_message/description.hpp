@@ -84,7 +84,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_reply::encode(container);
-            return detail::encode(container, desc_);
+            return v13_detail::encode(container, desc_);
         }
 
         template <class Iterator>
@@ -99,7 +99,7 @@ namespace messages {
                 throw 2;
             }
 
-            auto desc = detail::decode<v13_detail::ofp_desc>(first, last);
+            auto desc = v13_detail::decode<v13_detail::ofp_desc>(first, last);
 
             return description_reply{reply, desc};
         }

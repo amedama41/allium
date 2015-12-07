@@ -41,14 +41,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, header_);
+            return v13_detail::encode(container, header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> features_request
         {
-            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
+            auto const header = v13_detail::decode<v13_detail::ofp_header>(first, last);
             if (header.length != sizeof(v13_detail::ofp_header) || std::distance(first, last) == 0) {
                 throw 2;
             }
@@ -126,14 +126,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, switch_features_);
+            return v13_detail::encode(container, switch_features_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> features_reply
         {
-            auto const switch_features = detail::decode<v13_detail::ofp_switch_features>(first, last);
+            auto const switch_features = v13_detail::decode<v13_detail::ofp_switch_features>(first, last);
             if (switch_features.header.length != sizeof(v13_detail::ofp_switch_features) || std::distance(first, last) != 0) {
                 throw 2;
             }

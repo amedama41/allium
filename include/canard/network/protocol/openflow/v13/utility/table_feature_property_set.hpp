@@ -9,7 +9,8 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
 #include <boost/variant/apply_visitor.hpp>
-#include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
+#include <canard/network/protocol/openflow/detail/add_helper.hpp>
+#include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/table_feature_property.hpp>
 
@@ -54,7 +55,7 @@ namespace v13 {
         {
             using boost::adaptors::transformed;
             return boost::accumulate(*this | transformed([](const_reference prop) {
-                    auto const visitor = detail::calculating_exact_length_visitor{};
+                    auto const visitor = v13_detail::calculating_exact_length_visitor{};
                     return boost::apply_visitor(visitor, prop);
             }), std::uint16_t{0});
         }

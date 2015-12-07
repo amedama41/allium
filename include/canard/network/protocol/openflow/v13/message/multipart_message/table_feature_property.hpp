@@ -103,18 +103,18 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, v13_detail::ofp_table_feature_prop_instructions{std::uint16_t(type()), length()});
+                    v13_detail::encode(container, v13_detail::ofp_table_feature_prop_instructions{std::uint16_t(type()), length()});
                     boost::for_each(instruction_ids_, [&](any_instruction_id const& id) {
                         id.encode(container);
                     });
-                    return boost::push_back(container, canard::make_constant_range(detail::padding_length(length()), 0));
+                    return boost::push_back(container, canard::make_constant_range(v13_detail::padding_length(length()), 0));
                 }
 
                 template <class Iterator>
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_instructions = detail::decode<v13_detail::ofp_table_feature_prop_instructions>(first, last);
+                    auto const prop_instructions = v13_detail::decode<v13_detail::ofp_table_feature_prop_instructions>(first, last);
                     if (std::distance(first, last) < prop_instructions.length - sizeof(v13_detail::ofp_table_feature_prop_instructions)) {
                         throw 2;
                     }
@@ -124,7 +124,7 @@ namespace v13 {
                     while (first != last) {
                         instruction_ids.push_back(any_instruction_id::decode(first, last));
                     }
-                    std::advance(first, detail::padding_length(prop_instructions.length));
+                    std::advance(first, v13_detail::padding_length(prop_instructions.length));
                     return T{std::move(instruction_ids)};
                 }
 
@@ -198,23 +198,23 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, v13_detail::ofp_table_feature_prop_next_tables{std::uint16_t(type()), length()});
+                    v13_detail::encode(container, v13_detail::ofp_table_feature_prop_next_tables{std::uint16_t(type()), length()});
                     boost::push_back(container, table_ids_);
-                    return boost::push_back(container, canard::make_constant_range(detail::padding_length(length()), 0));
+                    return boost::push_back(container, canard::make_constant_range(v13_detail::padding_length(length()), 0));
                 }
 
                 template <class Iterator>
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_next_tables = detail::decode<v13_detail::ofp_table_feature_prop_next_tables>(first, last);
+                    auto const prop_next_tables = v13_detail::decode<v13_detail::ofp_table_feature_prop_next_tables>(first, last);
                     if (std::distance(first, last) < prop_next_tables.length - sizeof(v13_detail::ofp_table_feature_prop_next_tables)) {
                         throw 2;
                     }
                     last = std::next(first, prop_next_tables.length - sizeof(v13_detail::ofp_table_feature_prop_next_tables));
                     auto table_ids = table_id_list(first, last);
                     std::advance(first, table_ids.size());
-                    std::advance(first, detail::padding_length(prop_next_tables.length));
+                    std::advance(first, v13_detail::padding_length(prop_next_tables.length));
                     return T{std::move(table_ids)};
                 }
 
@@ -291,18 +291,18 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, v13_detail::ofp_table_feature_prop_actions{std::uint16_t(type()), length()});
+                    v13_detail::encode(container, v13_detail::ofp_table_feature_prop_actions{std::uint16_t(type()), length()});
                     boost::for_each(action_ids_, [&](any_action_id const& id) {
                         id.encode(container);
                     });
-                    return boost::push_back(container, canard::make_constant_range(detail::padding_length(length()), 0));
+                    return boost::push_back(container, canard::make_constant_range(v13_detail::padding_length(length()), 0));
                 }
 
                 template <class Iterator>
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_actions = detail::decode<v13_detail::ofp_table_feature_prop_actions>(first, last);
+                    auto const prop_actions = v13_detail::decode<v13_detail::ofp_table_feature_prop_actions>(first, last);
                     if (std::distance(first, last) < prop_actions.length - sizeof(v13_detail::ofp_table_feature_prop_actions)) {
                         throw 2;
                     }
@@ -312,7 +312,7 @@ namespace v13 {
                     while (first != last) {
                         action_ids.push_back(any_action_id::decode(first, last));
                     }
-                    std::advance(first, detail::padding_length(prop_actions.length));
+                    std::advance(first, v13_detail::padding_length(prop_actions.length));
                     return T{std::move(action_ids)};
                 }
 
@@ -389,18 +389,18 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    detail::encode(container, v13_detail::ofp_table_feature_prop_oxm{std::uint16_t(type()), length()});
+                    v13_detail::encode(container, v13_detail::ofp_table_feature_prop_oxm{std::uint16_t(type()), length()});
                     boost::for_each(oxm_ids_, [&](any_oxm_id const& id) {
                         id.encode(container);
                     });
-                    return boost::push_back(container, canard::make_constant_range(detail::padding_length(length()), 0));
+                    return boost::push_back(container, canard::make_constant_range(v13_detail::padding_length(length()), 0));
                 }
 
                 template <class Iterator>
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const prop_oxm = detail::decode<v13_detail::ofp_table_feature_prop_oxm>(first, last);
+                    auto const prop_oxm = v13_detail::decode<v13_detail::ofp_table_feature_prop_oxm>(first, last);
                     if (std::distance(first, last) < prop_oxm.length - sizeof(v13_detail::ofp_table_feature_prop_oxm)) {
                         throw 2;
                     }
@@ -410,7 +410,7 @@ namespace v13 {
                     while (first != last) {
                         oxm_ids.push_back(any_oxm_id::decode(first, last));
                     }
-                    std::advance(first, detail::padding_length(prop_oxm.length));
+                    std::advance(first, v13_detail::padding_length(prop_oxm.length));
                     return T{std::move(oxm_ids)};
                 }
 
@@ -699,7 +699,7 @@ namespace v13 {
             -> ReturnType
         {
             auto copy_first = first;
-            auto const header = detail::decode<v13_detail::ofp_table_feature_prop_header>(copy_first, last);
+            auto const header = v13_detail::decode<v13_detail::ofp_table_feature_prop_header>(copy_first, last);
             switch (header.type) {
 #           define CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_DECODE_CASE(z, N, _) \
             case std::tuple_element<N, property_list>::type::prop_type: \
@@ -709,7 +709,7 @@ namespace v13 {
 #           undef  CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_DECODE_CASE
             default:
                 // TODO
-                std::advance(first, detail::exact_length(header.length));
+                std::advance(first, v13_detail::exact_length(header.length));
                 throw std::runtime_error{(boost::format{"%1%: prop_type(%2%) is unknwon"} % __func__ % header.type).str()};
             }
         }

@@ -81,7 +81,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, mod_add_);
+            v13_detail::encode(container, mod_add_);
             entry_.match().encode(container);
             return entry_.instructions().encode(container);
         }
@@ -90,7 +90,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_add
         {
-            auto const mod_add = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_add = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_add.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -116,7 +116,7 @@ namespace messages {
             -> std::uint16_t
         {
             return std::uint16_t{sizeof(v13_detail::ofp_flow_mod)}
-                + detail::exact_length(entry.match().length()) + entry.instructions().length();
+                + v13_detail::exact_length(entry.match().length()) + entry.instructions().length();
         }
 
     private:
@@ -145,7 +145,7 @@ namespace messages {
                   v13_detail::ofp_header{
                       protocol::OFP_VERSION
                     , message_type
-                    , detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length() + instructions.length())
+                    , v13_detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length() + instructions.length())
                     , get_xid()
                   }
                 , cookie, cookie_mask
@@ -173,7 +173,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, mod_modify_);
+            v13_detail::encode(container, mod_modify_);
             match_.encode(container);
             return instructions_.encode(container);
         }
@@ -182,7 +182,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_modify_strict
         {
-            auto const mod_modify = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_modify = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_modify.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -258,7 +258,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, mod_modify_);
+            v13_detail::encode(container, mod_modify_);
             match_.encode(container);
             return instructions_.encode(container);
         }
@@ -267,7 +267,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_modify
         {
-            auto const mod_modify = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_modify = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_modify.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -289,7 +289,7 @@ namespace messages {
             -> std::uint16_t
         {
             return std::uint16_t{sizeof(v13_detail::ofp_flow_mod)}
-                + detail::exact_length(match.length()) + instructions.length();
+                + v13_detail::exact_length(match.length()) + instructions.length();
         }
 
     private:
@@ -328,7 +328,7 @@ namespace messages {
             : mod_delete_{
                   v13_detail::ofp_header{
                         protocol::OFP_VERSION, message_type
-                      , detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length())
+                      , v13_detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + entry_id.match_.length())
                       , get_xid()
                   }
                 , cookie, cookie_mask
@@ -357,7 +357,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, mod_delete_);
+            v13_detail::encode(container, mod_delete_);
             return match_.encode(container);
         }
 
@@ -365,7 +365,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_delete_strict
         {
-            auto const mod_delete = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_delete = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_delete.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -407,7 +407,7 @@ namespace messages {
             : mod_delete_{
                   v13_detail::ofp_header{
                       protocol::OFP_VERSION, message_type
-                    , detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + match.length())
+                    , v13_detail::exact_length(sizeof(v13_detail::ofp_flow_mod) + match.length())
                     , get_xid()
                   }
                 , 0, 0, table_id, command_type, 0, 0, 0, 0, out_port, out_group, 0, {0, 0}
@@ -428,7 +428,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, mod_delete_);
+            v13_detail::encode(container, mod_delete_);
             return match_.encode(container);
         }
 
@@ -436,7 +436,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_delete
         {
-            auto const mod_delete = detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_delete = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_delete.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }

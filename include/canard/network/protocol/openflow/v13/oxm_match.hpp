@@ -79,10 +79,10 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, std::uint16_t{match_type});
-            detail::encode(container, length());
+            v13_detail::encode(container, std::uint16_t{match_type});
+            v13_detail::encode(container, length());
             return boost::push_back(oxm_match_fields_.encode(container)
-                    , canard::make_constant_range(detail::padding_length(length()), 0));
+                    , canard::make_constant_range(v13_detail::padding_length(length()), 0));
         }
 
     private:
@@ -96,16 +96,16 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> oxm_match
         {
-            auto const type = detail::decode<std::uint16_t>(first, last);
+            auto const type = v13_detail::decode<std::uint16_t>(first, last);
             if (type != match_type) {
                 throw 1;
             }
-            auto const length = detail::decode<std::uint16_t>(first, last);
+            auto const length = v13_detail::decode<std::uint16_t>(first, last);
             auto oxm_fields = v13_detail::oxm_match_field_set::decode(first, std::next(first, length - match_base_length));
             if (length != match_base_length + oxm_fields.length()) {
                 throw 2;
             }
-            std::advance(first, detail::padding_length(length));
+            std::advance(first, v13_detail::padding_length(length));
             return oxm_match{std::move(oxm_fields)};
         }
 

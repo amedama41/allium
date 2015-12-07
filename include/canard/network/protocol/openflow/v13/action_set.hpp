@@ -10,8 +10,8 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
 #include <canard/type_traits.hpp>
+#include <canard/network/protocol/openflow/detail/add_helper.hpp>
 #include <canard/network/protocol/openflow/v13/any_action.hpp>
-#include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode_action.hpp>
 
 namespace canard {

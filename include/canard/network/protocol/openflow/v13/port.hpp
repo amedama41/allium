@@ -118,7 +118,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, *port_);
+            return v13_detail::encode(container, *port_);
         }
 
     private:
@@ -133,7 +133,7 @@ namespace v13 {
             -> port
         {
             auto port_ptr = std::unique_ptr<v13_detail::ofp_port>{new v13_detail::ofp_port};
-            *port_ptr = detail::decode<v13_detail::ofp_port>(first, last);
+            *port_ptr = v13_detail::decode<v13_detail::ofp_port>(first, last);
             return port{std::move(port_ptr)};
         }
 

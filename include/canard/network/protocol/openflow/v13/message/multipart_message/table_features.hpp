@@ -11,10 +11,8 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
-#include <boost/variant/apply_visitor.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/table_feature_property.hpp>
 #include <canard/network/protocol/openflow/v13/utility/table_feature_property_set.hpp>
@@ -105,7 +103,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, table_features_);
+            v13_detail::encode(container, table_features_);
             return properties_.encode(container);
         }
 
@@ -113,7 +111,7 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> table_features
         {
-            auto const features = detail::decode<v13_detail::ofp_table_features>(first, last);
+            auto const features = v13_detail::decode<v13_detail::ofp_table_features>(first, last);
             if (std::distance(first, last) < features.length - sizeof(v13_detail::ofp_table_features)) {
                 throw 2;
             }

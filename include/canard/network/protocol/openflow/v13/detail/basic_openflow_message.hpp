@@ -15,7 +15,7 @@ namespace v13 {
 
         template <class T>
         class basic_openflow_message
-            : public v13::detail::transaction_id_assignor<std::uint32_t>
+            : public v13::v13_detail::transaction_id_assignor<std::uint32_t>
         {
         private:
             auto header() const

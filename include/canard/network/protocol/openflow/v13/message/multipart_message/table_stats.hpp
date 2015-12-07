@@ -59,14 +59,14 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, table_stats_);
+            return v13_detail::encode(container, table_stats_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> table_stats
         {
-            return table_stats{detail::decode<v13_detail::ofp_table_stats>(first, last)};
+            return table_stats{v13_detail::decode<v13_detail::ofp_table_stats>(first, last)};
         }
 
     private:

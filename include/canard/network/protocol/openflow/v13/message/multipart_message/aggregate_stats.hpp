@@ -26,7 +26,7 @@ namespace messages {
 
         explicit aggregate_stats_request(oxm_match match)
             : basic_multipart_request{
-                detail::exact_length(sizeof(v13_detail::ofp_aggregate_stats_request) + match.length())
+                v13_detail::exact_length(sizeof(v13_detail::ofp_aggregate_stats_request) + match.length())
                 , 0
               }
             , aggregate_stats_request_{
@@ -45,7 +45,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_request::encode(container);
-            detail::encode(container, aggregate_stats_request_);
+            v13_detail::encode(container, aggregate_stats_request_);
             return match_.encode(container);
         }
 
@@ -100,7 +100,7 @@ namespace messages {
             if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
-            auto const stats_reply = detail::decode<v13_detail::ofp_aggregate_stats_reply>(first, last);
+            auto const stats_reply = v13_detail::decode<v13_detail::ofp_aggregate_stats_reply>(first, last);
             return {reply, stats_reply};
         }
 

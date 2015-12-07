@@ -115,7 +115,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, hello_);
+            v13_detail::encode(container, hello_);
             boost::for_each(elements_, [&](any_hello_element const& hello_elem) {
                 hello_elem.encode(container);
             });
@@ -126,7 +126,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> hello
         {
-            auto const h = detail::decode<v13_detail::ofp_hello>(first, last);
+            auto const h = v13_detail::decode<v13_detail::ofp_hello>(first, last);
             if (std::distance(first, last) != h.header.length - sizeof(v13_detail::ofp_hello)) {
                 throw 2;
             }
@@ -150,7 +150,7 @@ namespace messages {
         {
             using boost::adaptors::transformed;
             return boost::accumulate(elements | transformed([](any_hello_element const& hello_elem) {
-                    return detail::exact_length(hello_elem.length());
+                    return v13_detail::exact_length(hello_elem.length());
             }), std::uint16_t{sizeof(hello_)});
         }
 

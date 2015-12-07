@@ -17,7 +17,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         template <class Handler>
         class shared_buffer_handler
@@ -63,7 +63,7 @@ namespace v13 {
             };
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow
@@ -74,11 +74,11 @@ namespace boost {
 namespace asio {
 
     template <class Handler>
-    class async_result<canard::network::openflow::v13::detail::shared_buffer_handler<Handler>>
+    class async_result<canard::network::openflow::v13::v13_detail::shared_buffer_handler<Handler>>
         : public async_result<Handler>
     {
     public:
-        using handler_type = canard::network::openflow::v13::detail::shared_buffer_handler<Handler>;
+        using handler_type = canard::network::openflow::v13::v13_detail::shared_buffer_handler<Handler>;
         using type = typename async_result<Handler>::type;
 
         explicit async_result(handler_type& handler)

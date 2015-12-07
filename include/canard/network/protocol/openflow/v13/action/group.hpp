@@ -50,7 +50,7 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, group_);
+                return v13_detail::encode(container, group_);
             }
 
         private:
@@ -73,7 +73,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> group
             {
-                auto const action_group = detail::decode<v13_detail::ofp_action_group>(first, last);
+                auto const action_group = v13_detail::decode<v13_detail::ofp_action_group>(first, last);
                 return group{action_group};
             }
 

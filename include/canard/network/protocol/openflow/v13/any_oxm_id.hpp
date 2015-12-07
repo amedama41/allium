@@ -8,6 +8,7 @@
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -41,28 +42,28 @@ namespace v13 {
         auto oxm_type() const
             -> std::uint32_t
         {
-            auto visitor = detail::oxm_type_visitor{};
+            auto visitor = v13_detail::oxm_type_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto oxm_header() const
             -> std::uint32_t
         {
-            auto visitor = detail::oxm_header_visitor{};
+            auto visitor = v13_detail::oxm_header_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto oxm_has_mask() const
             -> bool
         {
-            auto visitor = detail::oxm_has_mask_visitor{};
+            auto visitor = v13_detail::oxm_has_mask_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto oxm_length() const
             -> std::uint8_t
         {
-            auto visitor = detail::oxm_length_visitor{};
+            auto visitor = v13_detail::oxm_length_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
@@ -86,7 +87,7 @@ namespace v13 {
             -> any_oxm_id
         {
             auto copy_first = first;
-            auto const oxm_header = detail::decode<std::uint32_t>(copy_first, last);
+            auto const oxm_header = v13_detail::decode<std::uint32_t>(copy_first, last);
             if ((oxm_header >> 16) == protocol::OFPXMC_EXPERIMENTER) {
                 return oxm_experimenter_id::decode(first, last);
             }

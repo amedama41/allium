@@ -47,7 +47,7 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, nw_ttl_);
+                return v13_detail::encode(container, nw_ttl_);
             }
 
         public:
@@ -55,7 +55,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> set_nw_ttl
             {
-                auto const action_nw_ttl = detail::decode<v13_detail::ofp_action_nw_ttl>(first, last);
+                auto const action_nw_ttl = v13_detail::decode<v13_detail::ofp_action_nw_ttl>(first, last);
                 if (action_nw_ttl.type != action_type) {
                     throw 1;
                 }

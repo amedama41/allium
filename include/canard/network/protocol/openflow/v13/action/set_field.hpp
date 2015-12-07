@@ -32,7 +32,7 @@ namespace v13 {
             template <class OXMField, typename std::enable_if<!is_related<set_field, OXMField>::value>::type* = nullptr>
             explicit set_field(OXMField&& oxm_field)
                 : type_{action_type}
-                , length_{detail::exact_length(sizeof(type_) + sizeof(length_) + oxm_field.length())}
+                , length_{v13_detail::exact_length(sizeof(type_) + sizeof(length_) + oxm_field.length())}
                 , field_{std::move(oxm_field)}
             {
             }
@@ -59,8 +59,8 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                detail::encode(container, type_);
-                detail::encode(container, length_);
+                v13_detail::encode(container, type_);
+                v13_detail::encode(container, length_);
                 field_.encode(container);
                 return boost::push_back(container
                         , canard::make_constant_range(length_ - (sizeof(type_) + sizeof(length_) + field_.length()), 0));
@@ -70,11 +70,11 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> set_field
             {
-                auto const type = detail::decode<std::uint16_t>(first, last);
+                auto const type = v13_detail::decode<std::uint16_t>(first, last);
                 if (type != action_type) {
                     throw 1;
                 }
-                auto const length = detail::decode<std::uint16_t>(first, last);
+                auto const length = v13_detail::decode<std::uint16_t>(first, last);
                 if (length <= sizeof(v13_detail::ofp_action_set_field)) {
                     throw 2;
                 }
@@ -83,7 +83,7 @@ namespace v13 {
                     throw std::runtime_error{(boost::format{"%1%: field(%2%).oxm_has_mask is true"} % __func__ % field.oxm_type()).str()};
                 }
                 auto const field_length = field.length();
-                if (length != detail::exact_length(sizeof(type_) + sizeof(length_) + field_length)) {
+                if (length != v13_detail::exact_length(sizeof(type_) + sizeof(length_) + field_length)) {
                     throw 2;
                 }
                 std::advance(first, length - (sizeof(type_) + sizeof(length_) + field_length));

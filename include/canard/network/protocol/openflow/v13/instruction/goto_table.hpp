@@ -49,14 +49,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, goto_table_);
+                return v13_detail::encode(container, goto_table_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> goto_table
             {
-                auto const instruction_goto_table = detail::decode<v13_detail::ofp_instruction_goto_table>(first, last);
+                auto const instruction_goto_table = v13_detail::decode<v13_detail::ofp_instruction_goto_table>(first, last);
                 if (instruction_goto_table.type != instruction_type) {
                     throw 1;
                 }

@@ -8,6 +8,7 @@
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field_list.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
@@ -48,35 +49,35 @@ namespace v13 {
         auto oxm_type() const
             -> std::uint32_t
         {
-            auto visitor = detail::oxm_type_visitor{};
+            auto visitor = v13_detail::oxm_type_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto oxm_header() const
             -> std::uint32_t
         {
-            auto visitor = detail::oxm_header_visitor{};
+            auto visitor = v13_detail::oxm_header_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto oxm_has_mask() const
             -> bool
         {
-            auto visitor = detail::oxm_has_mask_visitor{};
+            auto visitor = v13_detail::oxm_has_mask_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto oxm_length() const
             -> std::uint8_t
         {
-            auto visitor = detail::oxm_length_visitor{};
+            auto visitor = v13_detail::oxm_length_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 
         auto wildcard() const
             -> bool
         {
-            auto visitor = detail::wildcard_visitor{};
+            auto visitor = v13_detail::wildcard_visitor{};
             return boost::apply_visitor(visitor, variant_);
         }
 

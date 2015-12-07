@@ -50,7 +50,7 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, set_queue_);
+                return v13_detail::encode(container, set_queue_);
             }
 
         private:
@@ -73,7 +73,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> set_queue
             {
-                auto const action_set_queue = detail::decode<v13_detail::ofp_action_set_queue>(first, last);
+                auto const action_set_queue = v13_detail::decode<v13_detail::ofp_action_set_queue>(first, last);
                 return set_queue{action_set_queue};
             }
 

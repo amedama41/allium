@@ -67,7 +67,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, packet_out_);
+            v13_detail::encode(container, packet_out_);
             action_list_.encode(container);
             return boost::push_back(container, data_);
         }
@@ -85,7 +85,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator& last)
             -> packet_out
         {
-            auto const pkt_out = detail::decode<v13_detail::ofp_packet_out>(first, last);
+            auto const pkt_out = v13_detail::decode<v13_detail::ofp_packet_out>(first, last);
             if (std::distance(first, last) < std::max<std::uint16_t>(pkt_out.actions_len, pkt_out.header.length - sizeof(v13_detail::ofp_packet_out))) {
                 throw 1;
             }

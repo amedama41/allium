@@ -10,53 +10,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
-
-        template <class Container>
-        class encoding_visitor
-            : public boost::static_visitor<Container&>
-        {
-        public:
-            encoding_visitor(Container& container)
-                : container_{&container}
-            {
-            }
-
-            template <class T>
-            auto operator()(T const& t) const
-                -> Container&
-            {
-                return t.encode(*container_);
-            }
-
-        private:
-            Container* container_;
-        };
-
-        template <class Type>
-        class type_visitor
-            : public boost::static_visitor<Type>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> Type
-            {
-                return t.type();
-            }
-        };
-
-        class length_visitor
-            : public boost::static_visitor<std::uint16_t>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> std::uint16_t
-            {
-                return t.length();
-            }
-        };
+    namespace v13_detail {
 
         class calculating_exact_length_visitor
             : public boost::static_visitor<std::uint16_t>
@@ -66,7 +20,7 @@ namespace v13 {
             auto operator()(T const& t) const
                 -> std::uint16_t
             {
-                return detail::exact_length(t.length());
+                return v13_detail::exact_length(t.length());
             }
         };
 
@@ -142,7 +96,7 @@ namespace v13 {
             }
         };
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

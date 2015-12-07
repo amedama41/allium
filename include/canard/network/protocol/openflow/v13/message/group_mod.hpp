@@ -89,7 +89,7 @@ namespace messages {
             auto encode(Container& container) const
                 -> Container&
             {
-                detail::encode(container, group_mod_);
+                v13_detail::encode(container, group_mod_);
                 boost::for_each(buckets_, [&](bucket const& bkt) {
                     bkt.encode(container);
                 });
@@ -100,7 +100,7 @@ namespace messages {
             static auto decode(Iterator& first, Iterator last)
                 -> T
             {
-                auto const group_mod = detail::decode<v13_detail::ofp_group_mod>(first, last);
+                auto const group_mod = v13_detail::decode<v13_detail::ofp_group_mod>(first, last);
                 if (std::distance(first, last) != group_mod.header.length - sizeof(v13_detail::ofp_group_mod)) {
                     throw 2;
                 }
@@ -220,14 +220,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, group_mod_);
+            return v13_detail::encode(container, group_mod_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> group_mod_delete
         {
-            auto const group_mod = detail::decode<v13_detail::ofp_group_mod>(first, last);
+            auto const group_mod = v13_detail::decode<v13_detail::ofp_group_mod>(first, last);
             return group_mod_delete{group_mod};
         }
 

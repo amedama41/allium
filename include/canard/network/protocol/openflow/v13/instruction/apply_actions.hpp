@@ -53,7 +53,7 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                detail::encode(container, actions_);
+                v13_detail::encode(container, actions_);
                 return action_list_.encode(container);
             }
 
@@ -61,7 +61,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> apply_actions
             {
-                auto const instruction_actions = detail::decode<v13_detail::ofp_instruction_actions>(first, last);
+                auto const instruction_actions = v13_detail::decode<v13_detail::ofp_instruction_actions>(first, last);
                 if (instruction_actions.type != instruction_type) {
                     throw 1;
                 }

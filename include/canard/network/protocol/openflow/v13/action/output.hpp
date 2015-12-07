@@ -67,7 +67,7 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, output_);
+                return v13_detail::encode(container, output_);
             }
 
         private:
@@ -90,7 +90,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> output
             {
-                auto const action_output = detail::decode<v13_detail::ofp_action_output>(first, last);
+                auto const action_output = v13_detail::decode<v13_detail::ofp_action_output>(first, last);
                 return output{action_output};
             }
 

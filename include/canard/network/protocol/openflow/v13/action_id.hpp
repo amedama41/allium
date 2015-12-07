@@ -41,16 +41,16 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, std::uint16_t(type()));
-            return detail::encode(container, length());
+            v13_detail::encode(container, std::uint16_t(type()));
+            return v13_detail::encode(container, length());
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> action_id
         {
-            auto const type = detail::decode<std::uint16_t>(first, last);
-            auto const length = detail::decode<std::uint16_t>(first, last);
+            auto const type = v13_detail::decode<std::uint16_t>(first, last);
+            auto const length = v13_detail::decode<std::uint16_t>(first, last);
             if (length != offsetof(v13_detail::ofp_action_header, pad)) {
                 throw std::runtime_error{
                     boost::str(boost::format{
@@ -102,9 +102,9 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, std::uint16_t(type()));
-            detail::encode(container, length());
-            detail::encode(container, experimenter());
+            v13_detail::encode(container, std::uint16_t(type()));
+            v13_detail::encode(container, length());
+            v13_detail::encode(container, experimenter());
             return boost::push_back(container, data());
         }
 
@@ -113,7 +113,7 @@ namespace v13 {
             -> action_experimenter_id
         {
             auto const experimenter_header
-                = detail::decode<v13_detail::ofp_action_experimenter_header>(first, last);
+                = v13_detail::decode<v13_detail::ofp_action_experimenter_header>(first, last);
             if (experimenter_header.len > sizeof(experimenter_header) + std::distance(first, last)) {
                 throw std::runtime_error{__func__};
             }

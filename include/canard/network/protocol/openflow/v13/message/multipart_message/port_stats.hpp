@@ -112,14 +112,14 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, port_stats_);
+            return v13_detail::encode(container, port_stats_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> port_stats
         {
-            return port_stats{detail::decode<v13_detail::ofp_port_stats>(first, last)};
+            return port_stats{v13_detail::decode<v13_detail::ofp_port_stats>(first, last)};
         }
 
     private:
@@ -165,7 +165,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_request::encode(container);
-            return detail::encode(container, port_stats_request_);
+            return v13_detail::encode(container, port_stats_request_);
         }
 
     private:

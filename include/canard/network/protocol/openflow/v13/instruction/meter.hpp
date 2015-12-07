@@ -49,14 +49,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, meter_);
+                return v13_detail::encode(container, meter_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> meter
             {
-                auto const instruction_meter = detail::decode<v13_detail::ofp_instruction_meter>(first, last);
+                auto const instruction_meter = v13_detail::decode<v13_detail::ofp_instruction_meter>(first, last);
                 if (instruction_meter.type != instruction_type) {
                     throw 1;
                 }

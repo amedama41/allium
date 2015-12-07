@@ -93,12 +93,12 @@ namespace v13 {
                 -> Container&
             {
                 using boost::adaptors::transformed;
-                detail::encode(container, versionbitmap_);
+                v13_detail::encode(container, versionbitmap_);
                 boost::for_each(bitmaps_, [&](std::uint32_t const bitmap) {
-                    detail::encode(container, bitmap);
+                    v13_detail::encode(container, bitmap);
                 });
                 return boost::push_back(container
-                        , boost::irange<std::size_t>(0, detail::padding_length(length())) | transformed([](std::size_t){ return 0; }));
+                        , boost::irange<std::size_t>(0, v13_detail::padding_length(length())) | transformed([](std::size_t){ return 0; }));
             }
 
         private:
@@ -119,7 +119,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> versionbitmap
             {
-                auto const vbitmap = detail::decode<v13_detail::ofp_hello_elem_versionbitmap>(first, last);
+                auto const vbitmap = v13_detail::decode<v13_detail::ofp_hello_elem_versionbitmap>(first, last);
 
                 auto bitmaps = std::vector<std::uint32_t>((vbitmap.length - sizeof(vbitmap)) / sizeof(std::uint32_t));
                 std::copy_n(first, bitmaps.size() * sizeof(std::uint32_t)
@@ -129,7 +129,7 @@ namespace v13 {
                     boost::endian::big_to_native_inplace(bitmap);
                 });
 
-                std::advance(first, detail::padding_length(vbitmap.length));
+                std::advance(first, v13_detail::padding_length(vbitmap.length));
 
                 return versionbitmap{vbitmap, std::move(bitmaps)};
             }
@@ -164,7 +164,7 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                detail::encode(container, header_);
+                v13_detail::encode(container, header_);
                 return boost::push_back(container, data_);
             }
 
@@ -173,13 +173,13 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> unknown_element
             {
-                auto const header = detail::decode<v13_detail::ofp_hello_elem_header>(first, last);
+                auto const header = v13_detail::decode<v13_detail::ofp_hello_elem_header>(first, last);
 
                 auto data = std::vector<unsigned char>(header.length - sizeof(header));
                 std::copy_n(first, data.size(), data.begin());
                 std::advance(first, data.size());
 
-                std::advance(first, detail::padding_length(header.length));
+                std::advance(first, v13_detail::padding_length(header.length));
 
                 return unknown_element(header, std::move(data));
             }

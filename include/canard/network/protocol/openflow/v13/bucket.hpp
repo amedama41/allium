@@ -59,7 +59,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, bucket_);
+            v13_detail::encode(container, bucket_);
             return actions_.encode(container);
         }
 
@@ -67,7 +67,7 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> bucket
         {
-            auto const bkt = detail::decode<v13_detail::ofp_bucket>(first, last);
+            auto const bkt = v13_detail::decode<v13_detail::ofp_bucket>(first, last);
             if (std::distance(first, last) < bkt.len - sizeof(v13_detail::ofp_bucket)) {
                 throw 2;
             }

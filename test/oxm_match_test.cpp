@@ -205,7 +205,7 @@ BOOST_FIXTURE_TEST_SUITE(when_init_state_has_some_oxm_match_field, in_port_eth_t
 
         sut.encode(buffer);
 
-        BOOST_CHECK_EQUAL(buffer.size(), detail::exact_length(sut.length()));
+        BOOST_CHECK_EQUAL(buffer.size(), v13_detail::exact_length(sut.length()));
 
         auto it = buffer.begin();
         auto const decoded_match = oxm_match::decode(it, buffer.end());

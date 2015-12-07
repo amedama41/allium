@@ -8,8 +8,8 @@
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/type_traits.hpp>
@@ -71,7 +71,7 @@ namespace v13 {
             -> any_instruction_id
         {
             auto copy_first = first;
-            auto const type = detail::decode<std::uint16_t>(copy_first, last);
+            auto const type = v13_detail::decode<std::uint16_t>(copy_first, last);
             switch (type) {
             case protocol::OFPIT_EXPERIMENTER:
                 return instruction_experimenter_id::decode(first, last);

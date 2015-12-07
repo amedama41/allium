@@ -156,7 +156,7 @@ BOOST_FIXTURE_TEST_SUITE(encode_decode_test, encode_decode_fixture)
     {
         sut.encode(buffer);
 
-        BOOST_CHECK_EQUAL(buffer.size(), detail::exact_length(sut.length()));
+        BOOST_CHECK_EQUAL(buffer.size(), v13_detail::exact_length(sut.length()));
         auto ptr = buffer.data();
         auto type = std::uint16_t{};
         auto length = std::uint16_t{};

@@ -107,19 +107,19 @@ namespace match {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, oxm_header());
-            detail::encode(container, value_, needs_byteorder_conversion{});
-            return mask_ ? detail::encode(container, *mask_, needs_byteorder_conversion{}) : container;
+            v13_detail::encode(container, oxm_header());
+            v13_detail::encode(container, value_, needs_byteorder_conversion{});
+            return mask_ ? v13_detail::encode(container, *mask_, needs_byteorder_conversion{}) : container;
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_match_field
         {
-            auto const oxm_header = detail::decode<std::uint32_t>(first, last);
-            auto const value = detail::decode<value_type>(first, last, needs_byteorder_conversion{});
+            auto const oxm_header = v13_detail::decode<std::uint32_t>(first, last);
+            auto const value = v13_detail::decode<value_type>(first, last, needs_byteorder_conversion{});
             if (oxm_header & 0x00000100) {
-                auto const mask = detail::decode<value_type>(first, last, needs_byteorder_conversion{});
+                auto const mask = v13_detail::decode<value_type>(first, last, needs_byteorder_conversion{});
                 return oxm_match_field{value, mask};
             }
             return oxm_match_field{value};

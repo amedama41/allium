@@ -92,16 +92,16 @@ namespace v13 {
         auto send(Message const& message, Handler&& handler)
             -> typename send_async_result<Handler>::result_type
         {
-            auto buffer_handler = detail::make_shared_buffer_handler(
+            auto buffer_handler = v13_detail::make_shared_buffer_handler(
                     typename send_async_result<Handler>::handler_type(std::forward<Handler>(handler)));
             return send(message, buffer_handler, buffer_handler.buffer());
         }
 
         template <class Message>
         auto send(Message const& message)
-            -> typename send_async_result<detail::dummy_handler>::result_type
+            -> typename send_async_result<v13_detail::dummy_handler>::result_type
         {
-            return send(message, detail::dummy_handler{});
+            return send(message, v13_detail::dummy_handler{});
         }
 
         template <class Request, class RequestHandler, class Container>
@@ -121,7 +121,7 @@ namespace v13 {
         auto send_request(Request const& message, RequestHandler&& handler)
             -> typename request_async_result<Request, RequestHandler>::result_type
         {
-            auto buffer_handler = detail::make_shared_buffer_handler(
+            auto buffer_handler = v13_detail::make_shared_buffer_handler(
                     typename request_async_result<Request, RequestHandler>::handler_type(
                         std::forward<RequestHandler>(handler)));
             return send_request(message, buffer_handler, buffer_handler.buffer());

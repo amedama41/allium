@@ -47,7 +47,7 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, mpls_ttl_);
+                return v13_detail::encode(container, mpls_ttl_);
             }
 
         private:
@@ -67,7 +67,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> set_mpls_ttl
             {
-                auto const action_mpls_ttl = detail::decode<v13_detail::ofp_action_mpls_ttl>(first, last);
+                auto const action_mpls_ttl = v13_detail::decode<v13_detail::ofp_action_mpls_ttl>(first, last);
                 return set_mpls_ttl{action_mpls_ttl};
             }
 

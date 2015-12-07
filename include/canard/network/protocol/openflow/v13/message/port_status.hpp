@@ -56,8 +56,8 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> port_status
         {
-            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
-            auto const reason = detail::decode<std::uint8_t>(first, last);
+            auto const header = v13_detail::decode<v13_detail::ofp_header>(first, last);
+            auto const reason = v13_detail::decode<std::uint8_t>(first, last);
 
             std::advance(first, sizeof(decltype(v13_detail::ofp_port_status::pad)));
 

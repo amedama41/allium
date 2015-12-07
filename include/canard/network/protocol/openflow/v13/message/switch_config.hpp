@@ -40,14 +40,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, header_);
+            return v13_detail::encode(container, header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> switch_config_request
         {
-            return switch_config_request{detail::decode<v13_detail::ofp_header>(first, last)};
+            return switch_config_request{v13_detail::decode<v13_detail::ofp_header>(first, last)};
         }
 
     private:
@@ -104,14 +104,14 @@ namespace messages {
             auto encode(Container& container) const
                 -> Container&
             {
-                return detail::encode(container, switch_config_);
+                return v13_detail::encode(container, switch_config_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> T
             {
-                return T{detail::decode<v13_detail::ofp_switch_config>(first, last)};
+                return T{v13_detail::decode<v13_detail::ofp_switch_config>(first, last)};
             }
 
         protected:

@@ -11,9 +11,9 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
 #include <canard/type_traits.hpp>
+#include <canard/network/protocol/openflow/detail/add_helper.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_match_field.hpp>
 #include <canard/network/protocol/openflow/v13/decode_oxm_match_field.hpp>
-#include <canard/network/protocol/openflow/v13/detail/add_helper.hpp>
 
 namespace canard {
 namespace network {

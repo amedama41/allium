@@ -72,14 +72,14 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, oxm_header_);
+            return v13_detail::encode(container, oxm_header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_id
         {
-            auto const oxm_header = detail::decode<std::uint32_t>(first, last);
+            auto const oxm_header = v13_detail::decode<std::uint32_t>(first, last);
             return oxm_id{oxm_header};
         }
 
@@ -147,14 +147,14 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, header_);
+            return v13_detail::encode(container, header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_experimenter_id
         {
-            auto const header = detail::decode<v13_detail::ofp_oxm_experimenter_header>(first, last);
+            auto const header = v13_detail::decode<v13_detail::ofp_oxm_experimenter_header>(first, last);
             return oxm_experimenter_id{header.oxm_header, header.experimenter};
         }
 

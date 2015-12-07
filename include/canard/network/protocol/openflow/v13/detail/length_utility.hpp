@@ -8,7 +8,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    namespace detail {
+    namespace v13_detail {
 
         inline auto exact_length(std::uint16_t const length)
             -> std::uint16_t
@@ -22,7 +22,7 @@ namespace v13 {
             return exact_length(length) - length;
         }
 
-    } // namespace detail
+    } // namespace v13_detail
 
 } // namespace v13
 } // namespace openflow

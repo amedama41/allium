@@ -41,14 +41,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, port_mod_);
+            return v13_detail::encode(container, port_mod_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> port_mod
         {
-            auto const mod = detail::decode<v13_detail::ofp_port_mod>(first, last);
+            auto const mod = v13_detail::decode<v13_detail::ofp_port_mod>(first, last);
             if (port_mod.header.length != sizeof(v13_detail::ofp_port_mod)) {
                 throw 2;
             }
