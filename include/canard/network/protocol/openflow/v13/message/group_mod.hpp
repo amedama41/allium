@@ -8,10 +8,11 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/bucket.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -89,7 +90,7 @@ namespace messages {
             auto encode(Container& container) const
                 -> Container&
             {
-                v13_detail::encode(container, group_mod_);
+                detail::encode(container, group_mod_);
                 boost::for_each(buckets_, [&](bucket const& bkt) {
                     bkt.encode(container);
                 });
@@ -100,7 +101,7 @@ namespace messages {
             static auto decode(Iterator& first, Iterator last)
                 -> T
             {
-                auto const group_mod = v13_detail::decode<v13_detail::ofp_group_mod>(first, last);
+                auto const group_mod = detail::decode<v13_detail::ofp_group_mod>(first, last);
                 if (std::distance(first, last) != group_mod.header.length - sizeof(v13_detail::ofp_group_mod)) {
                     throw 2;
                 }
@@ -220,14 +221,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return v13_detail::encode(container, group_mod_);
+            return detail::encode(container, group_mod_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> group_mod_delete
         {
-            auto const group_mod = v13_detail::decode<v13_detail::ofp_group_mod>(first, last);
+            auto const group_mod = detail::decode<v13_detail::ofp_group_mod>(first, last);
             return group_mod_delete{group_mod};
         }
 

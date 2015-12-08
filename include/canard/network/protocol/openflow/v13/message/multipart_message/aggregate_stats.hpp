@@ -4,8 +4,9 @@
 #include <cstdint>
 #include <iterator>
 #include <utility>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -45,7 +46,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_request::encode(container);
-            v13_detail::encode(container, aggregate_stats_request_);
+            detail::encode(container, aggregate_stats_request_);
             return match_.encode(container);
         }
 
@@ -100,7 +101,7 @@ namespace messages {
             if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
                 throw 2;
             }
-            auto const stats_reply = v13_detail::decode<v13_detail::ofp_aggregate_stats_reply>(first, last);
+            auto const stats_reply = detail::decode<v13_detail::ofp_aggregate_stats_reply>(first, last);
             return {reply, stats_reply};
         }
 

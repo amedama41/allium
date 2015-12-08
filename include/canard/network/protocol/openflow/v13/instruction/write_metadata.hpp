@@ -3,8 +3,9 @@
 
 #include <cstdint>
 #include <limits>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -61,14 +62,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return v13_detail::encode(container, write_metadata_);
+                return detail::encode(container, write_metadata_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> write_metadata
             {
-                auto const instruction_write_metadata = v13_detail::decode<v13_detail::ofp_instruction_write_metadata>(first, last);
+                auto const instruction_write_metadata = detail::decode<v13_detail::ofp_instruction_write_metadata>(first, last);
                 if (instruction_write_metadata.type != instruction_type) {
                     throw 1;
                 }

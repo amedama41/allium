@@ -3,8 +3,9 @@
 
 #include <cstdint>
 #include <iterator>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -84,7 +85,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_reply::encode(container);
-            return v13_detail::encode(container, desc_);
+            return detail::encode(container, desc_);
         }
 
         template <class Iterator>
@@ -99,7 +100,7 @@ namespace messages {
                 throw 2;
             }
 
-            auto desc = v13_detail::decode<v13_detail::ofp_desc>(first, last);
+            auto desc = detail::decode<v13_detail::ofp_desc>(first, last);
 
             return description_reply{reply, desc};
         }

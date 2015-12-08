@@ -7,10 +7,10 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <boost/range/algorithm_ext/push_back.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -90,8 +90,9 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, header_);
-            return boost::push_back(container, data_);
+            detail::encode(container, header_);
+            return detail::encode_byte_array(
+                    container, data_.data(), data_.size());
         }
 
     protected:
@@ -99,7 +100,7 @@ namespace messages {
         static auto decode_impl(Iterator& first, Iterator last)
             -> std::tuple<v13_detail::ofp_header, std::vector<unsigned char>>
         {
-            auto const header = v13_detail::decode<v13_detail::ofp_header>(first, last);
+            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
             if (header.length != sizeof(v13_detail::ofp_header) + std::distance(first, last)) {
                 throw 2;
             }

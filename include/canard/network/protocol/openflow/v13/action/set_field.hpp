@@ -5,14 +5,13 @@
 #include <iterator>
 #include <utility>
 #include <boost/format.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
-#include <canard/constant_range.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/padding.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_match_field.hpp>
 #include <canard/network/protocol/openflow/v13/decode_oxm_match_field.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/type_traits.hpp>
 
@@ -59,22 +58,24 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                v13_detail::encode(container, type_);
-                v13_detail::encode(container, length_);
+                detail::encode(container, type_);
+                detail::encode(container, length_);
                 field_.encode(container);
-                return boost::push_back(container
-                        , canard::make_constant_range(length_ - (sizeof(type_) + sizeof(length_) + field_.length()), 0));
+                return detail::encode_byte_array(
+                          container
+                        , detail::padding
+                        , length_ - (sizeof(type_) + sizeof(length_) + field_.length()));
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> set_field
             {
-                auto const type = v13_detail::decode<std::uint16_t>(first, last);
+                auto const type = detail::decode<std::uint16_t>(first, last);
                 if (type != action_type) {
                     throw 1;
                 }
-                auto const length = v13_detail::decode<std::uint16_t>(first, last);
+                auto const length = detail::decode<std::uint16_t>(first, last);
                 if (length <= sizeof(v13_detail::ofp_action_set_field)) {
                     throw 2;
                 }

@@ -4,9 +4,10 @@
 #include <cstdint>
 #include <iterator>
 #include <utility>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/action_set.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -59,7 +60,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, bucket_);
+            detail::encode(container, bucket_);
             return actions_.encode(container);
         }
 
@@ -67,7 +68,7 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> bucket
         {
-            auto const bkt = v13_detail::decode<v13_detail::ofp_bucket>(first, last);
+            auto const bkt = detail::decode<v13_detail::ofp_bucket>(first, last);
             if (std::distance(first, last) < bkt.len - sizeof(v13_detail::ofp_bucket)) {
                 throw 2;
             }

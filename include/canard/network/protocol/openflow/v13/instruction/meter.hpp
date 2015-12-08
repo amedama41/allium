@@ -2,8 +2,9 @@
 #define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_METER_HPP
 
 #include <cstdint>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -49,14 +50,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return v13_detail::encode(container, meter_);
+                return detail::encode(container, meter_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> meter
             {
-                auto const instruction_meter = v13_detail::decode<v13_detail::ofp_instruction_meter>(first, last);
+                auto const instruction_meter = detail::decode<v13_detail::ofp_instruction_meter>(first, last);
                 if (instruction_meter.type != instruction_type) {
                     throw 1;
                 }

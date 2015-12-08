@@ -7,8 +7,8 @@
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/format.hpp>
 #include <boost/optional/optional.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/oxm_type_definition_map.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/type_traits.hpp>
@@ -27,7 +27,7 @@ namespace match {
 
     public:
         using value_type = typename base_type::value_type;
-        using needs_byteorder_conversion = typename base_type::needs_byteorder_conversion;
+        using needs_endian_conversion = typename base_type::needs_endian_conversion;
 
         explicit oxm_match_field(value_type value)
             : value_(std::move(value))
@@ -107,19 +107,19 @@ namespace match {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, oxm_header());
-            v13_detail::encode(container, value_, needs_byteorder_conversion{});
-            return mask_ ? v13_detail::encode(container, *mask_, needs_byteorder_conversion{}) : container;
+            detail::encode(container, oxm_header());
+            detail::encode(container, value_, sizeof(value_), needs_endian_conversion{});
+            return mask_ ? detail::encode(container, *mask_, sizeof(*mask_), needs_endian_conversion{}) : container;
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_match_field
         {
-            auto const oxm_header = v13_detail::decode<std::uint32_t>(first, last);
-            auto const value = v13_detail::decode<value_type>(first, last, needs_byteorder_conversion{});
+            auto const oxm_header = detail::decode<std::uint32_t>(first, last);
+            auto const value = detail::decode<value_type>(first, last, sizeof(value_type), needs_endian_conversion{});
             if (oxm_header & 0x00000100) {
-                auto const mask = v13_detail::decode<value_type>(first, last, needs_byteorder_conversion{});
+                auto const mask = detail::decode<value_type>(first, last, sizeof(value_type), needs_endian_conversion{});
                 return oxm_match_field{value, mask};
             }
             return oxm_match_field{value};

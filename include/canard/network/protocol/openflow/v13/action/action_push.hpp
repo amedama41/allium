@@ -2,8 +2,8 @@
 #define CANARD_NETWORK_OPENFLOW_V13_ACTION_ACTION_PUSH_HPP
 
 #include <cstdint>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -48,14 +48,14 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    return v13_detail::encode(container, push_);
+                    return detail::encode(container, push_);
                 }
 
                 template <class Iterator>
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const action_push = v13_detail::decode<v13_detail::ofp_action_push>(first, last);
+                    auto const action_push = detail::decode<v13_detail::ofp_action_push>(first, last);
                     if (action_push.type != T::action_type) {
                         throw 1;
                     }

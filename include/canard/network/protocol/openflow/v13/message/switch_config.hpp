@@ -2,9 +2,10 @@
 #define CANARD_NETWORK_OPENFLOW_V13_SWITCH_CONFIG_HPP
 
 #include <cstdint>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -40,14 +41,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return v13_detail::encode(container, header_);
+            return detail::encode(container, header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> switch_config_request
         {
-            return switch_config_request{v13_detail::decode<v13_detail::ofp_header>(first, last)};
+            return switch_config_request{detail::decode<v13_detail::ofp_header>(first, last)};
         }
 
     private:
@@ -104,14 +105,14 @@ namespace messages {
             auto encode(Container& container) const
                 -> Container&
             {
-                return v13_detail::encode(container, switch_config_);
+                return detail::encode(container, switch_config_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> T
             {
-                return T{v13_detail::decode<v13_detail::ofp_switch_config>(first, last)};
+                return T{detail::decode<v13_detail::ofp_switch_config>(first, last)};
             }
 
         protected:

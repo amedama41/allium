@@ -5,10 +5,11 @@
 #include <iterator>
 #include <utility>
 #include <vector>
-#include <boost/range/algorithm_ext/push_back.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/padding.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -84,18 +85,23 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, packet_in_);
+            detail::encode(container, packet_in_);
             match_.encode(container);
-            return frame_.empty()
-                ? container
-                : boost::push_back(boost::push_back(container, {0, 0}), frame_);
+            if (frame_.empty()) {
+                return container;
+            }
+            else {
+                detail::encode_byte_array(container, detail::padding, 2);
+                return detail::encode_byte_array(
+                        container, frame_.data(), frame_.size());
+            }
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> packet_in
         {
-            auto const pkt_in = v13_detail::decode<v13_detail::ofp_packet_in>(first, last);
+            auto const pkt_in = detail::decode<v13_detail::ofp_packet_in>(first, last);
             if (std::distance(first, last) != pkt_in.header.length - sizeof(v13_detail::ofp_packet_in)) {
                 throw 2;
             }

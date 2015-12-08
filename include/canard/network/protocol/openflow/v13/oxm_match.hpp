@@ -5,12 +5,13 @@
 #include <cstdint>
 #include <iterator>
 #include <utility>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/constant_range.hpp>
 #include <canard/type_traits.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/padding.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_match_field.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/detail/oxm_match_field_set.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -79,10 +80,13 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, std::uint16_t{match_type});
-            v13_detail::encode(container, length());
-            return boost::push_back(oxm_match_fields_.encode(container)
-                    , canard::make_constant_range(v13_detail::padding_length(length()), 0));
+            detail::encode(container, std::uint16_t{match_type});
+            detail::encode(container, length());
+            oxm_match_fields_.encode(container);
+            return detail::encode_byte_array(
+                      container
+                    , detail::padding
+                    , v13_detail::padding_length(length()));
         }
 
     private:
@@ -96,11 +100,11 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> oxm_match
         {
-            auto const type = v13_detail::decode<std::uint16_t>(first, last);
+            auto const type = detail::decode<std::uint16_t>(first, last);
             if (type != match_type) {
                 throw 1;
             }
-            auto const length = v13_detail::decode<std::uint16_t>(first, last);
+            auto const length = detail::decode<std::uint16_t>(first, last);
             auto oxm_fields = v13_detail::oxm_match_field_set::decode(first, std::next(first, length - match_base_length));
             if (length != match_base_length + oxm_fields.length()) {
                 throw 2;

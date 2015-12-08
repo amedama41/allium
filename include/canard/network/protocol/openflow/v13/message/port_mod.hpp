@@ -2,9 +2,10 @@
 #define CANARD_NETWORK_OPENFLOW_V13_PORT_MOD_HPP
 
 #include <canard/mac_address.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -41,14 +42,14 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            return v13_detail::encode(container, port_mod_);
+            return detail::encode(container, port_mod_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> port_mod
         {
-            auto const mod = v13_detail::decode<v13_detail::ofp_port_mod>(first, last);
+            auto const mod = detail::decode<v13_detail::ofp_port_mod>(first, last);
             if (port_mod.header.length != sizeof(v13_detail::ofp_port_mod)) {
                 throw 2;
             }

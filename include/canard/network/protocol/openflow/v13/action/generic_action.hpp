@@ -2,8 +2,8 @@
 #define CANARD_NETWORK_OPENFLOW_V13_ACTION_GENERIC_ACTION_HPP
 
 #include <cstdint>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -42,14 +42,14 @@ namespace v13 {
                 auto encode(Container& container) const
                     -> Container&
                 {
-                    return v13_detail::encode(container, header_);
+                    return detail::encode(container, header_);
                 }
 
                 template <class Iterator>
                 static auto decode(Iterator& first, Iterator last)
                     -> T
                 {
-                    auto const header = v13_detail::decode<v13_detail::ofp_action_header>(first, last);
+                    auto const header = detail::decode<v13_detail::ofp_action_header>(first, last);
                     if (header.type != T::action_type) {
                         throw 1;
                     }

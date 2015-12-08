@@ -2,8 +2,9 @@
 #define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_CLEAR_ACTIONS_HPP
 
 #include <cstdint>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -40,14 +41,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return v13_detail::encode(container, actions_);
+                return detail::encode(container, actions_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> clear_actions
             {
-                auto const instruction_actions = v13_detail::decode<v13_detail::ofp_instruction_actions>(first, last);
+                auto const instruction_actions = detail::decode<v13_detail::ofp_instruction_actions>(first, last);
                 if (instruction_actions.type != instruction_type) {
                     throw 1;
                 }

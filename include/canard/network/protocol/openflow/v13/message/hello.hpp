@@ -11,10 +11,10 @@
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/numeric.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/any_hello_element.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/message/hello_elements.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -115,7 +115,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, hello_);
+            detail::encode(container, hello_);
             boost::for_each(elements_, [&](any_hello_element const& hello_elem) {
                 hello_elem.encode(container);
             });
@@ -126,7 +126,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> hello
         {
-            auto const h = v13_detail::decode<v13_detail::ofp_hello>(first, last);
+            auto const h = detail::decode<v13_detail::ofp_hello>(first, last);
             if (std::distance(first, last) != h.header.length - sizeof(v13_detail::ofp_hello)) {
                 throw 2;
             }

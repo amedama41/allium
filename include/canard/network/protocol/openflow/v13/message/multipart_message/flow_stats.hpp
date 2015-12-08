@@ -5,8 +5,9 @@
 #include <utility>
 #include <vector>
 #include <boost/range/algorithm/for_each.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/flow_entry.hpp>
 #include <canard/network/protocol/openflow/v13/instruction_set.hpp>
@@ -63,7 +64,7 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, v13_detail::ofp_flow_stats{
+            detail::encode(container, v13_detail::ofp_flow_stats{
                       length()
                     , table_id_
                     , 0
@@ -86,7 +87,7 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> flow_stats
         {
-            auto const stats = v13_detail::decode<v13_detail::ofp_flow_stats>(first, last);
+            auto const stats = detail::decode<v13_detail::ofp_flow_stats>(first, last);
             last = std::next(first, stats.length - sizeof(v13_detail::ofp_flow_stats));
             auto match = oxm_match::decode(first, last);
             auto instructions = instruction_set::decode(first, last);
@@ -149,7 +150,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_request::encode(container);
-            v13_detail::encode(container, flow_stats_request_);
+            detail::encode(container, flow_stats_request_);
             return match_.encode(container);
         }
 
@@ -158,7 +159,7 @@ namespace messages {
             -> flow_stats_request
         {
             auto const request = basic_multipart_request::decode(first, last);
-            auto const stats_reqeust = v13_detail::decode<v13_detail::ofp_flow_stats_request>(first, last);
+            auto const stats_reqeust = detail::decode<v13_detail::ofp_flow_stats_request>(first, last);
             auto match = oxm_match::decode(first, last);
             return flow_stats_request{request, stats_reqeust, std::move(match)};
         }

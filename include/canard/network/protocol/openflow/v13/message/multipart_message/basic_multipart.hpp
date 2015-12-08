@@ -6,9 +6,10 @@
 #include <algorithm>
 #include <iterator>
 #include <limits>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -75,14 +76,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return v13_detail::encode(container, request_);
+                return detail::encode(container, request_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> v13_detail::ofp_multipart_request
             {
-                return v13_detail::decode<v13_detail::ofp_multipart_request>(first, last);
+                return detail::decode<v13_detail::ofp_multipart_request>(first, last);
             }
 
         protected:
@@ -146,14 +147,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                return v13_detail::encode(container, reply_);
+                return detail::encode(container, reply_);
             }
 
             template <class Iterator>
             static auto decode(Iterator& first, Iterator last)
                 -> v13_detail::ofp_multipart_reply
             {
-                return v13_detail::decode<v13_detail::ofp_multipart_reply>(first, last);
+                return detail::decode<v13_detail::ofp_multipart_reply>(first, last);
             }
 
         protected:

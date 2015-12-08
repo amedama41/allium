@@ -8,17 +8,15 @@
 #include <vector>
 #include <boost/endian/conversion.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/for_each.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
-#include <boost/range/irange.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant.hpp>
 #include <canard/as_byte_range.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/padding.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -92,13 +90,14 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                using boost::adaptors::transformed;
-                v13_detail::encode(container, versionbitmap_);
+                detail::encode(container, versionbitmap_);
                 boost::for_each(bitmaps_, [&](std::uint32_t const bitmap) {
-                    v13_detail::encode(container, bitmap);
+                    detail::encode(container, bitmap);
                 });
-                return boost::push_back(container
-                        , boost::irange<std::size_t>(0, v13_detail::padding_length(length())) | transformed([](std::size_t){ return 0; }));
+                return detail::encode_byte_array(
+                          container
+                        , detail::padding
+                        , v13_detail::padding_length(length()));
             }
 
         private:
@@ -119,7 +118,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> versionbitmap
             {
-                auto const vbitmap = v13_detail::decode<v13_detail::ofp_hello_elem_versionbitmap>(first, last);
+                auto const vbitmap = detail::decode<v13_detail::ofp_hello_elem_versionbitmap>(first, last);
 
                 auto bitmaps = std::vector<std::uint32_t>((vbitmap.length - sizeof(vbitmap)) / sizeof(std::uint32_t));
                 std::copy_n(first, bitmaps.size() * sizeof(std::uint32_t)
@@ -164,8 +163,9 @@ namespace v13 {
             auto encode(Container& container) const
                 -> Container&
             {
-                v13_detail::encode(container, header_);
-                return boost::push_back(container, data_);
+                detail::encode(container, header_);
+                return detail::encode_byte_array(
+                        container, data_.data(), data_.size());
             }
 
         public:
@@ -173,7 +173,7 @@ namespace v13 {
             static auto decode(Iterator& first, Iterator last)
                 -> unknown_element
             {
-                auto const header = v13_detail::decode<v13_detail::ofp_hello_elem_header>(first, last);
+                auto const header = detail::decode<v13_detail::ofp_hello_elem_header>(first, last);
 
                 auto data = std::vector<unsigned char>(header.length - sizeof(header));
                 std::copy_n(first, data.size(), data.begin());

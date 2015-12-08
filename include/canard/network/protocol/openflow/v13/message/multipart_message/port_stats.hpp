@@ -5,8 +5,9 @@
 #include <iterator>
 #include <utility>
 #include <vector>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
@@ -112,14 +113,14 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return v13_detail::encode(container, port_stats_);
+            return detail::encode(container, port_stats_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> port_stats
         {
-            return port_stats{v13_detail::decode<v13_detail::ofp_port_stats>(first, last)};
+            return port_stats{detail::decode<v13_detail::ofp_port_stats>(first, last)};
         }
 
     private:
@@ -165,7 +166,7 @@ namespace messages {
             -> Container&
         {
             basic_multipart_request::encode(container);
-            return v13_detail::encode(container, port_stats_request_);
+            return detail::encode(container, port_stats_request_);
         }
 
     private:

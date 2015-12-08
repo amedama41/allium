@@ -9,9 +9,10 @@
 #include <boost/optional/optional.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/for_each.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/flow_entry.hpp>
 #include <canard/network/protocol/openflow/v13/instruction_set.hpp>
@@ -81,7 +82,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, mod_add_);
+            detail::encode(container, mod_add_);
             entry_.match().encode(container);
             return entry_.instructions().encode(container);
         }
@@ -90,7 +91,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_add
         {
-            auto const mod_add = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_add = detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_add.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -173,7 +174,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, mod_modify_);
+            detail::encode(container, mod_modify_);
             match_.encode(container);
             return instructions_.encode(container);
         }
@@ -182,7 +183,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_modify_strict
         {
-            auto const mod_modify = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_modify = detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_modify.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -258,7 +259,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, mod_modify_);
+            detail::encode(container, mod_modify_);
             match_.encode(container);
             return instructions_.encode(container);
         }
@@ -267,7 +268,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_modify
         {
-            auto const mod_modify = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_modify = detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_modify.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -357,7 +358,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, mod_delete_);
+            detail::encode(container, mod_delete_);
             return match_.encode(container);
         }
 
@@ -365,7 +366,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_delete_strict
         {
-            auto const mod_delete = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_delete = detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_delete.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }
@@ -428,7 +429,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, mod_delete_);
+            detail::encode(container, mod_delete_);
             return match_.encode(container);
         }
 
@@ -436,7 +437,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_mod_delete
         {
-            auto const mod_delete = v13_detail::decode<v13_detail::ofp_flow_mod>(first, last);
+            auto const mod_delete = detail::decode<v13_detail::ofp_flow_mod>(first, last);
             if (std::distance(first, last) != mod_delete.header.length - sizeof(v13_detail::ofp_flow_mod)) {
                 throw 2;
             }

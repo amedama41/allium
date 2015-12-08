@@ -8,12 +8,11 @@
 #include <vector>
 #include <boost/endian/conversion.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <canard/as_byte_range.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -84,15 +83,16 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, error_msg_);
-            return boost::push_back(container, data_);
+            detail::encode(container, error_msg_);
+            return detail::encode_byte_array(
+                    container, data_.data(), data_.size());
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> error_msg
         {
-            auto const error = v13_detail::decode<v13_detail::ofp_error_msg>(first, last);
+            auto const error = detail::decode<v13_detail::ofp_error_msg>(first, last);
             if (std::distance(first, last) != error.header.length - sizeof(v13_detail::ofp_error_msg)) {
                 throw 2;
             }

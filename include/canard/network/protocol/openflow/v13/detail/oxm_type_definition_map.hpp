@@ -79,7 +79,7 @@ namespace v13 {
 
         public:
             using value_type = typename oxm_type_definition<0>::type;
-            using needs_byteorder_conversion = typename oxm_type_definition<1>::type;
+            using needs_endian_conversion = typename oxm_type_definition<1>::type;
 
             static constexpr auto oxm_class()
                 -> protocol::ofp_oxm_class

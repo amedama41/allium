@@ -8,8 +8,8 @@
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/visitors.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_id.hpp>
@@ -87,7 +87,7 @@ namespace v13 {
             -> any_oxm_id
         {
             auto copy_first = first;
-            auto const oxm_header = v13_detail::decode<std::uint32_t>(copy_first, last);
+            auto const oxm_header = detail::decode<std::uint32_t>(copy_first, last);
             if ((oxm_header >> 16) == protocol::OFPXMC_EXPERIMENTER) {
                 return oxm_experimenter_id::decode(first, last);
             }

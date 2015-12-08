@@ -2,9 +2,10 @@
 #define CANARD_NETWORK_OPENFLOW_V13_OXM_ID_HPP
 
 #include <cstdint>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_id.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -72,14 +73,14 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return v13_detail::encode(container, oxm_header_);
+            return detail::encode(container, oxm_header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_id
         {
-            auto const oxm_header = v13_detail::decode<std::uint32_t>(first, last);
+            auto const oxm_header = detail::decode<std::uint32_t>(first, last);
             return oxm_id{oxm_header};
         }
 
@@ -147,14 +148,14 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            return v13_detail::encode(container, header_);
+            return detail::encode(container, header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_experimenter_id
         {
-            auto const header = v13_detail::decode<v13_detail::ofp_oxm_experimenter_header>(first, last);
+            auto const header = detail::decode<v13_detail::ofp_oxm_experimenter_header>(first, last);
             return oxm_experimenter_id{header.oxm_header, header.experimenter};
         }
 

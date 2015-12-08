@@ -4,9 +4,10 @@
 #include <cstdint>
 #include <iterator>
 #include <utility>
+#include <canard/network/protocol/openflow/detail/decode.hpp>
+#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/flow_entry.hpp>
 #include <canard/network/protocol/openflow/v13/instruction_set.hpp>
@@ -109,7 +110,7 @@ namespace messages {
         auto encode(Container& container) const
             -> Container&
         {
-            v13_detail::encode(container, flow_removed_);
+            detail::encode(container, flow_removed_);
             return match_.encode(container);
         }
 
@@ -118,7 +119,7 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> flow_removed
         {
-            auto const flow_rm = v13_detail::decode<v13_detail::ofp_flow_removed>(first, last);
+            auto const flow_rm = detail::decode<v13_detail::ofp_flow_removed>(first, last);
             if (std::distance(first, last) != flow_rm.header.length - sizeof(v13_detail::ofp_flow_removed)) {
                 throw 2;
             }
