@@ -1,4 +1,5 @@
 #define BOOST_TEST_DYN_LINK
+#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
@@ -19,6 +20,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
 BOOST_AUTO_TEST_CASE(constructor_test)
 {
+    static_assert(!oxm_eth_dst::needs_endian_conversion::value, "HOGE");
     auto const sut = oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}};
 
     BOOST_CHECK(not sut.oxm_has_mask());

@@ -1,4 +1,5 @@
 #define BOOST_TEST_DYN_LINK
+#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/v13/action/copy_ttl_in.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>

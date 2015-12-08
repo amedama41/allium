@@ -1,4 +1,5 @@
 #define BOOST_TEST_DYN_LINK
+#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
@@ -17,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(oxm_in_port_test)
 BOOST_AUTO_TEST_CASE(oxm_type_definition_test)
 {
     BOOST_CHECK((std::is_same<oxm_in_port::value_type, std::uint32_t>::value));
-    BOOST_CHECK((std::is_same<oxm_in_port::needs_byteorder_conversion, std::true_type>::value));
+    BOOST_CHECK((std::is_same<oxm_in_port::needs_endian_conversion, std::true_type>::value));
     BOOST_CHECK_EQUAL(oxm_in_port::oxm_class(), protocol::OFPXMC_OPENFLOW_BASIC);
     BOOST_CHECK_EQUAL(oxm_in_port::oxm_field(), protocol::OFPXMT_OFB_IN_PORT);
     BOOST_CHECK_EQUAL(oxm_in_port::oxm_type(), protocol::OFPXMC_OPENFLOW_BASIC << 7 | protocol::OFPXMT_OFB_IN_PORT);
