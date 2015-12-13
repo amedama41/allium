@@ -14,9 +14,11 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/system/error_code.hpp>
+#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/options.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel_impl.hpp>
+#include <canard/network/protocol/openflow/with_buffer.hpp>
 #include <canard/network/utils/io_service_pool.hpp>
 
 #include <iostream>
@@ -145,7 +147,7 @@ namespace openflow {
             auto const hello_msg = hello{v10::protocol::OFP_VERSION};
             boost::asio::async_write(
                       *socket
-                    , boost::asio::buffer(hello_msg.encode(*buffer))
+                    , with_buffer(hello_msg, *buffer).encode()
                     , [=](boost::system::error_code const& ec
                         , std::size_t const) mutable {
                 if (ec) {
