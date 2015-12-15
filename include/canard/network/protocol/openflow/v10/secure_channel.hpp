@@ -8,6 +8,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/fusion/sequence/intrinsic/at_key.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/queueing_write_stream.hpp>
@@ -22,9 +23,10 @@ namespace network {
 namespace openflow {
 namespace v10 {
 
-    template <class Socket = boost::asio::ip::tcp::socket>
+    template <class ChannelData, class Socket = boost::asio::ip::tcp::socket>
     class secure_channel
-        : public std::enable_shared_from_this<secure_channel<Socket>>
+        : private ChannelData
+        , public std::enable_shared_from_this<secure_channel<ChannelData, Socket>>
     {
         template <class WriteHandler>
         using async_write_result_init = canard::async_result_init<
@@ -51,6 +53,13 @@ namespace v10 {
             -> boost::asio::io_service::strand
         {
             return strand_;
+        }
+
+        template <class T>
+        auto get_data()
+            -> typename boost::fusion::result_of::at_key<ChannelData, T>::type
+        {
+            return boost::fusion::at_key<T>(static_cast<ChannelData&>(*this));
         }
 
         void close()

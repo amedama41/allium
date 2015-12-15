@@ -33,7 +33,6 @@ namespace openflow {
         using tcp = boost::asio::ip::tcp;
 
     public:
-        using channel_ptr = std::shared_ptr<v10::secure_channel<>>;
         using options = controller_options<ControllerHandler>;
 
         controller(controller_options<ControllerHandler> const& options)

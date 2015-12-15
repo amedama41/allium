@@ -19,6 +19,7 @@
 #include <boost/preprocessor/repeat.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/asio/detail/bind_handler.hpp>
+#include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/goodbye.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
@@ -49,12 +50,13 @@ namespace v10 {
 
     template <
           class ControllerHandler
+        , class ChannelData = detail::channel_data_t<ControllerHandler>
         , class Socket = boost::asio::ip::tcp::socket
     >
     class secure_channel_impl
-        : public secure_channel<Socket>
+        : public secure_channel<ChannelData, Socket>
     {
-        using base_type = secure_channel<Socket>;
+        using base_type = secure_channel<ChannelData, Socket>;
 
     public:
         secure_channel_impl(
@@ -87,7 +89,8 @@ namespace v10 {
         template <class Message>
         void handle(std::shared_ptr<base_type> const& channel, Message&& msg)
         {
-            controller_handler_.handle(channel, std::forward<Message>(msg));
+            detail::handle(
+                    controller_handler_, channel, std::forward<Message>(msg));
         }
 
     private:
