@@ -79,15 +79,19 @@ namespace v10 {
                 , WriteHandler&& handler)
             -> typename async_write_result_init<WriteHandler>::result_type
         {
-            async_write_result_init<WriteHandler> init{
-                std::forward<WriteHandler>(handler)
-            };
-            strand_.dispatch(
-                    make_async_write_functor(
-                          this->shared_from_this()
-                        , std::move(init.handler())
-                        , msg.encode()));
-            return init.get();
+            if (strand_.running_in_this_thread()) {
+                return async_write_some(
+                        msg.encode(), std::forward<WriteHandler>(handler));
+            }
+            else {
+                async_write_result_init<WriteHandler> init{
+                    std::forward<WriteHandler>(handler)
+                };
+                strand_.post(make_async_write_functor(
+                              this->shared_from_this()
+                            , std::move(init.handler()), msg.encode()));
+                return init.get();
+            }
         }
 
         template <class Message, class WriteHandler>
