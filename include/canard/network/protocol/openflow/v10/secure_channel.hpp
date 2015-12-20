@@ -4,12 +4,12 @@
 #include <cstddef>
 #include <memory>
 #include <utility>
-#include <boost/asio/handler_alloc_hook.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/fusion/sequence/intrinsic/at_key.hpp>
 #include <boost/system/error_code.hpp>
+#include <canard/asio/asio_handler_hook_propagation.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/queueing_write_stream.hpp>
 #include <canard/asio/suppress_asio_async_result_propagation.hpp>
@@ -119,7 +119,19 @@ namespace v10 {
     private:
         template <class WriteHandler, class ConstBufferSequence>
         struct async_write_functor
+            : canard::asio_handler_hook_propagation<
+                  async_write_functor<WriteHandler, ConstBufferSequence>
+                , canard::no_propagation_hook_invoke
+              >
         {
+            template <class Channel, class Handler, class BufferSequence>
+            async_write_functor(Channel&& c, Handler&& h, BufferSequence&& b)
+                : channel_(std::forward<Channel>(c))
+                , handler_(std::forward<Handler>(h))
+                , buffers_(std::forward<BufferSequence>(b))
+            {
+            }
+
             void operator()()
             {
                 channel_->async_write_some(
@@ -128,22 +140,10 @@ namespace v10 {
                               std::move(handler_)));
             }
 
-            friend auto asio_handler_allocate(
-                    std::size_t const size, async_write_functor* const func)
-                -> void*
+            auto handler() noexcept
+                -> WriteHandler&
             {
-                using boost::asio::asio_handler_allocate;
-                return asio_handler_allocate(
-                        size, std::addressof(func->handler_));
-            }
-
-            friend void asio_handler_deallocate(
-                    void* const pointer, std::size_t const size
-                    , async_write_functor* const func)
-            {
-                using boost::asio::asio_handler_deallocate;
-                asio_handler_deallocate(
-                        pointer, size, std::addressof(func->handler_));
+                return handler_;
             }
 
             std::shared_ptr<secure_channel> channel_;
