@@ -13,7 +13,7 @@ namespace openflow {
     struct shared_buffer_generator
     {
         shared_buffer_generator() noexcept
-            : buffer{}, it{buffer.data()}
+            : buffer{}, it{nullptr}
         {
         }
 
