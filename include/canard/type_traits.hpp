@@ -6,13 +6,19 @@
 namespace canard {
 
     template <class T>
-    struct remove_cv_and_reference
+    struct remove_cvref
         : std::remove_cv<typename std::remove_reference<T>::type>
     {
     };
 
     template <class T>
-    using remove_cv_and_reference_t = typename remove_cv_and_reference<T>::type;
+    using remove_cvref_t = typename remove_cvref<T>::type;
+
+    template <class T>
+    using remove_cv_and_reference = remove_cvref<T>;
+
+    template <class T>
+    using remove_cv_and_reference_t = remove_cvref_t<T>;
 
     template <class T, class... U>
     struct is_related : std::false_type {};
