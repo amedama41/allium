@@ -466,7 +466,6 @@ private:
 public:
     using next_layer_type = typename std::remove_reference<Stream>::type;
     using lowest_layer_type = typename next_layer_type::lowest_layer_type;
-    using native_handle_type = typename next_layer_type::native_handle_type;
 
     explicit queueing_write_stream(Stream stream)
         : queueing_write_stream{std::move(stream), Context{}}
@@ -501,12 +500,6 @@ public:
         -> boost::asio::io_service&
     {
         return next_layer().get_io_service();
-    }
-
-    auto native_handle()
-        -> native_handle_type
-    {
-        return stream_.native_handle();
     }
 
     auto next_layer()
