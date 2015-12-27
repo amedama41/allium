@@ -1,5 +1,5 @@
 INCLUDES = -I../include
-LDFLAGS = -lboost_unit_test_framework-mt
+LDFLAGS = -lboost_unit_test_framework-mt -lboost_system-mt -lboost_thread-mt
 CXX = clang++
 # CXX = g++-4.9
 CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
@@ -81,6 +81,9 @@ all: $(DEPENDS) $(TARGET)
 $(TARGET): $(OBJS)
 	$(build_test)
 
+queueing_write_stream_test: queueing_write_stream_test.o
+	$(build_test)
+
 utility_test: $(UTILITY_TEST_OBJS)
 	$(build_test)
 
@@ -104,7 +107,7 @@ run_each: $(ALL_TESTS)
 	done
 
 clean:
-	-rm *.o $(DEPENDS) $(ALL_TESTS) $(TARGET) utility_test message_test oxm_match_field_test action_test 2> /dev/null
+	-rm *.o $(DEPENDS) $(ALL_TESTS) $(TARGET) queueing_write_stream_test utility_test message_test oxm_match_field_test action_test 2> /dev/null
 
 -include $(DEPENDS)
 
