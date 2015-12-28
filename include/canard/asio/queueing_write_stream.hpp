@@ -36,7 +36,8 @@ namespace detail {
     protected:
         using complete_func_type = boost::asio::detail::operation::func_type;
         using consume_func_type
-            = auto(*)(write_op_base*, std::size_t&) -> bool;
+            = auto(*)(write_op_base*, std::size_t&)
+                -> boost::asio::const_buffer;
         using buffers_func_type
             = void(*)(write_op_base*, std::vector<boost::asio::const_buffer>&);
 
@@ -48,12 +49,13 @@ namespace detail {
             , consume_func_(consume_func)
             , buffers_func_(buffers_func)
             , ec_{}
+            , bytes_transferred_{}
         {
         }
 
     public:
         auto consume(std::size_t& bytes_transferred)
-            -> bool
+            -> boost::asio::const_buffer
         {
             return consume_func_(this, bytes_transferred);
         }
@@ -74,10 +76,28 @@ namespace detail {
             ec_ = ec;
         }
 
+        auto bytes_transferred() const noexcept
+            -> std::size_t
+        {
+            return bytes_transferred_;
+        }
+
+        auto bytes_transferred_ref() noexcept
+            -> std::size_t&
+        {
+            return bytes_transferred_;
+        }
+
+        void add_bytes_transferred(std::size_t const bytes) noexcept
+        {
+            bytes_transferred_ += bytes;
+        }
+
     private:
         consume_func_type consume_func_;
         buffers_func_type buffers_func_;
         boost::system::error_code ec_;
+        std::size_t bytes_transferred_;
     };
 
     template <class WriteHandler, class ConstBufferSequence>
@@ -113,8 +133,7 @@ namespace detail {
             };
 
             auto function = detail::bind(
-                      op->handler_, op->error_code()
-                    , op->buffers_.total_consumed_size());
+                    op->handler_, op->error_code(), op->bytes_transferred());
 
             holder.handler(function.handler());
             holder.reset();
@@ -131,10 +150,11 @@ namespace detail {
 
         static auto do_consume(
                 write_op_base* base, std::size_t& bytes_transferred)
-            -> bool
+            -> boost::asio::const_buffer
         {
             auto const op = static_cast<waiting_op*>(base);
-            return op->buffers_.consume(bytes_transferred);
+            return op->buffers_.consume(
+                    op->bytes_transferred_ref(), bytes_transferred);
         }
 
         static void do_buffers(
@@ -180,10 +200,28 @@ namespace detail {
         }
 
         template <class Queue>
+        auto gather(boost::asio::const_buffer const& buffer
+                  , Queue& waiting_queue)
+            -> gather_buffers&
+        {
+            buffers_->clear();
+            buffers_->push_back(buffer);
+            gather_impl(waiting_queue);
+            return *this;
+        }
+
+        template <class Queue>
         auto gather(Queue& waiting_queue)
             -> gather_buffers&
         {
             buffers_->clear();
+            gather_impl(waiting_queue);
+            return *this;
+        }
+
+        template <class Queue>
+        void gather_impl(Queue& waiting_queue)
+        {
             for (auto op = waiting_queue.front();
                     op;
                     op = boost::asio::detail::op_queue_access::next(op)) {
@@ -192,7 +230,6 @@ namespace detail {
                     break;
                 }
             }
-            return *this;
         }
 
     private:
@@ -216,6 +253,8 @@ namespace detail {
                   Stream& stream
                 , std::shared_ptr<queueing_write_stream_impl> ptr)
         {
+            head_buffer = boost::asio::const_buffer{};
+
             auto& io_service_impl = boost::asio::use_service<
                 boost::asio::detail::io_service_impl
             >(stream.get_io_service());
@@ -232,10 +271,11 @@ namespace detail {
                     , queueing_write_handler<Stream, Context> const& handler)
         {
             stream.next_layer().async_write_some(
-                      buffers_.gather(waiting_queue), handler);
+                    buffers_.gather(head_buffer, waiting_queue), handler);
         }
 
         boost::asio::detail::op_queue<detail::write_op_base> waiting_queue;
+        boost::asio::const_buffer head_buffer;
         gather_buffers buffers_;
     };
 
@@ -312,15 +352,29 @@ namespace detail {
                       , std::size_t bytes_transferred)
         {
             operation_queue ready_queue{};
-            while (auto const op = impl_->waiting_queue.front()) {
-                if (!op->consume(bytes_transferred)) {
-                    break;
+
+            auto const head_op = impl_->waiting_queue.front();
+            auto const head_buffer_size
+                = boost::asio::buffer_size(impl_->head_buffer);
+            if (head_buffer_size <= bytes_transferred) {
+                head_op->add_bytes_transferred(head_buffer_size);
+                bytes_transferred -= head_buffer_size;
+                while (auto const op = impl_->waiting_queue.front()) {
+                    auto const buffer = op->consume(bytes_transferred);
+                    if (boost::asio::buffer_size(buffer) != 0) {
+                        impl_->head_buffer = buffer;
+                        break;
+                    }
+                    if (bytes_transferred == 0) {
+                        op->error_code(ec);
+                    }
+                    impl_->waiting_queue.pop();
+                    ready_queue.push(op);
                 }
-                if (bytes_transferred == 0) {
-                    op->error_code(ec);
-                }
-                impl_->waiting_queue.pop();
-                ready_queue.push(op);
+            }
+            else {
+                impl_->head_buffer = impl_->head_buffer + bytes_transferred;
+                head_op->add_bytes_transferred(bytes_transferred);
             }
 
             if (ec) {
