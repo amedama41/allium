@@ -311,6 +311,109 @@ BOOST_AUTO_TEST_SUITE(strand_context)
 
 BOOST_AUTO_TEST_SUITE_END() // strand_context
 
+BOOST_AUTO_TEST_SUITE(original_context)
+
+  struct original_context
+  {
+    struct data {
+      std::size_t alloc_counter = 0;
+      std::size_t dealloc_counter = 0;
+      std::size_t invoke_counter = 0;
+      std::size_t continuation_counter = 0;
+    };
+    data* ptr;
+
+    friend auto asio_handler_allocate(std::size_t size, original_context* ctx)
+      -> void*
+    {
+      ++ctx->ptr->alloc_counter;
+      return operator new(size);
+    }
+
+    friend void asio_handler_deallocate(void* p, std::size_t, original_context* ctx)
+    {
+      ++ctx->ptr->dealloc_counter;
+      operator delete(p);
+    }
+
+    template <class Function>
+    friend void asio_handler_invoke(Function&& function, original_context* ctx)
+    {
+      ++ctx->ptr->invoke_counter;
+      function();
+      ++ctx->ptr->invoke_counter;
+    }
+
+    friend bool asio_handler_is_continuation(original_context* ctx)
+    {
+      ++ctx->ptr->continuation_counter;
+      return false;
+    }
+  };
+
+  using stream_type = canard::queueing_write_stream<
+    stub_stream, original_context
+  >;
+
+  BOOST_AUTO_TEST_CASE(construct_from_stream_test)
+  {
+    asio::io_service io_service{};
+    auto max_size = std::size_t{5000};
+    auto ec = make_error_code(sys::errc::bad_message);
+    auto base_stream = stub_stream{io_service, max_size, ec};
+
+    stream_type stream{std::move(base_stream)};
+
+    BOOST_TEST(&stream.get_io_service() == &io_service);
+    BOOST_TEST(stream.next_layer().max_writable_size_per_write() == max_size);
+    BOOST_TEST(stream.next_layer().error_code() == ec);
+    BOOST_TEST(stream.next_layer().written_data().size() == 0);
+  }
+
+  BOOST_AUTO_TEST_CASE(construct_from_arguments_test)
+  {
+    asio::io_service io_service{};
+    auto max_size = std::size_t{3000};
+    auto ec = make_error_code(sys::errc::no_stream_resources);
+
+    stream_type stream{io_service, max_size, ec};
+
+    BOOST_TEST(&stream.get_io_service() == &io_service);
+    BOOST_TEST(stream.next_layer().max_writable_size_per_write() == max_size);
+    BOOST_TEST(stream.next_layer().error_code() == ec);
+    BOOST_TEST(stream.next_layer().written_data().size() == 0);
+  }
+
+  BOOST_FIXTURE_TEST_CASE(continuous_write_test, buffer_fixture<>)
+  {
+    asio::io_service io_service{};
+    auto data = original_context::data{};
+    stream_type stream{original_context{&data}, io_service};
+    auto result = std::vector<std::tuple<sys::error_code, std::size_t>>();
+
+    for (auto&& buf : buffers) {
+      stream.async_write_some(
+            asio::buffer(buf)
+          , [&](sys::error_code const& ec, std::size_t const size) {
+              result.emplace_back(ec, size);
+      });
+    }
+    io_service.run();
+
+    BOOST_TEST(data.alloc_counter == 2);
+    BOOST_TEST(data.dealloc_counter == 2);
+    BOOST_TEST(data.invoke_counter == 4);
+    BOOST_TEST(data.continuation_counter == 0);
+    BOOST_TEST(result.size() == num_buffers);
+    for (auto&& e : result) {
+      BOOST_TEST(std::get<0>(e) == sys::error_code{});
+      BOOST_TEST(std::get<1>(e) == buffer_size);
+    }
+    BOOST_TEST(stream.next_layer().written_data() == joined_buffers());
+  }
+
+BOOST_AUTO_TEST_SUITE_END() // original_context
+
 BOOST_AUTO_TEST_SUITE(multi_thread_test)
 
   using stream_type = canard::queueing_write_stream<
