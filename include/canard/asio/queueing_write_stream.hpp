@@ -212,15 +212,27 @@ namespace detail {
         }
 
         template <class Stream>
-        void do_write(
+        void start_write(
                   Stream& stream
                 , std::shared_ptr<queueing_write_stream_impl> ptr)
         {
+            auto& io_service_impl = boost::asio::use_service<
+                boost::asio::detail::io_service_impl
+            >(stream.get_io_service());
+
             stream.next_layer().async_write_some(
                       buffers_.gather(waiting_queue)
                     , queueing_write_handler<Stream, Context>{
-                            stream, stream.get_io_service(), std::move(ptr)
+                            stream, io_service_impl, std::move(ptr)
                       });
+        }
+
+        template <class Stream>
+        void continue_write(Stream& stream
+                    , queueing_write_handler<Stream, Context> const& handler)
+        {
+            stream.next_layer().async_write_some(
+                      buffers_.gather(waiting_queue), handler);
         }
 
         boost::asio::detail::op_queue<detail::write_op_base> waiting_queue;
@@ -251,7 +263,7 @@ namespace detail {
             {
                 if (need_write) {
                     try {
-                        impl->do_write(stream, impl);
+                        this_->impl_->continue_write(this_->stream_, *this_);
                     }
                     catch (boost::system::system_error const& e) {
                         set_error_to_ready_queue(e.code());
@@ -270,30 +282,28 @@ namespace detail {
 
                 while (auto const op = ready_queue.front()) {
                     ready_queue.pop();
-                    io_service.post_immediate_completion(op, true);
+                    this_->io_service_impl_.post_immediate_completion(op, true);
                 }
             }
 
             void set_error_to_ready_queue(boost::system::error_code const& ec)
             {
-                set_error_code(ec, impl->waiting_queue);
-                ready_queue.push(impl->waiting_queue);
+                set_error_code(ec, this_->impl_->waiting_queue);
+                ready_queue.push(this_->impl_->waiting_queue);
             }
 
-            Stream& stream;
-            std::shared_ptr<queueing_write_stream_impl<Context>> impl;
+            queueing_write_handler* this_;
             operation_queue& ready_queue;
-            boost::asio::detail::io_service_impl& io_service;
             bool need_write;
         };
 
     public:
         queueing_write_handler(
                   Stream& stream
-                , boost::asio::io_service& io_service
+                , boost::asio::detail::io_service_impl& io_service_impl
                 , std::shared_ptr<queueing_write_stream_impl<Context>>&& impl)
             : stream_(stream)
-            , io_service_(io_service)
+            , io_service_impl_(io_service_impl)
             , impl_(std::move(impl))
         {
         }
@@ -318,18 +328,13 @@ namespace detail {
                 ready_queue.push(impl_->waiting_queue);
             }
 
-            auto& io_service = boost::asio::use_service<
-                boost::asio::detail::io_service_impl
-            >(io_service_);
-
             on_do_complete_exit on_exit{
-                  stream_, impl_
-                , ready_queue, io_service, !impl_->waiting_queue.empty()
+                this, ready_queue, !impl_->waiting_queue.empty()
             };
 
             while (auto const op = ready_queue.front()) {
                 ready_queue.pop();
-                op->complete(io_service, ec, 0);
+                op->complete(io_service_impl_, ec, 0);
             }
         }
 
@@ -370,7 +375,7 @@ namespace detail {
 
     private:
         Stream& stream_;
-        boost::asio::io_service& io_service_;
+        boost::asio::detail::io_service_impl& io_service_impl_;
         std::shared_ptr<queueing_write_stream_impl<Context>> impl_;
     };
 
@@ -551,7 +556,7 @@ public:
             queue_cleanup on_exit{
                 std::addressof(impl_->waiting_queue), false
             };
-            impl_->do_write(*this, impl_);
+            impl_->start_write(*this, impl_);
             on_exit.commit = true;
         }
 
