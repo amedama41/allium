@@ -77,11 +77,9 @@ namespace v10 {
         {
             auto base_channel = base_type::shared_from_this();
             handle(base_channel, std::move(hello));
-            auto read_channel
-                = std::static_pointer_cast<secure_channel_impl>(base_channel);
-            auto loop = message_loop{
-                std::move(read_channel), std::move(base_channel)
-            };
+            auto const read_channel
+                = static_cast<secure_channel_impl*>(base_channel.get());
+            auto loop = message_loop{read_channel, std::move(base_channel)};
             loop.run();
         }
 
@@ -98,19 +96,17 @@ namespace v10 {
         {
             void run()
             {
-                auto const channel = channel_.get();
                 auto const least_size = sizeof(v10_detail::ofp_header);
-                channel->strand_.dispatch(
+                channel_->strand_.dispatch(
                         canard::detail::bind(std::move(*this), least_size));
             }
 
             void operator()(std::size_t const least_size)
             {
-                auto const channel = channel_.get();
                 boost::asio::async_read(
-                          channel->stream_, channel->streambuf_
+                          channel_->stream_, channel_->streambuf_
                         , boost::asio::transfer_at_least(least_size)
-                        , channel->strand_.wrap(std::move(*this)));
+                        , channel_->strand_.wrap(std::move(*this)));
             }
 
             void operator()(boost::system::error_code const& ec, std::size_t)
@@ -121,7 +117,7 @@ namespace v10 {
                     channel_->close();
                     std::cout
                         << "connection closed: " << ec.message()
-                        << " " << channel_.use_count() << std::endl;
+                        << " " << base_channel_.use_count() << std::endl;
                     return;
                 }
                 auto const least_size = handle_read(channel_->streambuf_);
@@ -232,7 +228,7 @@ namespace v10 {
                 operator delete(pointer);
             }
 
-            std::shared_ptr<secure_channel_impl> channel_;
+            secure_channel_impl* channel_;
             std::shared_ptr<base_type> base_channel_;
         };
 
