@@ -4,8 +4,6 @@
 #include <cstddef>
 #include <utility>
 #include <boost/asio/buffer.hpp>
-#include <boost/range/iterator_range.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 
 namespace canard {
 namespace detail {
@@ -48,12 +46,16 @@ namespace detail {
             return boost::asio::const_buffer{};
         }
 
-        template <class Container>
-        void push_back_to(Container& container) const
+        template <class Iterator>
+        auto copy_buffers(Iterator out, Iterator out_end) const
+            -> Iterator
         {
-            boost::push_back(
-                    container, boost::make_iterator_range(
-                        begin_remainder_, buffers_.end()));
+            for (auto it = begin_remainder_, it_end = buffers_.end();
+                    it != it_end && out != out_end;
+                    ++out, ++it) {
+                *out = *it;
+            }
+            return out;
         }
 
     private:

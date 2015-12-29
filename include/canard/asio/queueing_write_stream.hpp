@@ -2,12 +2,13 @@
 #define CANARD_ASIO_QUEUEING_WRITE_STREAM_HPP
 
 #include <cstddef>
+#include <array>
+#include <iterator>
 #include <type_traits>
 #include <memory>
 #include <new>
 #include <system_error>
 #include <utility>
-#include <vector>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/completion_condition.hpp>
 #include <boost/asio/error.hpp>
@@ -18,6 +19,7 @@
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/operation.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 #include <canard/asio/async_result_init.hpp>
@@ -30,6 +32,17 @@
 namespace canard {
 namespace detail {
 
+    struct asio_limiting_params
+        : private boost::asio::detail::buffer_sequence_adapter_base
+    {
+        using buffer_sequence_adapter_base::max_buffers;
+    };
+
+    using buffers_type = std::array<
+        boost::asio::const_buffer, asio_limiting_params::max_buffers
+    >;
+    using buffers_iterator = buffers_type::iterator;
+
     class write_op_base
         : public boost::asio::detail::operation
     {
@@ -39,7 +52,8 @@ namespace detail {
             = auto(*)(write_op_base*, std::size_t&)
                 -> boost::asio::const_buffer;
         using buffers_func_type
-            = void(*)(write_op_base*, std::vector<boost::asio::const_buffer>&);
+            = auto(*)(write_op_base*, buffers_iterator, buffers_iterator)
+                -> buffers_iterator;
 
         write_op_base(
                   complete_func_type const complete_func
@@ -60,9 +74,10 @@ namespace detail {
             return consume_func_(this, bytes_transferred);
         }
 
-        void buffers(std::vector<boost::asio::const_buffer>& buffers)
+        auto buffers(buffers_iterator it, buffers_iterator it_end)
+            -> buffers_iterator
         {
-            buffers_func_(this, buffers);
+            return buffers_func_(this, it, it_end);
         }
 
         auto error_code() const
@@ -157,83 +172,18 @@ namespace detail {
                     op->bytes_transferred_ref(), bytes_transferred);
         }
 
-        static void do_buffers(
+        static auto do_buffers(
                   write_op_base* base
-                , std::vector<boost::asio::const_buffer>& buffers)
+                , buffers_iterator it, buffers_iterator it_end)
+            -> buffers_iterator
         {
             auto const op = static_cast<waiting_op*>(base);
-            op->buffers_.push_back_to(buffers);
+            return op->buffers_.copy_buffers(it, it_end);
         }
 
     private:
         WriteHandler handler_;
         canard::detail::consuming_buffers<ConstBufferSequence> buffers_;
-    };
-
-    class gather_buffers
-    {
-        struct asio_limiting_params
-            : private boost::asio::detail::buffer_sequence_adapter_base
-        {
-            using buffer_sequence_adapter_base::max_buffers;
-        };
-
-    public:
-        using value_type = boost::asio::const_buffer;
-        using const_iterator = std::vector<value_type>::const_iterator;
-
-        gather_buffers()
-            : buffers_(std::make_shared<std::vector<value_type>>())
-        {
-        }
-
-        auto begin() const
-            -> const_iterator
-        {
-            return buffers_->begin();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return buffers_->end();
-        }
-
-        template <class Queue>
-        auto gather(boost::asio::const_buffer const& buffer
-                  , Queue& waiting_queue)
-            -> gather_buffers&
-        {
-            buffers_->clear();
-            buffers_->push_back(buffer);
-            gather_impl(waiting_queue);
-            return *this;
-        }
-
-        template <class Queue>
-        auto gather(Queue& waiting_queue)
-            -> gather_buffers&
-        {
-            buffers_->clear();
-            gather_impl(waiting_queue);
-            return *this;
-        }
-
-        template <class Queue>
-        void gather_impl(Queue& waiting_queue)
-        {
-            for (auto op = waiting_queue.front();
-                    op;
-                    op = boost::asio::detail::op_queue_access::next(op)) {
-                op->buffers(*buffers_);
-                if (buffers_->size() >= asio_limiting_params::max_buffers) {
-                    break;
-                }
-            }
-        }
-
-    private:
-        std::shared_ptr<std::vector<value_type>> buffers_;
     };
 
     template <class Stream, class Context>
@@ -253,30 +203,52 @@ namespace detail {
                   Stream& stream
                 , std::shared_ptr<queueing_write_stream_impl> ptr)
         {
-            head_buffer = boost::asio::const_buffer{};
+            auto bytes_transferred = std::size_t{};
+            head_buffer() = waiting_queue.front()->consume(bytes_transferred);
 
             auto& io_service_impl = boost::asio::use_service<
                 boost::asio::detail::io_service_impl
             >(stream.get_io_service());
 
             stream.next_layer().async_write_some(
-                      buffers_.gather(waiting_queue)
+                      gather_buffers()
                     , queueing_write_handler<Stream, Context>{
                             stream, io_service_impl, std::move(ptr)
                       });
         }
 
         template <class Stream>
-        void continue_write(Stream& stream
-                    , queueing_write_handler<Stream, Context> const& handler)
+        void continue_write(
+                  Stream& stream
+                , queueing_write_handler<Stream, Context> const& handler)
         {
-            stream.next_layer().async_write_some(
-                    buffers_.gather(head_buffer, waiting_queue), handler);
+            stream.next_layer().async_write_some(gather_buffers(), handler);
+        }
+
+        auto head_buffer() noexcept
+            -> boost::asio::const_buffer&
+        {
+            return buffers_.front();
+        }
+
+        auto gather_buffers()
+            -> boost::iterator_range<buffers_iterator>
+        {
+            auto it = std::next(buffers_.begin());
+            auto const it_end = buffers_.end();
+            for (auto op = waiting_queue.front();
+                    op;
+                    op = boost::asio::detail::op_queue_access::next(op)) {
+                it = op->buffers(it, it_end);
+                if (it == it_end) {
+                    break;
+                }
+            }
+            return boost::make_iterator_range(buffers_.begin(), it);
         }
 
         boost::asio::detail::op_queue<detail::write_op_base> waiting_queue;
-        boost::asio::const_buffer head_buffer;
-        gather_buffers buffers_;
+        buffers_type buffers_;
     };
 
     void set_error_code(
@@ -355,14 +327,14 @@ namespace detail {
 
             auto const head_op = impl_->waiting_queue.front();
             auto const head_buffer_size
-                = boost::asio::buffer_size(impl_->head_buffer);
+                = boost::asio::buffer_size(impl_->head_buffer());
             if (head_buffer_size <= bytes_transferred) {
                 head_op->add_bytes_transferred(head_buffer_size);
                 bytes_transferred -= head_buffer_size;
                 while (auto const op = impl_->waiting_queue.front()) {
                     auto const buffer = op->consume(bytes_transferred);
                     if (boost::asio::buffer_size(buffer) != 0) {
-                        impl_->head_buffer = buffer;
+                        impl_->head_buffer() = buffer;
                         break;
                     }
                     if (bytes_transferred == 0) {
@@ -373,7 +345,7 @@ namespace detail {
                 }
             }
             else {
-                impl_->head_buffer = impl_->head_buffer + bytes_transferred;
+                impl_->head_buffer() = impl_->head_buffer() + bytes_transferred;
                 head_op->add_bytes_transferred(bytes_transferred);
             }
 
