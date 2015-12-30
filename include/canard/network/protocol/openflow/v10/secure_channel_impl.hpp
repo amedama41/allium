@@ -77,9 +77,7 @@ namespace v10 {
         {
             auto base_channel = base_type::shared_from_this();
             handle(base_channel, std::move(hello));
-            auto const read_channel
-                = static_cast<secure_channel_impl*>(base_channel.get());
-            auto loop = message_loop{read_channel, std::move(base_channel)};
+            auto loop = message_loop{this, std::move(base_channel)};
             loop.run();
         }
 
