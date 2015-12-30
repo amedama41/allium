@@ -1,5 +1,5 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_ERROR_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_ERROR_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_ERROR_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_ERROR_HPP
 
 #include <cstdint>
 #include <algorithm>
@@ -126,4 +126,4 @@ using messages::error;
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_ERROR_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_ERROR_HPP
