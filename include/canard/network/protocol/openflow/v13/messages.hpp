@@ -1,6 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_HPP
 
+#include <tuple>
 #include <canard/network/protocol/openflow/v13/message/hello.hpp>
 #include <canard/network/protocol/openflow/v13/message/error.hpp>
 #include <canard/network/protocol/openflow/v13/message/echo.hpp>
@@ -14,5 +15,47 @@
 #include <canard/network/protocol/openflow/v13/message/packet_in.hpp>
 #include <canard/network/protocol/openflow/v13/message/flow_removed.hpp>
 #include <canard/network/protocol/openflow/v13/message/port_status.hpp>
+
+namespace canard {
+namespace network {
+namespace openflow {
+namespace v13 {
+
+    using default_switch_message_list = std::tuple<
+          messages::error
+        , messages::echo_request
+        , messages::echo_reply
+        , messages::features_reply
+        , messages::get_config_reply
+        , messages::packet_in
+        , messages::flow_removed
+        , messages::port_status
+        , messages::barrier_reply
+        // , messages::queue_get_config_reply
+        // , messages::role_reply
+        // , messages::get_async_reply
+    >;
+
+    using default_multipart_reply_list = std::tuple<
+          messages::description_reply
+        , messages::flow_stats_reply
+        , messages::aggregate_stats_reply
+        , messages::table_stats_reply
+        , messages::port_stats_reply
+        // , messages::queue_stats_reply
+        // , messages::group_stats_reply
+        // , messages::group_description_reply
+        // , messages::gruop_features_reply
+        // , messages::meter_stats_reply
+        // , messages::meter_config_reply
+        // , messages::meter_features_reply
+        , messages::table_features_reply
+        , messages::port_description_reply
+    >;
+
+} // namespace v13
+} // namespace openflow
+} // namespace network
+} // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_HPP
