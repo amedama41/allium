@@ -71,7 +71,7 @@ namespace messages {
             detail::encode(container, packet_out_);
             action_list_.encode(container);
             return detail::encode_byte_array(
-                    container, data_.data(, data_.size());
+                    container, data_.data(), data_.size());
         }
 
     private:
