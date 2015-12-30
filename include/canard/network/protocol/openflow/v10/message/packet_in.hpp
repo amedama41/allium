@@ -32,15 +32,7 @@ namespace messages {
     class packet_in
         : public v10_detail::basic_openflow_message<packet_in>
     {
-        struct array_deleter
-        {
-            void operator()(unsigned char* ptr) const
-            {
-                delete [] ptr;
-            }
-        };
-
-        using data_type = std::unique_ptr<unsigned char[], array_deleter>;
+        using data_type = std::unique_ptr<unsigned char[]>;
 
     public:
         static protocol::ofp_type const message_type = protocol::OFPT_PACKET_IN;
