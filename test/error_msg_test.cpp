@@ -1,6 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #include <canard/network/protocol/openflow/vector_buffer.hpp>
-#include <canard/network/protocol/openflow/v13/message/error_msg.hpp>
+#include <canard/network/protocol/openflow/v13/message/error.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <vector>
@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_SUITE(instantiation_test, error_data_fixture)
 
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
-        auto const sut = error_msg{protocol::OFPET_HELLO_FAILED, protocol::OFPHFC_INCOMPATIBLE, data};
+        auto const sut = messages::error{protocol::OFPET_HELLO_FAILED, protocol::OFPHFC_INCOMPATIBLE, data};
 
         BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_ERROR);
@@ -39,7 +39,7 @@ BOOST_FIXTURE_TEST_SUITE(instantiation_test, error_data_fixture)
 
     BOOST_AUTO_TEST_CASE(move_constructor_test)
     {
-        auto sut = error_msg{protocol::OFPET_HELLO_FAILED, protocol::OFPHFC_INCOMPATIBLE, data};
+        auto sut = messages::error{protocol::OFPET_HELLO_FAILED, protocol::OFPHFC_INCOMPATIBLE, data};
 
         auto const copy = std::move(sut);
 
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 
 BOOST_FIXTURE_TEST_CASE(decoding_failed_request_header, error_data_fixture)
 {
-    auto const sut = error_msg{protocol::OFPET_BAD_REQUEST, protocol::OFPBRC_BAD_LEN, data};
+    auto const sut = messages::error{protocol::OFPET_BAD_REQUEST, protocol::OFPBRC_BAD_LEN, data};
 
     auto const header = sut.failed_request_header();
 
@@ -68,14 +68,14 @@ BOOST_FIXTURE_TEST_CASE(decoding_failed_request_header, error_data_fixture)
 BOOST_FIXTURE_TEST_CASE(encode_decode_test, error_data_fixture)
 {
     auto buffer = std::vector<std::uint8_t>{};
-    auto const sut = error_msg{protocol::OFPET_FLOW_MOD_FAILED, protocol::OFPFMFC_TABLE_FULL, data};
+    auto const sut = messages::error{protocol::OFPET_FLOW_MOD_FAILED, protocol::OFPFMFC_TABLE_FULL, data};
 
     sut.encode(buffer);
 
     BOOST_CHECK_EQUAL(buffer.size(), sut.length());
 
     auto it = buffer.begin();
-    auto const decoded_message = error_msg::decode(it, buffer.end());
+    auto const decoded_message = messages::error::decode(it, buffer.end());
 
     BOOST_CHECK_EQUAL(decoded_message.version(), sut.version());
     BOOST_CHECK_EQUAL(decoded_message.type(), sut.type());
