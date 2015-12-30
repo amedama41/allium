@@ -2,7 +2,7 @@
 #define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_HPP
 
 #include <canard/network/protocol/openflow/v13/message/hello.hpp>
-#include <canard/network/protocol/openflow/v13/message/error_msg.hpp>
+#include <canard/network/protocol/openflow/v13/message/error.hpp>
 #include <canard/network/protocol/openflow/v13/message/echo.hpp>
 #include <canard/network/protocol/openflow/v13/message/flow_mod.hpp>
 #include <canard/network/protocol/openflow/v13/message/group_mod.hpp>

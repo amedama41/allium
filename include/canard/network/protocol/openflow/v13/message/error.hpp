@@ -1,5 +1,5 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_ERROR_MSG_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_ERROR_MSG_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_ERROR_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_ERROR_HPP
 
 #include <cstdint>
 #include <algorithm>
@@ -21,13 +21,13 @@ namespace openflow {
 namespace v13 {
 namespace messages {
 
-    class error_msg
-        : public v13_detail::basic_openflow_message<error_msg>
+    class error
+        : public v13_detail::basic_openflow_message<error>
     {
     public:
         static protocol::ofp_type const message_type = protocol::OFPT_ERROR;
 
-        error_msg(protocol::ofp_error_type const type, std::uint16_t const code
+        error(protocol::ofp_error_type const type, std::uint16_t const code
                 , std::vector<unsigned char> data)
             : error_msg_{
                   v13_detail::ofp_header{
@@ -90,7 +90,7 @@ namespace messages {
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
-            -> error_msg
+            -> error
         {
             auto const error = detail::decode<v13_detail::ofp_error_msg>(first, last);
             if (std::distance(first, last) != error.header.length - sizeof(v13_detail::ofp_error_msg)) {
@@ -106,7 +106,7 @@ namespace messages {
         }
 
     private:
-        error_msg(v13_detail::ofp_error_msg const& error, std::vector<unsigned char> data)
+        error(v13_detail::ofp_error_msg const& error, std::vector<unsigned char> data)
             : error_msg_(error)
             , data_{std::move(data)}
         {
@@ -119,11 +119,11 @@ namespace messages {
 
 } // namespace messages
 
-using messages::error_msg;
+using messages::error;
 
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_ERROR_MSG_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_ERROR_HPP

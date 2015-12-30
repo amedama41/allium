@@ -143,7 +143,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, error_msg const& error)
+    auto operator<<(OStream& os, error const& error)
         -> OStream&
     {
         return os << boost::format("%s: xid=%#x type=%u, failed_request.type=%u")
