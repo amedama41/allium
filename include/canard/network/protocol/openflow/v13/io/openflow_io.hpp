@@ -182,7 +182,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, switch_config_reply const& reply)
+    auto operator<<(OStream& os, get_config_reply const& reply)
         -> OStream&
     {
         return os << boost::format{"%s: xid=%#x, flags=%#x, miss_send_length=%u"}

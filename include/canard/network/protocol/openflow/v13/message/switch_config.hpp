@@ -14,14 +14,14 @@ namespace openflow {
 namespace v13 {
 namespace messages {
 
-    class switch_config_request
-        : public v13_detail::basic_openflow_message<switch_config_request>
+    class get_config_request
+        : public v13_detail::basic_openflow_message<get_config_request>
     {
     public:
         static protocol::ofp_type const message_type
             = protocol::OFPT_GET_CONFIG_REQUEST;
 
-        switch_config_request()
+        get_config_request()
             : header_{
                   protocol::OFP_VERSION, message_type
                 , sizeof(v13_detail::ofp_header), get_xid()
@@ -46,13 +46,13 @@ namespace messages {
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
-            -> switch_config_request
+            -> get_config_request
         {
-            return switch_config_request{detail::decode<v13_detail::ofp_header>(first, last)};
+            return get_config_request{detail::decode<v13_detail::ofp_header>(first, last)};
         }
 
     private:
-        explicit switch_config_request(v13_detail::ofp_header const& header)
+        explicit get_config_request(v13_detail::ofp_header const& header)
             : header_(header)
         {
         }
@@ -127,14 +127,14 @@ namespace messages {
 
     } // namespace v13_detail
 
-    class switch_config_reply
-        : public switch_config_detail::basic_switch_config<switch_config_reply>
+    class get_config_reply
+        : public switch_config_detail::basic_switch_config<get_config_reply>
     {
     public:
         static protocol::ofp_type const message_type
             = protocol::OFPT_GET_CONFIG_REPLY;
 
-        switch_config_reply(std::uint16_t const flags, std::uint16_t const miss_send_len)
+        get_config_reply(std::uint16_t const flags, std::uint16_t const miss_send_len)
             : basic_switch_config{flags, miss_send_len}
         {
         }
@@ -142,20 +142,20 @@ namespace messages {
     private:
         friend basic_switch_config;
 
-        explicit switch_config_reply(v13_detail::ofp_switch_config const& config)
+        explicit get_config_reply(v13_detail::ofp_switch_config const& config)
             : basic_switch_config{config}
         {
         }
     };
 
-    class set_switch_config
-        : public switch_config_detail::basic_switch_config<set_switch_config>
+    class set_config
+        : public switch_config_detail::basic_switch_config<set_config>
     {
     public:
         static protocol::ofp_type const message_type
             = protocol::OFPT_SET_CONFIG;
 
-        set_switch_config(std::uint16_t const flags, std::uint16_t const miss_send_len)
+        set_config(std::uint16_t const flags, std::uint16_t const miss_send_len)
             : basic_switch_config{flags, miss_send_len}
         {
         }
@@ -163,7 +163,7 @@ namespace messages {
     private:
         friend basic_switch_config;
 
-        explicit set_switch_config(v13_detail::ofp_switch_config const& config)
+        explicit set_config(v13_detail::ofp_switch_config const& config)
             : basic_switch_config{config}
         {
         }
@@ -171,9 +171,9 @@ namespace messages {
 
 } // namespace messages
 
-using messages::switch_config_request;
-using messages::switch_config_reply;
-using messages::set_switch_config;
+using messages::get_config_request;
+using messages::get_config_reply;
+using messages::set_config;
 
 } // namespace v13
 } // namespace openflow
