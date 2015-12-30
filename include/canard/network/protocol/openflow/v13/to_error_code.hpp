@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <boost/system/error_code.hpp>
 #include <canard/network/protocol/openflow/v13/error.hpp>
-#include <canard/network/protocol/openflow/v13/message/error_msg.hpp>
+#include <canard/network/protocol/openflow/v13/message/error.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -46,7 +46,7 @@ namespace v13 {
         }
     }
 
-    auto to_error_code(error_msg const& error)
+    auto to_error_code(error const& error)
         -> boost::system::error_code
     {
         return to_error_code(error.error_type(), error.error_code());
