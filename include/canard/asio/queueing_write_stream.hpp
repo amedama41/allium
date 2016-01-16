@@ -189,19 +189,18 @@ namespace detail {
     template <class Stream, class Context>
     class queueing_write_handler;
 
-    template <class Context>
+    template <class Stream, class Context>
     struct queueing_write_stream_impl
         : Context
     {
-        explicit queueing_write_stream_impl(Context&& context)
+        template <class... Args>
+        explicit queueing_write_stream_impl(Context&& context, Args&&... args)
             : Context(std::move(context))
+            , stream(std::forward<Args>(args)...)
         {
         }
 
-        template <class Stream>
-        void start_write(
-                  Stream& stream
-                , std::shared_ptr<queueing_write_stream_impl> ptr)
+        void start_write(std::shared_ptr<queueing_write_stream_impl> ptr)
         {
             auto bytes_transferred = std::size_t{};
             head_buffer() = waiting_queue.front()->consume(bytes_transferred);
@@ -210,19 +209,17 @@ namespace detail {
                 boost::asio::detail::io_service_impl
             >(stream.get_io_service());
 
-            stream.next_layer().async_write_some(
+            stream.async_write_some(
                       gather_buffers()
                     , queueing_write_handler<Stream, Context>{
-                            stream, io_service_impl, std::move(ptr)
+                            io_service_impl, std::move(ptr)
                       });
         }
 
-        template <class Stream>
         void continue_write(
-                  Stream& stream
-                , queueing_write_handler<Stream, Context> const& handler)
+                queueing_write_handler<Stream, Context> const& handler)
         {
-            stream.next_layer().async_write_some(gather_buffers(), handler);
+            stream.async_write_some(gather_buffers(), handler);
         }
 
         auto head_buffer() noexcept
@@ -247,6 +244,7 @@ namespace detail {
             return boost::make_iterator_range(buffers_.begin(), it);
         }
 
+        Stream stream;
         boost::asio::detail::op_queue<detail::write_op_base> waiting_queue;
         buffers_type buffers_;
     };
@@ -266,6 +264,7 @@ namespace detail {
     class queueing_write_handler
     {
     private:
+        using impl_type = queueing_write_stream_impl<Stream, Context>;
         using operation_queue
             = boost::asio::detail::op_queue<boost::asio::detail::operation>;
 
@@ -275,7 +274,7 @@ namespace detail {
             {
                 if (need_write) {
                     try {
-                        this_->impl_->continue_write(this_->stream_, *this_);
+                        this_->impl_->continue_write(*this_);
                     }
                     catch (boost::system::system_error const& e) {
                         set_error_to_ready_queue(e.code());
@@ -311,11 +310,9 @@ namespace detail {
 
     public:
         queueing_write_handler(
-                  Stream& stream
-                , boost::asio::detail::io_service_impl& io_service_impl
-                , std::shared_ptr<queueing_write_stream_impl<Context>>&& impl)
-            : stream_(stream)
-            , io_service_impl_(io_service_impl)
+                  boost::asio::detail::io_service_impl& io_service_impl
+                , std::shared_ptr<impl_type>&& impl)
+            : io_service_impl_(io_service_impl)
             , impl_(std::move(impl))
         {
         }
@@ -400,9 +397,8 @@ namespace detail {
         }
 
     private:
-        Stream& stream_;
         boost::asio::detail::io_service_impl& io_service_impl_;
-        std::shared_ptr<queueing_write_stream_impl<Context>> impl_;
+        std::shared_ptr<impl_type> impl_;
     };
 
     struct null_context
@@ -461,7 +457,7 @@ class queueing_write_stream
 private:
     using context_helper = detail::queueing_stream_context<Context>;
     using impl_type = detail::queueing_write_stream_impl<
-        typename context_helper::type
+        Stream, typename context_helper::type
     >;
 
     template <class ReadHandler>
@@ -504,8 +500,11 @@ public:
     }
 
     queueing_write_stream(Stream stream, Context context)
-        : stream_(std::move(stream))
-        , impl_{std::make_shared<impl_type>(context_helper::convert(context))}
+        : impl_{
+            std::make_shared<impl_type>(
+                      context_helper::convert(context)
+                    , std::move(stream))
+          }
     {
     }
 
@@ -522,8 +521,11 @@ public:
 
     template <class... Args>
     queueing_write_stream(Context context, Args&&... args)
-        : stream_{std::forward<Args>(args)...}
-        , impl_{std::make_shared<impl_type>(context_helper::convert(context))}
+        : impl_{
+            std::make_shared<impl_type>(
+                      context_helper::convert(context)
+                    , std::forward<Args>(args)...)
+          }
     {
     }
 
@@ -536,13 +538,13 @@ public:
     auto next_layer()
         -> next_layer_type&
     {
-        return stream_;
+        return impl_->stream;
     }
 
     auto lowest_layer()
         -> lowest_layer_type&
     {
-        return stream_.lowest_layer();
+        return impl_->stream.lowest_layer();
     }
 
     template <class MutableBufferSequence, class ReadHandler>
@@ -582,7 +584,7 @@ public:
             queue_cleanup on_exit{
                 std::addressof(impl_->waiting_queue), false
             };
-            impl_->start_write(*this, impl_);
+            impl_->start_write(impl_);
             on_exit.commit = true;
         }
 
@@ -592,7 +594,6 @@ public:
     }
 
 private:
-    Stream stream_;
     std::shared_ptr<impl_type> impl_;
 };
 
