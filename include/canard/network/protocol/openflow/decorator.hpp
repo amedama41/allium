@@ -11,6 +11,7 @@
 #include <boost/fusion/sequence/intrinsic/at_key.hpp>
 #include <boost/fusion/support/pair.hpp>
 #include <boost/mpl/bool.hpp>
+#include <canard/network/protocol/openflow/data_per_channel.hpp>
 
 namespace canard {
 namespace network {
@@ -94,23 +95,15 @@ namespace openflow {
         template <class Handler>
         using decorator_t = typename decorator<Handler>::type;
 
-        struct null_data {};
-
         template <class Decorator>
-        auto data(Decorator*)
-            -> boost::fusion::pair<
-                    Decorator, typename Decorator::data_per_channel>;
-
-        auto data(...) -> null_data;
-
-        template <class Decorator>
-        using to_pair_t = decltype(data(static_cast<Decorator*>(0)));
+        using to_pair_t
+            = boost::fusion::pair<Decorator, data_per_channel_t<Decorator>>;
 
         struct is_not_null
         {
             template <class T>
             struct apply
-                : boost::mpl::bool_<!std::is_same<null_data, T>::value>
+                : boost::mpl::bool_<!std::is_same<detail::null_data, T>::value>
             {};
         };
 
