@@ -15,8 +15,10 @@
 #include <boost/asio/write.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/network/protocol/openflow/vector_buffer.hpp>
+#include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/options.hpp>
+#include <canard/network/protocol/openflow/secure_channel.hpp>
 #include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
 #include <canard/network/utils/io_service_pool.hpp>
@@ -35,6 +37,11 @@ namespace v13 {
 
     public:
         using options = controller_options<ControllerHandler>;
+        using channel_ptr = std::shared_ptr<
+            secure_channel<
+                detail::channel_data_t<ControllerHandler>, tcp::socket
+            >
+        >;
 
         controller(controller_options<ControllerHandler> const& options)
             : io_service_pool_(
