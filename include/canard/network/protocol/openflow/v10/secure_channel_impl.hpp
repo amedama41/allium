@@ -22,10 +22,10 @@
 #include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/goodbye.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
+#include <canard/network/protocol/openflow/secure_channel.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/messages.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
 
 #include <iostream>
 

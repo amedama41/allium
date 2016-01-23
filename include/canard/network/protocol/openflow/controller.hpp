@@ -18,7 +18,7 @@
 #include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/options.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
+#include <canard/network/protocol/openflow/secure_channel.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel_impl.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
 #include <canard/network/utils/io_service_pool.hpp>
@@ -37,7 +37,7 @@ namespace openflow {
     public:
         using options = controller_options<ControllerHandler>;
         using channel_ptr = std::shared_ptr<
-            v10::secure_channel<
+            secure_channel<
                 detail::channel_data_t<ControllerHandler>, tcp::socket
             >
         >;
