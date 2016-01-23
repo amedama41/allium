@@ -6,12 +6,16 @@
 #include <type_traits>
 #include <utility>
 #include <boost/fusion/algorithm/transformation/filter_if.hpp>
+#include <boost/fusion/container/map.hpp>
 #include <boost/fusion/container/map/convert.hpp>
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic/at_key.hpp>
+#include <boost/fusion/sequence/intrinsic/has_key.hpp>
 #include <boost/fusion/support/pair.hpp>
 #include <boost/mpl/bool.hpp>
+#include <canard/integer_sequence.hpp>
 #include <canard/network/protocol/openflow/data_per_channel.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -42,10 +46,90 @@ namespace openflow {
         }
     };
 
+    namespace decorator_detail {
+
+        template <class Tuple>
+        using args_indices_t = canard::make_index_sequence<
+            std::tuple_size<canard::remove_cvref_t<Tuple>>::value
+        >;
+
+        template <class Map, class Decorator>
+        using has_key_t
+            = typename boost::fusion::result_of::has_key<Map, Decorator>::type;
+
+        template <class Map, class Decorator>
+        using at_key_t
+            = typename boost::fusion::result_of::at_key<Map, Decorator>::type;
+
+        template <class Decorator>
+        struct decorator_wrapper
+            : Decorator
+        {
+            template <class Tuple>
+            decorator_wrapper(Tuple&& tuple)
+                : decorator_wrapper{
+                    std::forward<Tuple>(tuple), args_indices_t<Tuple>{}
+                  }
+            {
+            }
+
+            template <class Tuple, std::size_t... Ints>
+            decorator_wrapper(Tuple&& tuple, canard::index_sequence<Ints...>)
+                : Decorator{std::get<Ints>(std::forward<Tuple>(tuple))...}
+            {
+            }
+        };
+
+        template <class Decorator, class Map>
+        auto get_args(Map& map)
+            -> typename std::enable_if<
+                    has_key_t<Map, Decorator>::value, at_key_t<Map, Decorator>
+               >::type
+        {
+            return boost::fusion::at_key<Decorator>(map);
+        }
+
+        template <class Decorator, class Map>
+        auto get_args(Map&)
+            -> typename std::enable_if<
+                    !has_key_t<Map, Decorator>::value, std::tuple<>
+               >::type
+        {
+            return std::tuple<>{};
+        }
+
+    } // namespace decorator_detail
+
+    template <class Decorator, class... Args>
+    auto make_args(Args&&... args)
+        -> boost::fusion::pair<Decorator, std::tuple<Args&&...>>
+    {
+        return boost::fusion::make_pair<Decorator>(
+                std::forward_as_tuple(std::forward<Args>(args)...));
+    }
+
     template <class... Decorators>
     struct decorate
-        : public Decorators...
+        : public decorator_detail::decorator_wrapper<Decorators>...
     {
+        template <class... Pairs>
+        explicit decorate(Pairs&&... pairs)
+            : decorate{
+                boost::fusion::map<canard::remove_cvref_t<Pairs>...>{
+                    std::forward<Pairs>(pairs)...
+                }
+              }
+        {
+        }
+
+    private:
+        template <class... Pairs>
+        explicit decorate(boost::fusion::map<Pairs...> map)
+            : decorator_detail::decorator_wrapper<Decorators>{
+                decorator_detail::get_args<Decorators>(map)
+              }...
+        {
+        }
     };
 
     namespace detail {
