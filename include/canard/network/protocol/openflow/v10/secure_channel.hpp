@@ -1,185 +1,85 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_HPP
 #define CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_HPP
 
-#include <cstddef>
-#include <memory>
-#include <utility>
-#include <boost/asio/io_service.hpp>
+#include <tuple>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/strand.hpp>
-#include <boost/fusion/sequence/intrinsic/at_key.hpp>
-#include <boost/system/error_code.hpp>
-#include <canard/asio/asio_handler_hook_propagation.hpp>
-#include <canard/asio/async_result_init.hpp>
-#include <canard/asio/queueing_write_stream.hpp>
-#include <canard/asio/suppress_asio_async_result_propagation.hpp>
-#include <canard/network/protocol/openflow/detail/null_handler.hpp>
-#include <canard/network/protocol/openflow/shared_buffer_generator.hpp>
-#include <canard/network/protocol/openflow/with_buffer.hpp>
-#include <canard/type_traits.hpp>
+#include <boost/preprocessor/repeat.hpp>
+#include <canard/network/protocol/openflow/secure_channel_reader.hpp>
+#include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v10/messages.hpp>
+#include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v10 {
 
-    template <class ChannelData, class Socket = boost::asio::ip::tcp::socket>
-    class secure_channel
-        : private ChannelData
-        , public std::enable_shared_from_this<secure_channel<ChannelData, Socket>>
+    struct handle_message
     {
-        template <class WriteHandler>
-        using async_write_result_init = canard::async_result_init<
-              canard::remove_cv_and_reference_t<WriteHandler>
-            , void(boost::system::error_code, std::size_t)
-        >;
+        using header_type = v10_detail::ofp_header;
 
-    public:
-        secure_channel(
-                  Socket socket
-                , boost::asio::io_service::strand strand)
-            : stream_{std::move(socket), strand}
-            , strand_{std::move(strand)}
+        template <class Reader, class BaseChannel>
+        void operator()(
+                Reader* const reader, BaseChannel const& base_channel
+              , header_type const& header
+              , unsigned char const* first
+              , unsigned char const* const last) const
         {
-        }
-
-        auto get_io_service()
-            -> boost::asio::io_service&
-        {
-            return stream_.get_io_service();
-        }
-
-        auto get_context()
-            -> boost::asio::io_service::strand
-        {
-            return strand_;
-        }
-
-        template <class T>
-        auto get_data()
-            -> typename boost::fusion::result_of::at_key<ChannelData, T>::type
-        {
-            return boost::fusion::at_key<T>(static_cast<ChannelData&>(*this));
-        }
-
-        void close()
-        {
-            auto channel = this->shared_from_this();
-            strand_.dispatch([channel]{
-                if (channel->stream_.lowest_layer().is_open()) {
-                    auto ignore = boost::system::error_code{};
-                    channel->stream_.lowest_layer().close(ignore);
+            switch (header.type) {
+#           define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
+            using msg ## N \
+                = std::tuple_element<N, default_switch_message_list>::type; \
+            case msg ## N::message_type: \
+                reader->handle(base_channel, msg ## N::decode(first, last)); \
+                break;
+            static_assert(
+                    std::tuple_size<default_switch_message_list>::value == 10
+                  , "not match to the number of message types");
+            BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
+#           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
+            case protocol::OFPT_STATS_REPLY:
+                if (header.length < sizeof(v10_detail::ofp_stats_reply)) {
+                    // TODO needs error handling
+                    break;
                 }
-            });
-        }
-
-        template <class Message, class Buffer, class WriteHandler>
-        auto async_send(
-                  detail::message_with_buffer<Message, Buffer> const& msg
-                , WriteHandler&& handler)
-            -> typename async_write_result_init<WriteHandler>::result_type
-        {
-            if (strand_.running_in_this_thread()) {
-                return async_write_some(
-                        msg.encode(), std::forward<WriteHandler>(handler));
-            }
-            else {
-                async_write_result_init<WriteHandler> init{
-                    std::forward<WriteHandler>(handler)
-                };
-                strand_.post(make_async_write_functor(
-                              this->shared_from_this()
-                            , std::move(init.handler()), msg.encode()));
-                return init.get();
+                handle_stats_reply(reader, base_channel, first, last);
+                break;
+            default:
+                break;
             }
         }
 
-        template <class Message, class WriteHandler>
-        auto async_send(Message const& msg, WriteHandler&& handler)
-            -> typename async_write_result_init<WriteHandler>::result_type
+        template <class Reader, class BaseChannel>
+        void handle_stats_reply(
+                Reader* const reader, BaseChannel const& base_channel
+              , unsigned char const* first
+              , unsigned char const* const last) const
         {
-            return async_send(with_buffer(msg, shared_buffer_generator{})
-                      , std::forward<WriteHandler>(handler));
-        }
-
-        template <class Message>
-        auto async_send(Message const& msg)
-            -> typename async_write_result_init<detail::null_handler>::result_type
-        {
-            return async_send(msg, detail::null_handler{});
-        }
-
-    protected:
-        template <class ConstBufferSequence, class WriteHandler>
-        auto async_write_some(
-                ConstBufferSequence&& buffers, WriteHandler&& handler)
-            -> typename async_write_result_init<WriteHandler>::result_type
-        {
-            return stream_.async_write_some(
-                      std::forward<ConstBufferSequence>(buffers)
-                    , std::forward<WriteHandler>(handler));
-        }
-
-    private:
-        template <class WriteHandler, class ConstBufferSequence>
-        struct async_write_functor
-            : canard::asio_handler_hook_propagation<
-                  async_write_functor<WriteHandler, ConstBufferSequence>
-                , canard::no_propagation_hook_invoke
-              >
-        {
-            template <class Channel, class Handler, class BufferSequence>
-            async_write_functor(Channel&& c, Handler&& h, BufferSequence&& b)
-                : channel_(std::forward<Channel>(c))
-                , handler_(std::forward<Handler>(h))
-                , buffers_(std::forward<BufferSequence>(b))
-            {
+            auto const stats_reply = secure_channel_detail::read<
+                v10_detail::ofp_stats_reply
+            >(first);
+            switch (stats_reply.type) {
+#           define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
+            using msg ## N \
+                = std::tuple_element<N, default_stats_reply_list>::type; \
+            case msg ## N::stats_type_value: \
+                reader->handle(base_channel, msg ## N::decode(first, last)); \
+                break;
+            static_assert(
+                    std::tuple_size<default_stats_reply_list>::value == 6
+                  , "not match to the number of stats reply types");
+            BOOST_PP_REPEAT(
+                    6, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
+#           undef  CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE
+            default:
+                break;
             }
-
-            void operator()()
-            {
-                channel_->async_write_some(
-                          std::move(buffers_)
-                        , canard::suppress_asio_async_result_propagation(
-                              std::move(handler_)));
-            }
-
-            auto handler() noexcept
-                -> WriteHandler&
-            {
-                return handler_;
-            }
-
-            std::shared_ptr<secure_channel> channel_;
-            WriteHandler handler_;
-            ConstBufferSequence buffers_;
-        };
-
-        template <class WriteHandler, class ConstBufferSequence>
-        static auto make_async_write_functor(
-                  std::shared_ptr<secure_channel>&& c
-                , WriteHandler&& h
-                , ConstBufferSequence&& cb)
-            -> async_write_functor<
-                      canard::remove_cv_and_reference_t<WriteHandler>
-                    , canard::remove_cv_and_reference_t<ConstBufferSequence>
-               >
-        {
-            return async_write_functor<
-                  canard::remove_cv_and_reference_t<WriteHandler>
-                , canard::remove_cv_and_reference_t<ConstBufferSequence>
-            >{
-                  std::move(c), std::forward<WriteHandler>(h)
-                , std::forward<ConstBufferSequence>(cb)
-            };
         }
-
-    protected:
-        canard::queueing_write_stream<
-            Socket, boost::asio::io_service::strand
-        > stream_;
-        boost::asio::io_service::strand strand_;
     };
+
+    template <class ControllerHandler, class Socket = boost::asio::ip::tcp::socket>
+    using secure_channel
+        = secure_channel_reader<handle_message, ControllerHandler, Socket>;
 
 } // namespace v10
 } // namespace openflow
