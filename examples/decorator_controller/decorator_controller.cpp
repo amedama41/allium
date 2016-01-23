@@ -5,33 +5,32 @@
 #include "table_miss_entry_setting_decorator.hpp"
 #include "logging_decorator.hpp"
 
-namespace of = canard::network::openflow::v13;
-
-struct flooding_handler;
-
-using controller = of::controller<flooding_handler>;
+namespace of = canard::network::openflow;
+namespace v13 = of::v13;
 
 struct flooding_handler
-    : of::decoration<flooding_handler
-        , logging_decorator<std::ostream&
-        , table_miss_entry_setting_decorator<>
-      >>
+    : of::decorate<
+          table_miss_entry_setting_decorator
+        , logging_decorator<std::ostream&>
+      >
 {
-    template <class... Args>
-    flooding_handler(Args&&... args)
-        : decoration{std::forward<Args>(args)...}
+    flooding_handler()
+        : decorate{
+            of::make_args<logging_decorator>(std::cout)
+          }
     {
     }
 
-    void handle(controller::channel_ptr channel, of::packet_in const& pkt_in)
+    template <class Channel>
+    void handle(Channel const& channel, v13::packet_in const& pkt_in)
     {
-        channel->send(of::packet_out{pkt_in.frame()
-                , of::protocol::OFPP_CONTROLLER
-                , of::actions::output{of::protocol::OFPP_ALL}});
+        channel->async_send(v13::packet_out{pkt_in.frame()
+                , v13::protocol::OFPP_CONTROLLER
+                , v13::actions::output{v13::protocol::OFPP_ALL}});
     }
 
-    template <class... Args>
-    void handle(controller::channel_ptr channel, Args const&...) {}
+    template <class Channel, class... Args>
+    void handle(Channel const& channel, Args const&...) {}
 };
 
 int main(int argc, char* argv[])
@@ -41,10 +40,13 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    flooding_handler handler{std::cout};
+    flooding_handler handler{};
 
+    using controller = v13::controller<flooding_handler>;
     try {
-        controller cont{controller::options{handler}.address(argv[1]).port("6653")};
+        controller cont{
+            controller::options{handler}.address(argv[1]).port("6653")
+        };
         cont.run();
     }
     catch (std::exception& e) {

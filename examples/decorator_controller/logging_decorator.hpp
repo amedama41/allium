@@ -2,38 +2,41 @@
 #define LOGGING_DECORATOR_HPP
 
 #include <utility>
-#include <canard/network/protocol/openflow/v13/controller_decorator.hpp>
+#include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/v13/io/openflow_io.hpp>
 
-template <class Logger, class Base = canard::network::openflow::v13::null_decorator>
+template <class Logger>
 struct logging_decorator
 {
-    template <class Derived>
-    struct type : canard::network::openflow::v13::decoration<type<Derived>, Base>
+    logging_decorator(Logger&& logger)
+        : logger(std::forward<Logger>(logger))
     {
-        template <class... Args>
-        type(Logger const& logger, Args&&... args)
-            : type::base_type{std::forward<Args>(args)...}
-            , logger(logger)
-        {
-        }
+    }
 
-        template <class Channel>
-        void handle(Channel&& channel)
-        {
-            logger << "connect form " << channel->endpoint() << std::endl;
-            static_cast<Derived*>(this)->handle(std::forward<Channel>(channel));
-        }
+    template <class Forwarder, class Channel>
+    void handle(Forwarder forward
+              , Channel const& channel, canard::network::openflow::hello hello)
+    {
+        logger << "connected " << channel.get() << ": " << hello << std::endl;
+        forward(this, channel, std::move(hello));
+    }
 
-        template <class Channel, class Message>
-        void handle(Channel&& channel, Message&& message)
-        {
-            logger << message << std::endl;
-            static_cast<Derived*>(this)->handle(std::forward<Channel>(channel), std::forward<Message>(message));
-        }
+    template <class Forwarder, class Channel>
+    void handle(Forwarder forward
+              , Channel const& channel, canard::network::openflow::goodbye bye)
+    {
+        logger << "disconnected " << channel.get() << ": " << bye.reason().message() << std::endl;
+        forward(this, channel, std::move(bye));
+    }
 
-        Logger logger;
-    };
+    template <class Forwarder, class Channel, class Message>
+    void handle(Forwarder forward, Channel const& channel, Message&& message)
+    {
+        logger << message << std::endl;
+        forward(this, channel, std::forward<Message>(message));
+    }
+
+    Logger logger;
 };
 
 #endif // LOGGING_DECORATOR_HPP
