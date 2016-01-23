@@ -1,32 +1,35 @@
 #include <iostream>
 #include <canard/network/protocol/openflow/v13.hpp>
 
-namespace of = canard::network::openflow::v13;
-
-struct dump_table_features;
-using controller = of::controller<dump_table_features>;
+namespace of = canard::network::openflow;
+namespace v13 = of::v13;
 
 struct dump_table_features
 {
-    void handle(controller::channel_ptr channel)
+    template <class Channel>
+    void handle(Channel const& channel, of::hello const&)
     {
-        channel->send(of::table_features_request{});
+        channel->async_send(v13::table_features_request{});
     }
 
-    void handle(controller::channel_ptr channel, of::table_features_reply reply)
+    template <class Channel>
+    void handle(Channel const& channel, v13::table_features_reply const& reply)
     {
         std::cout << reply << std::endl;
     }
 
-    template <class... Args>
-    void handle(controller::channel_ptr, Args const&...) {}
+    template <class Channel, class... Args>
+    void handle(Channel const&, Args const&...) {}
 };
 
 int main()
 {
     auto handler = dump_table_features{};
-    controller cont{controller::options{handler}.address("0.0.0.0")};
+    using controller = v13::controller<dump_table_features>;
     try {
+        controller cont{
+            controller::options{handler}.address("0.0.0.0")
+        };
         cont.run();
     }
     catch (std::exception& e) {
