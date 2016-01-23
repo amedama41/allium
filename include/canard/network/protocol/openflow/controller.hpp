@@ -19,7 +19,7 @@
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/options.hpp>
 #include <canard/network/protocol/openflow/secure_channel.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel_impl.hpp>
+#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
 #include <canard/network/utils/io_service_pool.hpp>
 
@@ -196,7 +196,7 @@ namespace openflow {
                 auto strand
                     = boost::asio::io_service::strand{socket->get_io_service()};
                 auto channel = std::make_shared<
-                    v10::secure_channel_impl<ControllerHandler>
+                    v10::secure_channel<ControllerHandler>
                 >(std::move(*socket), strand, controller_handler_);
                 auto it = buffer->begin();
                 channel->run(hello::decode(it, buffer->end()));
