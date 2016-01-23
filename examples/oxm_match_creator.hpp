@@ -3,6 +3,7 @@
 #include <vector>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/range/algorithm/copy.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <canard/mac_address.hpp>
 #include <canard/packet_parser.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match.hpp>
@@ -170,7 +171,9 @@ auto oxm_match_from_packet(std::vector<unsigned char> const& packet)
     -> canard::network::openflow::v13::oxm_match
 {
     auto match = canard::network::openflow::v13::oxm_match{};
-    canard::for_each_header(packet, oxm_match_creator{match});
+    auto byte_range
+        = boost::make_iterator_range_n(packet.data(), packet.size());
+    canard::for_each_header(byte_range, oxm_match_creator{match});
     return match;
 }
 
