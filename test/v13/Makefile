@@ -1,4 +1,4 @@
-INCLUDES = -I../include
+INCLUDES = -I../../include
 LDFLAGS = -lboost_unit_test_framework-mt
 CXX = clang++
 # CXX = g++-4.9
@@ -64,8 +64,8 @@ ALL_TESTS = $(OBJS:.o=)
 DEPENDS = $(addprefix .,$(OBJS:.o=.depends))
 
 define build_test
-$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c driver.cpp
-$(CXX) $(CXXFLAGS) -o $@ driver.o $^ $(LDFLAGS)
+$(CXX) -DBOOST_TEST_MODULE=$@ $(CXXFLAGS) -c ../driver.cpp -o ../driver.o
+$(CXX) $(CXXFLAGS) -o $@ ../driver.o $^ $(LDFLAGS)
 endef
 
 .PHONY: all clean run run_each
