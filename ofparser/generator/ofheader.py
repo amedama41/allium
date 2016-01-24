@@ -1,5 +1,6 @@
 from future_builtins import map, filter
 import itertools
+from collections import OrderedDict
 
 def _maybe_qualify_std(type_name):
     return 'std::' + type_name if type_name.startswith('uint') else type_name
@@ -62,22 +63,30 @@ def _generate_enum_decls(enum_decls, alias_info):
             enum_decls.items()))
 
 def _generate_constant_decls(macro_defs, macro_type_map):
-    constants = '\n'.join(map(
-        lambda (name, macro): '            static constexpr {type} const {name} = {value};'.format(
-            type=macro_type_map[name], name=name, value=list(macro.get_tokens())[1].spelling),
-        filter(lambda (name, _): name in macro_type_map, macro_defs.items())))
-    if 'OFP_NO_BUFFER' not in macro_defs:
-        return '\n'.join([constants, '            static constexpr std::uint32_t const OFP_NO_BUFFER = 0xffffffff;'])
-    return constants
+    type_to_mems = OrderedDict()
+    for type_ in ('std::uint8_t', 'std::uint16_t', 'std::uint32_t'):
+        type_to_mems[type_] = []
 
-def _generate_constant_defs(macro_defs, macro_type_map):
-    constants = '\n'.join(map(
-        lambda (name, macro): '        template <class T> {type} const static_data_member_initializer<T>::{name};'.format(
-            type=macro_type_map[name], name=name),
-        filter(lambda (name, _): name in macro_type_map, macro_defs.items())))
     if 'OFP_NO_BUFFER' not in macro_defs:
-        return '\n'.join([constants, '        template <class T> std::uint32_t const static_data_member_initializer<T>::OFP_NO_BUFFER;'])
-    return constants
+        type_to_mems['std::uint32_t'].append(('OFP_NO_BUFFER', '0xffffffff'))
+
+    for name, macro in filter(lambda (name, _): name in macro_type_map,
+                              macro_defs.items()):
+        members = type_to_mems.setdefault(macro_type_map[name], [])
+        members.append((name, list(macro.get_tokens())[1].spelling))
+
+    return '\n\n'.join(map(
+        lambda (type_, members) : (
+"""\
+        enum {name}_constants : {type_}
+        {{
+{members}
+        }};\
+""".format(name=type_.replace('std::', ''), type_=type_, members='\n'.join(
+            map(lambda (name, value): '            {} = {},'.format(name, value),
+                members)))),
+        filter(lambda (_, members): members,
+               type_to_mems.items())))
 
 _alias_enumerations = {
         10: {
@@ -141,21 +150,13 @@ namespace v{version} {{
 
 {struct_decls}
 
-        template <class T>
-        class static_data_member_initializer
-        {{
-        public:
-{constant_decls}
-        }};
-
-{constant_defs}
-
     }} // namespace v{version}_detail
 
     class protocol
-        : public v{version}_detail::static_data_member_initializer<protocol>
     {{
     public:
+{constant_enum_decls}
+
 {enum_decls}
     }};
 
@@ -168,7 +169,6 @@ namespace v{version} {{
 """.format(
     version=collector.version,
     struct_decls=_generate_struct_decls(collector.struct_decls, collector.version == 13),
-    constant_decls=_generate_constant_decls(collector.macro_defs, macro_type_map),
-    constant_defs=_generate_constant_defs(collector.macro_defs, macro_type_map),
+    constant_enum_decls=_generate_constant_decls(collector.macro_defs, macro_type_map),
     enum_decls=_generate_enum_decls(collector.enum_decls, _alias_enumerations[collector.version])))
 
