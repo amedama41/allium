@@ -39,9 +39,6 @@ namespace messages {
               }
             , data_(std::move(data))
         {
-            if (data_.size() < sizeof(v13_detail::ofp_header)) {
-                throw 2;
-            }
         }
 
         auto header() const
