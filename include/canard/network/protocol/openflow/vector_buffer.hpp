@@ -15,6 +15,7 @@ namespace openflow {
     void openflow_buffer_reserve(
             std::vector<Ts...>& vec, std::size_t const size)
     {
+        vec.clear();
         vec.reserve(size);
     }
 

@@ -320,7 +320,6 @@ namespace detail {
             auto error = openflow::error{
                 openflow::OFPET_HELLO_FAILED, openflow::OFPHFC_INCOMPATIBLE, {}//, xid
             };
-            buffer_.clear();
             boost::asio::async_write(
                     socket_
                   , openflow::with_buffer(std::move(error), buffer_).encode()
