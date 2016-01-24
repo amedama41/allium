@@ -1,26 +1,18 @@
 #ifndef CANARD_NETWORK_OPENFLOW_CONTROLLER_HPP
 #define CANARD_NETWORK_OPENFLOW_CONTROLLER_HPP
 
-#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <string>
-#include <utility>
-#include <vector>
-#include <boost/asio/buffer.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/strand.hpp>
-#include <boost/asio/write.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/decorator.hpp>
-#include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/options.hpp>
 #include <canard/network/protocol/openflow/secure_channel.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
-#include <canard/network/protocol/openflow/with_buffer.hpp>
+#include <canard/network/protocol/openflow/setup_connection.hpp>
 #include <canard/network/utils/io_service_pool.hpp>
 
 #include <iostream>
@@ -104,12 +96,15 @@ namespace openflow {
 
         void async_accept()
         {
-            auto socket = std::make_shared<tcp::socket>(
-                    io_service_pool_->get_io_service());
+            using setup_connection
+                = detail::setup_connection<ControllerHandler>;
+            auto connection = std::make_shared<setup_connection>(
+                    controller_handler_, io_service_pool_->get_io_service());
             acceptor_.async_accept(
-                    *socket, [=](boost::system::error_code const& ec) mutable {
+                    connection->socket(), connection->endpoint()
+                  , [=](boost::system::error_code const& ec) mutable {
                 if (!ec) {
-                    send_hello(std::move(socket));
+                    connection->start_setup();
                 }
                 else {
                     std::cout << "accept error: " << ec.message() << std::endl;
@@ -145,62 +140,6 @@ namespace openflow {
             }
             async_accept();
             listening_ = true;
-        }
-
-        void send_hello(std::shared_ptr<tcp::socket> socket)
-        {
-            auto buffer = std::make_shared<std::vector<std::uint8_t>>();
-            auto const hello_msg = hello{v10::protocol::OFP_VERSION};
-            boost::asio::async_write(
-                      *socket
-                    , with_buffer(hello_msg, *buffer).encode()
-                    , [=](boost::system::error_code const& ec
-                        , std::size_t const) mutable {
-                if (ec) {
-                    std::cout << "send error: " << ec.message() << std::endl;
-                    return;
-                }
-                buffer->clear();
-                receive_hello(std::move(socket), std::move(buffer));
-            });
-        }
-
-        void receive_hello(std::shared_ptr<tcp::socket> socket
-                , std::shared_ptr<std::vector<std::uint8_t>> buffer
-                , std::size_t const read_size = sizeof(ofp_header))
-        {
-            auto const read_head = buffer->size();
-            buffer->resize(read_head + read_size);
-            boost::asio::async_read(
-                      *socket
-                    , boost::asio::buffer(&(*buffer)[read_head], read_size)
-                    , boost::asio::transfer_exactly(read_size)
-                    , [=](boost::system::error_code const& ec
-                        , std::size_t const) {
-                if (ec) {
-                    std::cout << "read error: " << ec.message() << std::endl;
-                    return;
-                }
-                auto const header
-                    = detail::read_ofp_header(boost::asio::buffer(*buffer));
-                if (header.type != hello::message_type) {
-                    std::cout << "not hello message" << std::endl;
-                    return;
-                }
-                if (header.length != buffer->size()) {
-                    receive_hello(std::move(socket)
-                                , std::move(buffer)
-                                , header.length - buffer->size());
-                    return;
-                }
-                auto strand
-                    = boost::asio::io_service::strand{socket->get_io_service()};
-                auto channel = std::make_shared<
-                    v10::secure_channel<ControllerHandler>
-                >(std::move(*socket), strand, controller_handler_);
-                auto it = buffer->begin();
-                channel->run(hello::decode(it, buffer->end()));
-            });
         }
 
     private:

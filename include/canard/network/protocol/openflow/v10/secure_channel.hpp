@@ -1,8 +1,8 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_HPP
 #define CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_HPP
 
+#include <cstdint>
 #include <tuple>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <canard/network/protocol/openflow/secure_channel_reader.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
@@ -77,9 +77,17 @@ namespace v10 {
         }
     };
 
-    template <class ControllerHandler, class Socket = boost::asio::ip::tcp::socket>
+    template <class ControllerHandler, class Socket>
     using secure_channel
         = secure_channel_reader<handle_message, ControllerHandler, Socket>;
+
+    struct version
+    {
+        static constexpr std::uint8_t value = v10::protocol::OFP_VERSION;
+
+        template <class ControllerHandler, class Socket>
+        using channel_t = secure_channel<ControllerHandler, Socket>;
+    };
 
 } // namespace v10
 } // namespace openflow
