@@ -1,4 +1,6 @@
 #include <iostream>
+#include <tuple>
+#include <canard/network/protocol/openflow/controller.hpp>
 #include <canard/network/protocol/openflow/v13.hpp>
 
 namespace of = canard::network::openflow;
@@ -6,6 +8,8 @@ namespace v13 = of::v13;
 
 struct dump_table_features
 {
+    using versions = std::tuple<v13::version>;
+
     template <class Channel>
     void handle(Channel const& channel, of::hello const&)
     {
@@ -25,7 +29,7 @@ struct dump_table_features
 int main()
 {
     auto handler = dump_table_features{};
-    using controller = v13::controller<dump_table_features>;
+    using controller = of::controller<dump_table_features>;
     try {
         controller cont{
             controller::options{handler}.address("0.0.0.0")

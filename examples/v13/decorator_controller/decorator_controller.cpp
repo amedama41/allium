@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
+#include <tuple>
 #include <utility>
+#include <canard/network/protocol/openflow/controller.hpp>
 #include <canard/network/protocol/openflow/v13.hpp>
 #include "table_miss_entry_setting_decorator.hpp"
 #include "logging_decorator.hpp"
@@ -14,6 +16,8 @@ struct flooding_handler
         , logging_decorator<std::ostream&>
       >
 {
+    using versions = std::tuple<v13::version>;
+
     flooding_handler()
         : decorate{
             of::make_args<logging_decorator>(std::cout)
@@ -42,7 +46,7 @@ int main(int argc, char* argv[])
 
     flooding_handler handler{};
 
-    using controller = v13::controller<flooding_handler>;
+    using controller = of::controller<flooding_handler>;
     try {
         controller cont{
             controller::options{handler}.address(argv[1]).port("6653")

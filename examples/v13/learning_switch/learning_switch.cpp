@@ -4,11 +4,13 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <tuple>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/optional/optional.hpp>
 #include <canard/packet_parser.hpp>
 #include <canard/mac_address.hpp>
+#include <canard/network/protocol/openflow/controller.hpp>
 #include <canard/network/protocol/openflow/v13.hpp>
 #include "../oxm_match_creator.hpp"
 
@@ -84,6 +86,8 @@ namespace canard { namespace network { namespace openflow {
 class learning_switch
 {
 public:
+    using versions = std::tuple<v13::version>;
+
     template <class Channel>
     void handle(Channel const& channel, v13::packet_in const& pkt_in)
     {
@@ -148,7 +152,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    using controller = v13::controller<learning_switch>;
+    using controller = of::controller<learning_switch>;
 
     auto io_service = std::make_shared<boost::asio::io_service>();
     learning_switch handler{};

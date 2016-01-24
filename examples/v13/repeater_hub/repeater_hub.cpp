@@ -1,4 +1,6 @@
 #include <iostream>
+#include <tuple>
+#include <canard/network/protocol/openflow/controller.hpp>
 #include <canard/network/protocol/openflow/v13.hpp>
 #include "../oxm_match_creator.hpp"
 
@@ -7,6 +9,8 @@ namespace v13 = of::v13;
 
 struct repeater_hub
 {
+    using versions = std::tuple<v13::version>;
+
     template <class Channel>
     void handle(Channel const& channel, of::hello const&)
     {
@@ -34,7 +38,7 @@ struct repeater_hub
 int main()
 {
     auto handler = repeater_hub{};
-    using controller = v13::controller<repeater_hub>;
+    using controller = of::controller<repeater_hub>;
     try {
         controller cont{
             controller::options{handler}.address("0.0.0.0")
