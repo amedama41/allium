@@ -1,9 +1,8 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_CHANNLE_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_CHANNLE_HPP
 
-#include <cstddef>
+#include <cstdint>
 #include <tuple>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <canard/network/protocol/openflow/secure_channel_reader.hpp>
 #include <canard/network/protocol/openflow/v13/messages.hpp>
@@ -76,12 +75,17 @@ namespace v13 {
         }
     };
 
-    template <
-          class ControllerHandler
-        , class Socket = boost::asio::ip::tcp::socket
-    >
+    template <class ControllerHandler, class Socket>
     using openflow_channel
         = secure_channel_reader<handle_message, ControllerHandler, Socket>;
+
+    struct version
+    {
+        static constexpr std::uint8_t value = v13::protocol::OFP_VERSION;
+
+        template <class ControllerHandler, class Socket>
+        using channel_t = openflow_channel<ControllerHandler, Socket>;
+    };
 
 } // namespace v13
 } // namespace openflow

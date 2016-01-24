@@ -2,7 +2,6 @@
 #define CANARD_NETWORK_OPENFLOW_V13_HPP
 
 #include <canard/network/protocol/openflow/v13/error.hpp>
-#include <canard/network/protocol/openflow/v13/controller.hpp>
 #include <canard/network/protocol/openflow/v13/action_list.hpp>
 #include <canard/network/protocol/openflow/v13/action_set.hpp>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
