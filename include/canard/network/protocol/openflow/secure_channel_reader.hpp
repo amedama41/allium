@@ -9,7 +9,6 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/completion_condition.hpp>
 #include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/streambuf.hpp>
@@ -44,13 +43,16 @@ namespace openflow {
     template <
           class MessageHandler
         , class ControllerHandler
-        , class Socket = boost::asio::ip::tcp::socket
-        , class ChannelData = detail::channel_data_t<ControllerHandler>
+        , class Socket
     >
     class secure_channel_reader
-        : public secure_channel<ChannelData, Socket>
+        : public secure_channel<
+              detail::channel_data_t<ControllerHandler>, Socket
+          >
     {
-        using base_type = secure_channel<ChannelData, Socket>;
+        using base_type = secure_channel<
+            detail::channel_data_t<ControllerHandler>, Socket
+        >;
         using header_type = typename MessageHandler::header_type;
 
     public:

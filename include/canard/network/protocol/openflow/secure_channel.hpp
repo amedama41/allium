@@ -5,7 +5,6 @@
 #include <memory>
 #include <utility>
 #include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/fusion/sequence/intrinsic/at_key.hpp>
 #include <boost/system/error_code.hpp>
@@ -22,10 +21,12 @@ namespace canard {
 namespace network {
 namespace openflow {
 
-    template <class ChannelData, class Socket = boost::asio::ip::tcp::socket>
+    template <class ChannelData, class Socket>
     class secure_channel
         : private ChannelData
-        , public std::enable_shared_from_this<secure_channel<ChannelData, Socket>>
+        , public std::enable_shared_from_this<
+              secure_channel<ChannelData, Socket>
+          >
     {
         template <class WriteHandler>
         using async_write_result_init = canard::async_result_init<
