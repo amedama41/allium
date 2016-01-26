@@ -6,7 +6,8 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 # CXXFLAGS = -std=c++11 -Wall -pedantic $(INCLUDES)
 
 SRCS = switch_features_test.cpp \
-	   switch_config_test.cpp
+	   switch_config_test.cpp \
+	   table_mod_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET = message_test
