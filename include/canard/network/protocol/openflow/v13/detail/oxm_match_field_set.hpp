@@ -32,6 +32,11 @@ namespace v13 {
                 add_impl(std::forward<OXMMatchFields>(match_fields)...);
             }
 
+            void swap(oxm_match_field_set& other)
+            {
+                oxm_match_field_map_.swap(other.oxm_match_field_map_);
+            }
+
             auto length() const
                 -> std::uint16_t
             {
@@ -43,15 +48,19 @@ namespace v13 {
             }
 
             template <class OXMMatchField>
-            void add(OXMMatchField&& field)
+            auto add(OXMMatchField&& field)
+                -> std::uint16_t
             {
                 auto const oxm_type = field.oxm_type();
                 auto const it = oxm_match_field_map_.lower_bound(oxm_type);
                 if (it != oxm_match_field_map_.end() && !oxm_match_field_map_.key_comp()(oxm_type, it->first)) {
+                    auto const old_field_length = it->second.length();
                     it->second = std::forward<OXMMatchField>(field);
+                    return old_field_length;
                 }
                 else {
                     oxm_match_field_map_.emplace_hint(it, oxm_type, std::forward<OXMMatchField>(field));
+                    return 0;
                 }
             }
 
