@@ -22,8 +22,7 @@ MESSAGE_TEST_SRCS = hello_test.cpp hello_elements_test.cpp \
 					group_mod_test.cpp \
 					table_feature_property_test.cpp \
 					table_features_test.cpp \
-					barrier_test.cpp \
-					packet_in_test.cpp
+					barrier_test.cpp
 MESSAGE_TEST_OBJS = $(MESSAGE_TEST_SRCS:.cpp=.o)
 
 ACTION_TEST_SRCS = output_test.cpp \
