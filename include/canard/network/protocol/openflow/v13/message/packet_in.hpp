@@ -109,11 +109,8 @@ namespace messages {
         auto operator=(packet_in const& other)
             -> packet_in&
         {
-            auto pkt_in = other;
-            packet_in_ = pkt_in.packet_in_;
-            match_.swap(pkt_in.match_);
-            data_.swap(pkt_in.data_);
-            return *this;
+            auto tmp = other;
+            return operator=(std::move(tmp));
         }
 
         auto operator=(packet_in&& other) noexcept
