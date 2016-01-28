@@ -13,6 +13,12 @@ namespace openflow {
     class binary_data
     {
     public:
+        binary_data()
+            : data_{nullptr}
+            , size_{0}
+        {
+        }
+
         binary_data(std::unique_ptr<unsigned char[]> data
                   , std::size_t const size) noexcept
             : data_(std::move(data))
