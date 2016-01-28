@@ -12,6 +12,7 @@
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/detail/padding.hpp>
+#include <canard/network/protocol/openflow/get_xid.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
