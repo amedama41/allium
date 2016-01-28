@@ -32,6 +32,11 @@ namespace v13 {
         {
         }
 
+        void swap(action_list& other) noexcept
+        {
+            actions_.swap(other.actions_);
+        }
+
         auto length() const
             -> std::uint16_t
         {
