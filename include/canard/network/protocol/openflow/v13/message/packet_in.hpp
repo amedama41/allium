@@ -87,7 +87,11 @@ namespace messages {
         packet_in(packet_in const& other)
             : packet_in_(other.packet_in_)
             , match_(other.match_)
-            , data_{new unsigned char[other.frame_length()]}
+            , data_{
+                  other.frame_length()
+                ? new unsigned char[other.frame_length()]
+                : nullptr
+              }
         {
             std::copy(other.data_.get()
                     , other.data_.get() + other.frame_length()
