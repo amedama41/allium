@@ -23,6 +23,8 @@ BOOST_AUTO_TEST_SUITE(message_test)
 
 BOOST_AUTO_TEST_SUITE(packet_in_test)
 
+    static constexpr std::size_t data_padding_size = 2;
+
     BOOST_AUTO_TEST_CASE(constructor_from_binary_test)
     {
         auto const buffer_id = proto::OFP_NO_BUFFER;
@@ -48,7 +50,7 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         BOOST_TEST(sut.type() == proto::OFPT_PACKET_IN);
         BOOST_TEST(sut.length() == sizeof(v13::v13_detail::ofp_packet_in)
                                  + v13::v13_detail::exact_length(match.length())
-                                 + 2 + sizeof(bin));
+                                 + data_padding_size + sizeof(bin));
         BOOST_TEST(sut.buffer_id() == buffer_id);
         BOOST_TEST(sut.total_length() == total_len);
         BOOST_TEST(sut.reason() == reason);
@@ -76,7 +78,7 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
 
         BOOST_TEST(sut.length() == sizeof(v13::v13_detail::ofp_packet_in)
                                  + sizeof(v13::v13_detail::ofp_match)
-                                 + 2 + sizeof(bin));
+                                 + data_padding_size + sizeof(bin));
         BOOST_TEST(sut.buffer_id() == buffer_id);
         BOOST_TEST(sut.total_length() == total_len);
         BOOST_TEST(sut.reason() == reason);
@@ -105,7 +107,8 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         };
 
         BOOST_TEST(sut.length() == sizeof(v13::v13_detail::ofp_packet_in)
-                                 + v13::v13_detail::exact_length(match.length()));
+                                 + v13::v13_detail::exact_length(match.length())
+                                 + data_padding_size);
         BOOST_TEST(sut.buffer_id() == buffer_id);
         BOOST_TEST(sut.total_length() == total_len);
         BOOST_TEST(sut.reason() == reason);
@@ -163,7 +166,8 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         BOOST_TEST((sut.frame() == org_pkt_in.frame()));
 
         BOOST_TEST(pkt_in.length() == sizeof(v13::v13_detail::ofp_packet_in)
-                                    + sizeof(v13::v13_detail::ofp_match));
+                                    + sizeof(v13::v13_detail::ofp_match)
+                                    + data_padding_size);
         BOOST_TEST(pkt_in.frame().empty());
     }
 
@@ -206,7 +210,8 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         BOOST_TEST((sut.frame() == org_pkt_in.frame()));
 
         BOOST_TEST(pkt_in.length() == sizeof(v13::v13_detail::ofp_packet_in)
-                                    + sizeof(v13::v13_detail::ofp_match));
+                                    + sizeof(v13::v13_detail::ofp_match)
+                                    + data_padding_size);
         BOOST_TEST(pkt_in.frame().empty());
     }
 
@@ -254,6 +259,33 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         BOOST_TEST(sut.cookie() == pkt_in.cookie());
         BOOST_TEST(sut.frame_length() == pkt_in.frame_length());
         BOOST_TEST((sut.frame() == pkt_in.frame()));
+    }
+
+    BOOST_AUTO_TEST_CASE(decode_no_data_test)
+    {
+        char const buffer[]
+            = "\x04\x0a\x00\x2a\x00\x01\x02\x03" "\x01\x23\x45\x67\x02\x00\x00\x02"
+              "\x00\x01\x02\x03\x04\x05\x06\x07" "\x00\x01\x00\x0c\x80\x00\x00\x04"
+              "\x00\x00\x00\x01\x00\x00\x00\x00" "\x00\x00"
+            ;
+
+        auto it = buffer;
+        auto const it_end = buffer + sizeof(buffer) - 1;
+        auto const sut = v13::messages::packet_in::decode(it, it_end);
+
+        BOOST_TEST(it == it_end);
+        BOOST_TEST(sut.version() == proto::OFP_VERSION);
+        BOOST_TEST(sut.type() == proto::OFPT_PACKET_IN);
+        BOOST_TEST(sut.length() == sizeof(buffer) - 1);
+        BOOST_TEST(sut.xid() == 0x00010203);
+        BOOST_TEST(sut.buffer_id() == 0x1234567);
+        BOOST_TEST(sut.total_length() == 0x200);
+        BOOST_TEST(sut.reason() == 0);
+        BOOST_TEST(sut.table_id() == 2);
+        BOOST_TEST(sut.cookie() == 0x0001020304050607);
+        BOOST_TEST(sut.match().length() == 12);
+        BOOST_TEST(sut.frame_length() == 0);
+        BOOST_TEST(sut.frame().empty());
     }
 
     BOOST_FIXTURE_TEST_CASE(extract_frame_test, packet_in_fixture)
