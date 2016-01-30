@@ -9,7 +9,8 @@ namespace of = canard::network::openflow;
 namespace v13 = canard::network::openflow::v13;
 using proto = v13::protocol;
 
-std::vector<std::uint8_t> operator ""_bin(char const* const str, std::size_t const size)
+inline auto operator ""_bin(char const* const str, std::size_t const size)
+    -> std::vector<std::uint8_t>
 {
     return std::vector<std::uint8_t>(str, str + size);
 }
