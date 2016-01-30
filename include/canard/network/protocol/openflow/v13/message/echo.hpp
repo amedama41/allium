@@ -1,14 +1,17 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_ECHO_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_ECHO_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_ECHO_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_ECHO_HPP
 
-#include <cstddef>
 #include <cstdint>
+#include <algorithm>
 #include <iterator>
-#include <tuple>
+#include <memory>
+#include <stdexcept>
 #include <utility>
-#include <vector>
+#include <boost/range/iterator_range.hpp>
+#include <canard/network/protocol/openflow/binary_data.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/get_xid.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -19,207 +22,202 @@ namespace openflow {
 namespace v13 {
 namespace messages {
 
-    template <class T>
-    class basic_echo
-        : public v13_detail::basic_openflow_message<T>
-    {
-        using v13_detail::basic_openflow_message<T>::get_xid;
+    namespace echo_detail {
 
-    protected:
-        basic_echo()
-            : header_{
-                  protocol::OFP_VERSION, T::message_type
-                , sizeof(v13_detail::ofp_header), get_xid()
-              }
+        template <class T>
+        class echo_base
+            : public v13_detail::basic_openflow_message<T>
         {
-        }
+        protected:
+            using data_type = std::unique_ptr<unsigned char[]>;
 
-        explicit basic_echo(std::vector<unsigned char> data)
-            : header_{
-                  protocol::OFP_VERSION, T::message_type
-                , std::uint16_t(sizeof(v13_detail::ofp_header) + data.size())
-                , get_xid()
-              }
-            , data_(std::move(data))
-        {
-        }
-
-        template <class>
-        friend class basic_echo;
-
-        template <class U>
-        basic_echo(basic_echo<U> const& echo2)
-            : header_{echo2.version(), T::message_type, echo2.length(), echo2.xid()}
-            , data_(echo2.data_)
-        {
-        }
-
-        template <class U>
-        basic_echo(basic_echo<U>&& echo2)
-            : header_{echo2.version(), T::message_type, echo2.length(), echo2.xid()}
-            , data_(std::move(echo2.data_))
-        {
-            echo2.header_.length = sizeof(v13_detail::ofp_header) + echo2.data_.size();
-        }
-
-        basic_echo(v13_detail::ofp_header const& header, std::vector<unsigned char> data)
-            : header_(header)
-            , data_(std::move(data))
-        {
-            if (header_.length != sizeof(header_) + data_.size()) {
-                throw 1;
+            echo_base(binary_data&& data, std::uint32_t const xid) noexcept
+                : header_{
+                      protocol::OFP_VERSION
+                    , T::message_type
+                    , std::uint16_t(
+                            sizeof(v13_detail::ofp_header) + data.size())
+                    , xid
+                  }
+                , data_(std::move(data).data())
+            {
             }
-        }
 
-    public:
-        auto data() const
-            -> std::vector<unsigned char> const&
-        {
-            return data_;
-        }
-
-        auto header() const
-            -> v13_detail::ofp_header const&
-        {
-            return header_;
-        }
-
-        using v13_detail::basic_openflow_message<T>::encode;
-
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
-        {
-            detail::encode(container, header_);
-            return detail::encode_byte_array(
-                    container, data_.data(), data_.size());
-        }
-
-    protected:
-        template <class Iterator>
-        static auto decode_impl(Iterator& first, Iterator last)
-            -> std::tuple<v13_detail::ofp_header, std::vector<unsigned char>>
-        {
-            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
-            if (header.length != sizeof(v13_detail::ofp_header) + std::distance(first, last)) {
-                throw 2;
+            echo_base(v13_detail::ofp_header const& header, data_type&& data)
+                : header_(header)
+                , data_(std::move(data))
+            {
             }
-            auto data = std::vector<unsigned char>(first, last);
-            std::advance(first, data.size());
 
-            return std::make_tuple(header, std::move(data));
-        }
-
-    private:
-        v13_detail::ofp_header header_;
-        std::vector<unsigned char> data_;
-    };
-
-    class echo_request;
-
-    class echo_reply
-        : public basic_echo<echo_reply>
-    {
-    public:
-        static protocol::ofp_type const message_type
-            = protocol::OFPT_ECHO_REPLY;
-
-        echo_reply()
-            : basic_echo{}
-        {
-        }
-
-        explicit echo_reply(std::vector<unsigned char> data)
-            : basic_echo{std::move(data)}
-        {
-        }
-
-        explicit echo_reply(echo_request const& request);
-        explicit echo_reply(echo_request&& request);
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> echo_reply
-        {
-            auto header_and_data = decode_impl(first, last);
-            return echo_reply{std::get<0>(header_and_data), std::move(std::get<1>(header_and_data))};
-        }
-
-    private:
-        echo_reply(v13_detail::ofp_header const& header, std::vector<unsigned char> data)
-            : basic_echo(header, std::move(data))
-        {
-            if (type() != message_type) {
-                throw 1;
+            echo_base(echo_base const& other)
+                : echo_base{other.header_, binary_data{other.data()}.data()}
+            {
             }
-        }
-    };
+
+            echo_base(echo_base&& other) noexcept
+                : header_(other.header_)
+                , data_(std::move(other.data_))
+            {
+                other.header_.length = sizeof(v13_detail::ofp_header);
+            }
+
+            auto operator=(echo_base const& other)
+                -> echo_base&
+            {
+                auto tmp = other;
+                return operator=(tmp);
+            }
+
+            auto operator=(echo_base&& other) noexcept
+                -> echo_base&
+            {
+                auto tmp = std::move(other);
+                header_ = tmp.header_;
+                data_ = std::move(tmp.data_);
+                return *this;
+            }
+
+        public:
+            auto header() const noexcept
+                -> v13_detail::ofp_header const&
+            {
+                return header_;
+            }
+
+            auto data() const noexcept
+                -> boost::iterator_range<unsigned char const*>
+            {
+                return boost::make_iterator_range_n(data_.get(), data_length());
+            }
+
+            auto data_length() const noexcept
+                -> std::uint16_t
+            {
+                return this->length() - sizeof(v13_detail::ofp_header);
+            }
+
+            auto extract_data() noexcept
+                -> binary_data
+            {
+                auto const data_len = data_length();
+                header_.length = sizeof(v13_detail::ofp_header);
+                return binary_data{std::move(data_), data_len};
+            }
+
+            template <class Container>
+            auto encode(Container& container) const
+                -> Container&
+            {
+                detail::encode(container, header_);
+                return detail::encode_byte_array(
+                        container, data_.get(), data_length());
+            }
+
+            template <class Iterator>
+            static auto decode(Iterator& first, Iterator last)
+                -> T
+            {
+                auto const header
+                    = detail::decode<v13_detail::ofp_header>(first, last);
+                auto const data_length
+                    = header.length - sizeof(v13_detail::ofp_header);
+                auto data = data_type{
+                    data_length ? new unsigned char[data_length] : nullptr
+                };
+                last = std::next(first, data_length);
+                std::copy(first, last, data.get());
+                first = last;
+
+                return T{header, std::move(data)};
+            }
+
+            static void validate(v13_detail::ofp_header const& header)
+            {
+                if (header.version != protocol::OFP_VERSION) {
+                    throw std::runtime_error{"invalid version"};
+                }
+                if (header.type != T::message_type) {
+                    throw std::runtime_error{"invalid message type"};
+                }
+                if (header.length < sizeof(v13_detail::ofp_header)) {
+                    throw std::runtime_error{"invalid length"};
+                }
+            }
+
+        private:
+            v13_detail::ofp_header header_;
+            data_type data_;
+        };
+
+    } // namespace echo_detail
+
 
     class echo_request
-        : public basic_echo<echo_request>
+        : public echo_detail::echo_base<echo_request>
     {
     public:
-        static protocol::ofp_type const message_type
+        static constexpr protocol::ofp_type message_type
             = protocol::OFPT_ECHO_REQUEST;
 
-        echo_request()
-            : basic_echo{}
+        explicit echo_request(
+                binary_data data, std::uint32_t const xid = get_xid()) noexcept
+            : echo_base{std::move(data), xid}
         {
         }
 
-        explicit echo_request(std::vector<unsigned char> data)
-            : basic_echo{std::move(data)}
+        explicit echo_request(std::uint32_t const xid = get_xid()) noexcept
+            : echo_request{binary_data{}, xid}
         {
-        }
-
-        auto reply() const&
-            -> echo_reply
-        {
-            return echo_reply{*this};
-        }
-
-        auto reply() &&
-            -> echo_reply
-        {
-            return echo_reply{std::move(*this)};
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> echo_request
-        {
-            auto header_and_data = decode_impl(first, last);
-            return echo_request{std::get<0>(header_and_data), std::move(std::get<1>(header_and_data))};
         }
 
     private:
-        echo_request(v13_detail::ofp_header const& header, std::vector<unsigned char> data)
-            : basic_echo(header, std::move(data))
+        friend echo_base;
+
+        echo_request(v13_detail::ofp_header const& header
+                   , echo_base::data_type&& data) noexcept
+            : echo_base{header, std::move(data)}
         {
-            if (type() != message_type) {
-                throw 1;
-            }
         }
     };
 
-    inline echo_reply::echo_reply(echo_request const& request)
-        : basic_echo{request}
-    {
-    }
 
-    inline echo_reply::echo_reply(echo_request&& request)
-        : basic_echo{std::move(request)}
+    class echo_reply
+        : public echo_detail::echo_base<echo_reply>
     {
-    }
+    public:
+        static constexpr protocol::ofp_type message_type
+            = protocol::OFPT_ECHO_REPLY;
+
+        explicit echo_reply(
+                binary_data data, std::uint32_t const xid = get_xid()) noexcept
+            : echo_base{std::move(data), xid}
+        {
+        }
+
+        explicit echo_reply(std::uint32_t const xid = get_xid()) noexcept
+            : echo_reply{binary_data{}, xid}
+        {
+        }
+
+        explicit echo_reply(echo_request request) noexcept
+            : echo_reply{request.extract_data(), request.xid()}
+        {
+        }
+
+    private:
+        friend echo_base;
+
+        echo_reply(v13_detail::ofp_header const& header
+                 , echo_base::data_type&& data) noexcept
+            : echo_base{header, std::move(data)}
+        {
+        }
+    };
 
 } // namespace messages
-
-using messages::echo_request;
-using messages::echo_reply;
-
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_ECHO_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_ECHO_HPP
