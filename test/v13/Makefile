@@ -17,7 +17,6 @@ UTILITY_TEST_OBJS = $(UTILITY_TEST_SRCS:.cpp=.o)
 
 MESSAGE_TEST_SRCS = hello_test.cpp hello_elements_test.cpp \
 					error_msg_test.cpp \
-					echo_test.cpp \
 					flow_mod_test.cpp \
 					group_mod_test.cpp \
 					table_feature_property_test.cpp \

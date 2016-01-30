@@ -5,7 +5,8 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 # CXX = g++-4.9
 # CXXFLAGS = -std=c++11 -Wall -pedantic $(INCLUDES)
 
-SRCS = switch_features_test.cpp \
+SRCS = echo_test.cpp \
+	   switch_features_test.cpp \
 	   switch_config_test.cpp \
 	   table_mod_test.cpp \
 	   packet_in_test.cpp \
