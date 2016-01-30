@@ -30,8 +30,11 @@ namespace messages {
     {
         using data_type = std::unique_ptr<unsigned char[]>;
 
+        static constexpr std::uint16_t data_alignment_padding_size = 2;
         static constexpr std::uint16_t base_pkt_in_size
-            = sizeof(v13_detail::ofp_packet_in) + sizeof(v13_detail::ofp_match);
+            = sizeof(v13_detail::ofp_packet_in)
+            + sizeof(v13_detail::ofp_match)
+            + data_alignment_padding_size;
 
     public:
         static constexpr protocol::ofp_type message_type
@@ -52,7 +55,8 @@ namespace messages {
                     , std::uint16_t(
                               sizeof(v13_detail::ofp_packet_in)
                             + v13_detail::exact_length(match.length())
-                            + (data.size() ? 2 + data.size() : 0))
+                            + data_alignment_padding_size
+                            + data.size())
                     , xid
                   }
                 , buffer_id
@@ -180,11 +184,10 @@ namespace messages {
         auto frame_length() const noexcept
             -> std::uint16_t
         {
-            auto const padding_data_length
-               = length()
-               - sizeof(v13_detail::ofp_packet_in)
-               - v13_detail::exact_length(match().length());
-            return padding_data_length ? padding_data_length - 2 : 0;
+            return length()
+                 - sizeof(v13_detail::ofp_packet_in)
+                 - v13_detail::exact_length(match().length())
+                 - data_alignment_padding_size;
         }
 
         auto extract_frame() noexcept
@@ -201,14 +204,10 @@ namespace messages {
         {
             detail::encode(container, packet_in_);
             match_.encode(container);
-            if (auto const frame_len = frame_length()) {
-                detail::encode_byte_array(container, detail::padding, 2);
-                return detail::encode_byte_array(
-                        container, data_.get(), frame_len);
-            }
-            else {
-                return container;
-            }
+            detail::encode_byte_array(
+                    container, detail::padding, data_alignment_padding_size);
+            return detail::encode_byte_array(
+                    container, data_.get(), frame_length());
         }
 
         template <class Iterator>
@@ -227,18 +226,20 @@ namespace messages {
             if (ofp_match.type != protocol::OFPMT_OXM) {
                 throw std::runtime_error{"match_type is not OFPMT_OXM"};
             }
-            if (sizeof(v13_detail::ofp_match) + std::distance(first, last)
-                    < ofp_match.length) {
+            auto const match_length
+                = v13_detail::exact_length(ofp_match.length);
+            if (std::distance(first, last) - data_alignment_padding_size
+                    < match_length) {
                 throw std::runtime_error{"invalid oxm_match length"};
             }
 
             auto match = oxm_match::decode(first, last);
 
-            if (std::distance(first, last) > 2) {
-                std::advance(first, 2);
-            }
+            std::advance(first, data_alignment_padding_size);
+
+            auto const frame_length = std::distance(first, last);
             auto data = data_type{
-                new unsigned char[std::distance(first, last)]
+                frame_length ? new unsigned char[frame_length] : nullptr
             };
             std::copy(first, last, data.get());
             first = last;
