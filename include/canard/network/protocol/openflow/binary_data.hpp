@@ -13,7 +13,7 @@ namespace openflow {
     class binary_data
     {
     public:
-        binary_data()
+        binary_data() noexcept
             : data_{nullptr}
             , size_{0}
         {
@@ -32,6 +32,22 @@ namespace openflow {
              , size_(boost::distance(range))
         {
             boost::copy(range, data_.get());
+        }
+
+        binary_data(binary_data&& other) noexcept
+            : data_(std::move(other.data_))
+            , size_(other.size_)
+        {
+            other.size_ = 0;
+        }
+
+        auto operator=(binary_data&& other) noexcept
+            -> binary_data&
+        {
+            auto tmp = std::move(other);
+            data_.swap(tmp.data_);
+            size_ = tmp.size_;
+            return *this;
         }
 
         auto begin() const noexcept
