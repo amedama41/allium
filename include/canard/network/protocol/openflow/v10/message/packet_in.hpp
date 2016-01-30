@@ -179,8 +179,9 @@ namespace messages {
                     first, last, base_pkt_in_size);
             last = std::next(first, pkt_in.header.length - base_pkt_in_size);
 
+            auto const frame_length = std::distance(first, last);
             auto data = data_type{
-                new unsigned char[std::distance(first, last)]
+                frame_length ? new unsigned char[frame_length] : nullptr
             };
             std::copy(first, last, data.get());
             first = last;
