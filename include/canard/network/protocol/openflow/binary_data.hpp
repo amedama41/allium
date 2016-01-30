@@ -28,7 +28,11 @@ namespace openflow {
 
         template <class Range>
         explicit binary_data(Range const& range)
-             : data_{new unsigned char[boost::distance(range)]}
+             : data_{
+                   boost::distance(range)
+                 ? new unsigned char[boost::distance(range)]
+                 : nullptr
+               }
              , size_(boost::distance(range))
         {
             boost::copy(range, data_.get());
