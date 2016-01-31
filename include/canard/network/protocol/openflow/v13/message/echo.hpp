@@ -65,7 +65,7 @@ namespace messages {
                 -> echo_base&
             {
                 auto tmp = other;
-                return operator=(tmp);
+                return operator=(std::move(tmp));
             }
 
             auto operator=(echo_base&& other) noexcept
