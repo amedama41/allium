@@ -2,8 +2,10 @@
 #define CANARD_NETWORK_OPENFLOW_BINARY_DATA_HPP
 
 #include <cstddef>
+#include <algorithm>
+#include <iterator>
 #include <memory>
-#include <boost/range/algorithm/copy.hpp>
+#include <type_traits>
 #include <boost/range/distance.hpp>
 
 namespace canard {
@@ -16,14 +18,15 @@ namespace openflow {
         using iterator = unsigned char const*;
         using const_iterator = unsigned char const*;
 
+        using pointer_type = std::unique_ptr<unsigned char[]>;
+
         binary_data() noexcept
             : data_{nullptr}
             , size_{0}
         {
         }
 
-        binary_data(std::unique_ptr<unsigned char[]> data
-                  , std::size_t const size) noexcept
+        binary_data(pointer_type data, std::size_t const size) noexcept
             : data_(std::move(data))
             , size_(size)
         {
@@ -31,14 +34,9 @@ namespace openflow {
 
         template <class Range>
         explicit binary_data(Range const& range)
-             : data_{
-                   boost::distance(range)
-                 ? new unsigned char[boost::distance(range)]
-                 : nullptr
-               }
+             : data_(copy_data(range))
              , size_(boost::distance(range))
         {
-            boost::copy(range, data_.get());
         }
 
         binary_data(binary_data&& other) noexcept
@@ -70,13 +68,13 @@ namespace openflow {
         }
 
         auto data() const& noexcept
-            -> std::unique_ptr<unsigned char[]> const&
+            -> pointer_type const&
         {
             return data_;
         }
 
         auto data() && noexcept
-            -> std::unique_ptr<unsigned char[]>
+            -> pointer_type
         {
             size_ = 0;
             auto data = std::move(data_);
@@ -89,8 +87,39 @@ namespace openflow {
             return size_;
         }
 
+        template <class Range>
+        static auto copy_data(Range const& range)
+            -> pointer_type
+        {
+            using std::begin;
+            return copy_data(begin(range), boost::distance(range));
+        }
+
+        template <class Iterator>
+        static auto copy_data(Iterator first, Iterator last)
+            -> typename std::enable_if<
+                   !std::is_integral<Iterator>::value, pointer_type
+               >::type
+        {
+            return copy_data(first, std::distance(first, last));
+        }
+
+        template <class Iterator, class DistanceType>
+        static auto copy_data(Iterator first, DistanceType size)
+            -> typename std::enable_if<
+                   std::is_integral<DistanceType>::value, pointer_type
+               >::type
+        {
+            if (size) {
+                auto copy = pointer_type{new unsigned char[size]};
+                std::copy_n(first, size, copy.get());
+                return copy;
+            }
+            return pointer_type{nullptr};
+        }
+
     private:
-        std::unique_ptr<unsigned char[]> data_;
+        pointer_type data_;
         std::size_t size_;
     };
 
