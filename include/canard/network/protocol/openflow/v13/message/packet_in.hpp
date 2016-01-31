@@ -2,7 +2,6 @@
 #define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_PACKET_IN_HPP
 
 #include <cstdint>
-#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -28,8 +27,6 @@ namespace messages {
     class packet_in
         : public v13_detail::basic_openflow_message<packet_in>
     {
-        using data_type = std::unique_ptr<unsigned char[]>;
-
         static constexpr std::uint16_t data_alignment_padding_size = 2;
         static constexpr std::uint16_t base_pkt_in_size
             = sizeof(v13_detail::ofp_packet_in)
@@ -37,6 +34,8 @@ namespace messages {
             + data_alignment_padding_size;
 
     public:
+        using data_type = binary_data::pointer_type;
+
         static constexpr protocol::ofp_type message_type
             = protocol::OFPT_PACKET_IN;
 
@@ -91,15 +90,8 @@ namespace messages {
         packet_in(packet_in const& other)
             : packet_in_(other.packet_in_)
             , match_(other.match_)
-            , data_{
-                  other.frame_length()
-                ? new unsigned char[other.frame_length()]
-                : nullptr
-              }
+            , data_(binary_data::copy_data(other.frame()))
         {
-            std::copy(other.data_.get()
-                    , other.data_.get() + other.frame_length()
-                    , data_.get());
         }
 
         packet_in(packet_in&& other) noexcept
@@ -237,11 +229,7 @@ namespace messages {
 
             std::advance(first, data_alignment_padding_size);
 
-            auto const frame_length = std::distance(first, last);
-            auto data = data_type{
-                frame_length ? new unsigned char[frame_length] : nullptr
-            };
-            std::copy(first, last, data.get());
+            auto data = binary_data::copy_data(first, last);
             first = last;
 
             return packet_in{pkt_in, std::move(match), std::move(data)};

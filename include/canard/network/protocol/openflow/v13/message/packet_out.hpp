@@ -2,7 +2,6 @@
 #define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_PACKET_OUT_HPP
 
 #include <cstdint>
-#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -26,12 +25,12 @@ namespace messages {
     class packet_out
         : public v13_detail::basic_openflow_message<packet_out>
     {
-        using data_type = std::unique_ptr<unsigned char[]>;
-
         static constexpr std::uint16_t base_pkt_out_size
             = sizeof(v13_detail::ofp_packet_out);
 
     public:
+        using data_type = binary_data::pointer_type;
+
         static constexpr protocol::ofp_type message_type
             = protocol::OFPT_PACKET_OUT;
 
@@ -88,15 +87,8 @@ namespace messages {
         packet_out(packet_out const& other)
             : packet_out_(other.packet_out_)
             , actions_(other.actions_)
-            , data_{
-                  other.frame_length()
-                ? new unsigned char[other.frame_length()]
-                : nullptr
-              }
+            , data_(binary_data::copy_data(other.frame()))
         {
-            std::copy(other.data_.get()
-                    , other.data_.get() + other.frame_length()
-                    , data_.get());
         }
 
         packet_out(packet_out&& other)
@@ -191,10 +183,8 @@ namespace messages {
 
             auto const actions_last = std::next(first, pkt_out.actions_len);
             auto actions = action_list::decode(first, actions_last);
-            auto data = data_type{
-                new unsigned char[std::distance(first, last)]
-            };
-            std::copy(first, last, data.get());
+
+            auto data = binary_data::copy_data(first, last);
             first = last;
             return packet_out{pkt_out, std::move(actions), std::move(data)};
         }

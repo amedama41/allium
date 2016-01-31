@@ -2,7 +2,6 @@
 #define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_ECHO_HPP
 
 #include <cstdint>
-#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -28,9 +27,10 @@ namespace messages {
         class echo_base
             : public v13_detail::basic_openflow_message<T>
         {
-        protected:
-            using data_type = std::unique_ptr<unsigned char[]>;
+        public:
+            using data_type = binary_data::pointer_type;
 
+        protected:
             echo_base(binary_data&& data, std::uint32_t const xid) noexcept
                 : header_{
                       protocol::OFP_VERSION
@@ -50,7 +50,8 @@ namespace messages {
             }
 
             echo_base(echo_base const& other)
-                : echo_base{other.header_, binary_data{other.data()}.data()}
+                : header_(other.header_)
+                , data_(binary_data::copy_data(other.data()))
             {
             }
 
@@ -119,13 +120,9 @@ namespace messages {
             {
                 auto const header
                     = detail::decode<v13_detail::ofp_header>(first, last);
-                auto const data_length
-                    = header.length - sizeof(v13_detail::ofp_header);
-                auto data = data_type{
-                    data_length ? new unsigned char[data_length] : nullptr
-                };
-                last = std::next(first, data_length);
-                std::copy(first, last, data.get());
+                last = std::next(
+                        first, header.length - sizeof(v13_detail::ofp_header));
+                auto data = binary_data::copy_data(first, last);
                 first = last;
 
                 return T{header, std::move(data)};
