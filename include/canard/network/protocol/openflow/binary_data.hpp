@@ -39,11 +39,24 @@ namespace openflow {
         {
         }
 
+        binary_data(binary_data const& other)
+            : data_(copy_data(other))
+            , size_(other.size_)
+        {
+        }
+
         binary_data(binary_data&& other) noexcept
             : data_(std::move(other.data_))
             , size_(other.size_)
         {
             other.size_ = 0;
+        }
+
+        auto operator=(binary_data const& other)
+            -> binary_data&
+        {
+            auto tmp = other;
+            return operator=(std::move(tmp));
         }
 
         auto operator=(binary_data&& other) noexcept
