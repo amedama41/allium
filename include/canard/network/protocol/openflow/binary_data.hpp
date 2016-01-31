@@ -13,6 +13,9 @@ namespace openflow {
     class binary_data
     {
     public:
+        using iterator = unsigned char const*;
+        using const_iterator = unsigned char const*;
+
         binary_data() noexcept
             : data_{nullptr}
             , size_{0}
@@ -55,13 +58,13 @@ namespace openflow {
         }
 
         auto begin() const noexcept
-            -> unsigned char const*
+            -> const_iterator
         {
             return data_.get();
         }
 
         auto end() const noexcept
-            -> unsigned char const*
+            -> const_iterator
         {
             return data_.get() + size_;
         }
