@@ -1,5 +1,4 @@
 #define BOOST_TEST_DYN_LINK
-#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/v13/message/table_mod.hpp>
 #include <boost/test/unit_test.hpp>
 
