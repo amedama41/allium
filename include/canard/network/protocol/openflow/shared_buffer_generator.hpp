@@ -2,58 +2,95 @@
 #define CANARD_NETWORK_OPENFLOW_SHARED_BUFFER_GENERATOR_HPP
 
 #include <cstddef>
+#include <algorithm>
 #include <utility>
-#include <boost/range/algorithm/copy.hpp>
 #include <canard/asio/shared_buffer.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 
-    struct shared_buffer_generator
-    {
-        shared_buffer_generator() noexcept
-            : buffer{}, it{nullptr}
-        {
-        }
+    namespace shared_buffer_generator_detail {
 
-        explicit shared_buffer_generator(canard::shared_buffer& buffer)
-            : buffer(buffer), it{buffer.data()}
+        struct shared_buffer_generator
         {
-        }
+            using iterator = unsigned char*;
+            using const_iterator = unsigned char const*;
 
-        explicit shared_buffer_generator(canard::shared_buffer&& buffer)
-            : buffer(std::move(buffer)), it{buffer.data()}
-        {
-        }
+            shared_buffer_generator() noexcept
+                : buffer{}, it{nullptr}
+            {
+            }
 
-        template <class Range>
-        void push_back(Range&& range)
-        {
-            it = boost::copy(std::forward<Range>(range), it);
-        }
+            explicit shared_buffer_generator(canard::shared_buffer& buffer)
+                : buffer(buffer), it{buffer.data()}
+            {
+            }
 
-        void reserve(std::size_t const size)
-        {
-            buffer.resize(size);
-            it = buffer.data();
-        }
+            explicit shared_buffer_generator(canard::shared_buffer&& buffer)
+                : buffer(std::move(buffer)), it{buffer.data()}
+            {
+            }
 
-        auto to_const_buffers() const& noexcept
+            auto begin() noexcept
+                -> iterator
+            {
+                return buffer.data();
+            }
+
+            auto begin() const noexcept
+                -> const_iterator
+            {
+                return buffer.data();
+            }
+
+            auto end() noexcept
+                -> iterator
+            {
+                return it;
+            }
+
+            auto end() const noexcept
+                -> const_iterator
+            {
+                return it;
+            }
+
+            void clear() noexcept
+            {
+            }
+
+            template <class Iterator>
+            void insert(unsigned char*, Iterator first, Iterator last)
+            {
+                it = std::copy(first, last, it);
+            }
+
+            void reserve(std::size_t const size)
+            {
+                buffer.resize(size);
+                it = buffer.data();
+            }
+
+            canard::shared_buffer buffer;
+            unsigned char* it;
+        };
+
+        auto to_const_buffers(shared_buffer_generator const& buffer)
             -> canard::shared_buffer const&
         {
-            return buffer;
+            return buffer.buffer;
         }
 
-        auto to_const_buffers() && noexcept
+        auto to_const_buffers(shared_buffer_generator&& buffer)
             -> canard::shared_buffer&&
         {
-            return std::move(buffer);
+            return std::move(buffer).buffer;
         }
 
-        canard::shared_buffer buffer;
-        unsigned char* it;
-    };
+    } // namespace shared_buffer_generator_detail
+
+    using shared_buffer_generator_detail::shared_buffer_generator;
 
 } // namespace openflow
 } // namespace network

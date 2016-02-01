@@ -4,9 +4,9 @@
 #include <cstddef>
 #include <type_traits>
 #include <boost/endian/conversion.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <canard/as_byte_range.hpp>
-#include <canard/network/protocol/openflow/with_buffer.hpp>
 
 namespace canard {
 namespace network {
@@ -32,9 +32,7 @@ namespace openflow {
             -> Buffer&
         {
             detail::encode_impl(value, NeedsEndianConversion{});
-            using canard::network::openflow::openflow_buffer_push_back;
-            return openflow_buffer_push_back(
-                    buffer, canard::as_byte_range(value, size));
+            return boost::push_back(buffer, canard::as_byte_range(value, size));
         }
 
         template <class Buffer>
@@ -43,8 +41,7 @@ namespace openflow {
                 , unsigned char const* const first, std::size_t const size)
             -> Buffer&
         {
-            using canard::network::openflow::openflow_buffer_push_back;
-            return openflow_buffer_push_back(
+            return boost::push_back(
                     buffer, boost::make_iterator_range_n(first, size));
         }
 

@@ -8,7 +8,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/system/error_code.hpp>
-#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/options.hpp>
 #include <canard/network/protocol/openflow/setup_connection.hpp>

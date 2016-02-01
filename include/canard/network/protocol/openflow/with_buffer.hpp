@@ -4,30 +4,17 @@
 #include <cstddef>
 #include <cstdint>
 #include <utility>
+#include <boost/asio/buffer.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 
     template <class Buffer>
-    void openflow_buffer_reserve(Buffer& buffer, std::size_t const size)
+    auto to_const_buffers(Buffer const& buffer)
+        -> boost::asio::const_buffers_1
     {
-        buffer.reserve(size);
-    }
-
-    template <class Buffer, class Range>
-    auto openflow_buffer_push_back(Buffer& buffer, Range&& range)
-        -> Buffer&
-    {
-        buffer.push_back(std::forward<Range>(range));
-        return buffer;
-    }
-
-    template <class Buffer>
-    auto openflow_buffer_to_const_buffers(Buffer&& buffer)
-        -> decltype(std::forward<Buffer>(buffer).to_const_buffers())
-    {
-        return std::forward<Buffer>(buffer).to_const_buffers();
+        return boost::asio::buffer(buffer);
     }
 
     namespace detail {
@@ -66,13 +53,12 @@ namespace openflow {
             }
 
             auto encode() const
-                -> decltype(openflow_buffer_to_const_buffers(
-                            std::declval<Buffer>()))
+                -> decltype(to_const_buffers(std::declval<Buffer>()))
             {
-                openflow_buffer_reserve(buffer, message.length());
+                buffer.clear();
+                buffer.reserve(message.length());
                 message.encode(buffer);
-                return openflow_buffer_to_const_buffers(
-                        std::forward<Buffer>(buffer));
+                return to_const_buffers(std::forward<Buffer>(buffer));
             }
 
             Message message;
