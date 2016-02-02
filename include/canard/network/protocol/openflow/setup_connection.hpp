@@ -317,7 +317,8 @@ namespace detail {
               , std::uint32_t const xid)
         {
             auto error = openflow::error{
-                openflow::OFPET_HELLO_FAILED, openflow::OFPHFC_INCOMPATIBLE, {}//, xid
+                  openflow::OFPET_HELLO_FAILED, openflow::OFPHFC_INCOMPATIBLE
+                , openflow::binary_data{"incompatible openflow version"}, xid
             };
             boost::asio::async_write(
                     socket_
