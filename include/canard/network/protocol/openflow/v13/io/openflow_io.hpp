@@ -31,8 +31,8 @@ namespace v13 {
             % port.port_no()
             % port.name()
             % port.config()
-            % port_state_string(port.state().to_ulong())
-            % port.curr_speed()
+            % port_state_string(port.state())
+            % port.current_speed()
             % port.max_speed()
             ;
     }
