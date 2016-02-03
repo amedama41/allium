@@ -11,6 +11,7 @@ SRCS = error_test.cpp \
 	   switch_config_test.cpp \
 	   table_mod_test.cpp \
 	   packet_in_test.cpp \
+	   port_status_test.cpp \
 	   packet_out_test.cpp \
 	   barrier_test.cpp
 OBJS = $(SRCS:.cpp=.o)
