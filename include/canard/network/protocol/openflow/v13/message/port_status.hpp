@@ -1,14 +1,12 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_PORT_STATUS_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_PORT_STATUS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_PORT_STATUS_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_PORT_STATUS_HPP
 
-#include <cstdint>
-#include <algorithm>
-#include <iterator>
-#include <utility>
+#include <stdexcept>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_openflow_message.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/detail/port_adaptor.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/port.hpp>
 
@@ -20,65 +18,116 @@ namespace messages {
 
     class port_status
         : public v13_detail::basic_openflow_message<port_status>
+        , public v13_detail::port_adaptor<port_status>
     {
     public:
-        static protocol::ofp_type const message_type
+        static constexpr protocol::ofp_type message_type
             = protocol::OFPT_PORT_STATUS;
 
-        auto header() const
+        port_status(v13::protocol::ofp_port_reason const reason
+                  , v13::port const& port
+                  , std::uint32_t const xid = get_xid()) noexcept
+            : port_status_{
+                  v13_detail::ofp_header{
+                      protocol::OFP_VERSION
+                    , message_type
+                    , sizeof(v13_detail::ofp_port_status)
+                    , xid
+                  }
+                , std::uint8_t(reason)
+                , { 0, 0, 0, 0, 0, 0, 0 }
+                , port.ofp_port()
+              }
+        {
+        }
+
+        auto header() const noexcept
             -> v13_detail::ofp_header const&
         {
-            return header_;
+            return port_status_.header;
         }
 
-        auto reason() const
+        auto reason() const noexcept
             -> protocol::ofp_port_reason
         {
-            return protocol::ofp_port_reason(reason_);
+            return protocol::ofp_port_reason(port_status_.reason);
         }
 
-        auto port() const
-            -> v13::port const&
+        auto port() const noexcept
+            -> v13::port
         {
-            return port_;
+            return v13::port::from_ofp_port(port_status_.desc);
         }
 
-    private:
-        port_status(v13_detail::ofp_header const& header, std::uint8_t reason, v13::port port)
-            : header_(header)
-            , reason_(reason)
-            , port_{std::move(port)}
+        auto is_added() const noexcept
+            -> bool
         {
+            return reason() == protocol::OFPPR_ADD;
         }
 
-    public:
+        auto is_deleted() const noexcept
+            -> bool
+        {
+            return reason() == protocol::OFPPR_DELETE;
+        }
+
+        auto is_modified() const noexcept
+            -> bool
+        {
+            return reason() == protocol::OFPPR_MODIFY;
+        }
+
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            return detail::encode(container, port_status_);
+        }
+
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> port_status
         {
-            auto const header = detail::decode<v13_detail::ofp_header>(first, last);
-            auto const reason = detail::decode<std::uint8_t>(first, last);
+            return port_status{
+                detail::decode<v13_detail::ofp_port_status>(first, last)
+            };
+        }
 
-            std::advance(first, sizeof(decltype(v13_detail::ofp_port_status::pad)));
-
-            auto port = v13::port::decode(first, last);
-
-            return {header, reason, std::move(port)};
+        static void validate(v13_detail::ofp_header const& header)
+        {
+            if (header.version != protocol::OFP_VERSION) {
+                throw std::runtime_error{"invalid version"};
+            }
+            if (header.type != message_type) {
+                throw std::runtime_error{"invalid message type"};
+            }
+            if (header.length != sizeof(v13_detail::ofp_port_status)) {
+                throw std::runtime_error{"invalid length"};
+            }
         }
 
     private:
-        v13_detail::ofp_header header_;
-        std::uint8_t reason_;
-        v13::port port_;
+        explicit port_status(v13_detail::ofp_port_status const& status) noexcept
+            : port_status_(status)
+        {
+        }
+
+        friend port_adaptor;
+
+        auto ofp_port() const noexcept
+            -> v13_detail::ofp_port const&
+        {
+            return port_status_.desc;
+        }
+
+    private:
+        v13_detail::ofp_port_status port_status_;
     };
 
 } // namespace messages
-
-using messages::port_status;
-
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_PORT_STATUS_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_PORT_STATUS_HPP
