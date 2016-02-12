@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <stdexcept>
 #include <utility>
 #include <canard/constant_range.hpp>
 #include <canard/type_traits.hpp>
@@ -137,6 +138,16 @@ namespace v13 {
                 = v13_detail::oxm_match_field_set::decode(first, last);
             std::advance(first, v13_detail::padding_length(length));
             return oxm_match{length, std::move(oxm_fields)};
+        }
+
+        static void validate(v13_detail::ofp_match const& match)
+        {
+            if (match.type != protocol::OFPMT_OXM) {
+                throw std::runtime_error{"match_type is not OFPMT_OXM"};
+            }
+            if (match.length < offsetof(v13_detail::ofp_match, pad)) {
+                throw std::runtime_error{"invalid oxm_match length"};
+            }
         }
 
     private:
