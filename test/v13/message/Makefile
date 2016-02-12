@@ -13,7 +13,9 @@ SRCS = error_test.cpp \
 	   packet_in_test.cpp \
 	   port_status_test.cpp \
 	   packet_out_test.cpp \
-	   flow_mod_test.cpp \
+	   flow_add_test.cpp \
+	   flow_modify_test.cpp \
+	   flow_delete_test.cpp \
 	   port_mod.cpp \
 	   barrier_test.cpp
 OBJS = $(SRCS:.cpp=.o)
