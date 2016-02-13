@@ -194,7 +194,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, description_reply const& reply)
+    auto operator<<(OStream& os, messages::multipart::description_reply const& reply)
         -> OStream&
     {
         return os << boost::format{"%s: xid=%#x, flags=%#x, mfr_desc=%s, hw_desc=%s, sw_desc=%s, serial_num=%s, dp_desc=%s"}
@@ -205,7 +205,7 @@ namespace messages {
             % reply.hardware_desc()
             % reply.software_desc()
             % reply.serial_number()
-            % reply.datapah_desc()
+            % reply.datapath_desc()
             ;
     }
 

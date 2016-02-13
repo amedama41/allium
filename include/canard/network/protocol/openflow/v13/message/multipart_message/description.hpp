@@ -1,12 +1,12 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_SWITCH_DESC_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_SWITCH_DESC_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_DESCRIPTION_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_DESCRIPTION_HPP
 
 #include <cstdint>
-#include <iterator>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/utility/string_ref.hpp>
+#include <canard/network/protocol/openflow/get_xid.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
@@ -14,116 +14,139 @@ namespace network {
 namespace openflow {
 namespace v13 {
 namespace messages {
+namespace multipart {
 
     class description_request
-        : public v13_detail::basic_multipart_request<description_request>
+        : public multipart_detail::basic_multipart_request<
+              description_request, void
+          >
     {
     public:
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_DESC;
 
-        description_request()
-            : basic_multipart_request{0, 0}
+        explicit description_request(
+                std::uint32_t const xid = get_xid()) noexcept
+            : basic_multipart_request{0, xid}
         {
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> description_request
-        {
-            return description_request{basic_multipart_request::decode(first, last)};
         }
 
     private:
-        explicit description_request(v13_detail::ofp_multipart_request const& request)
+        friend basic_multipart_request::base_type;
+
+        explicit description_request(
+                v13_detail::ofp_multipart_request const& request) noexcept
             : basic_multipart_request{request}
         {
         }
     };
 
+
     class description_reply
-        : public v13_detail::basic_multipart_reply<description_reply>
+        : public multipart_detail::basic_multipart_reply<
+                description_reply, v13_detail::ofp_desc
+          >
     {
     public:
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_DESC;
 
-        auto manufacture_desc() const
-            -> char const*
+        description_reply(
+                  boost::string_ref mfr_desc
+                , boost::string_ref hw_desc
+                , boost::string_ref sw_desc
+                , boost::string_ref serial_num
+                , boost::string_ref dp_desc
+                , std::uint32_t const xid = get_xid())
+            : basic_multipart_reply{
+                  0
+                , create_desc(mfr_desc, hw_desc, sw_desc, serial_num, dp_desc)
+                , xid
+              }
         {
-            return desc_.mfr_desc;
+        }
+
+        auto manufacture_desc() const
+            -> boost::string_ref
+        {
+            return body().mfr_desc;
         }
 
         auto hardware_desc() const
-            -> char const*
+            -> boost::string_ref
         {
-            return desc_.hw_desc;
+            return body().hw_desc;
         }
 
         auto software_desc() const
-            -> char const*
+            -> boost::string_ref
         {
-            return desc_.sw_desc;
+            return body().sw_desc;
         }
 
         auto serial_number() const
-            -> char const*
+            -> boost::string_ref
         {
-            return desc_.serial_num;
+            return body().serial_num;
         }
 
-        auto datapah_desc() const
-            -> char const*
+        auto datapath_desc() const
+            -> boost::string_ref
         {
-            return desc_.dp_desc;
-        }
-
-        using basic_openflow_message::encode;
-
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
-        {
-            basic_multipart_reply::encode(container);
-            return detail::encode(container, desc_);
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> description_reply
-        {
-            auto reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
-                throw 2;
-            }
-            if (std::distance(first, last) != sizeof(v13_detail::ofp_desc)) {
-                throw 2;
-            }
-
-            auto desc = detail::decode<v13_detail::ofp_desc>(first, last);
-
-            return description_reply{reply, desc};
+            return body().dp_desc;
         }
 
     private:
-        description_reply(v13_detail::ofp_multipart_reply const& reply, v13_detail::ofp_desc const& desc)
-            : basic_multipart_reply{reply}
-            , desc_(desc)
+        friend basic_multipart_reply::base_type;
+
+        description_reply(
+                  v13_detail::ofp_multipart_reply const& reply
+                , v13_detail::ofp_desc const& desc) noexcept
+            : basic_multipart_reply{reply, desc}
         {
         }
 
-    private:
-        v13_detail::ofp_desc desc_;
+        static auto create_desc(
+                  boost::string_ref mfr_desc
+                , boost::string_ref hw_desc
+                , boost::string_ref sw_desc
+                , boost::string_ref serial
+                , boost::string_ref dp_desc)
+            -> v13_detail::ofp_desc
+        {
+            using boost::adaptors::sliced;
+
+            auto desc = v13_detail::ofp_desc{};
+
+            auto const mfr_desc_size
+                = std::min(mfr_desc.size(), sizeof(desc.mfr_desc) - 1);
+            boost::copy(mfr_desc | sliced(0, mfr_desc_size), desc.mfr_desc);
+
+            auto const hw_desc_size
+                = std::min(hw_desc.size(), sizeof(desc.hw_desc) - 1);
+            boost::copy(hw_desc | sliced(0, hw_desc_size), desc.hw_desc);
+
+            auto const sw_desc_size
+                = std::min(sw_desc.size(), sizeof(desc.sw_desc) - 1);
+            boost::copy(sw_desc | sliced(0, sw_desc_size), desc.sw_desc);
+
+            auto const serial_size
+                = std::min(serial.size(), sizeof(desc.serial_num) - 1);
+            boost::copy(serial | sliced(0, serial_size), desc.serial_num);
+
+            auto const dp_desc_size
+                = std::min(dp_desc.size(), sizeof(desc.dp_desc) - 1);
+            boost::copy(dp_desc | sliced(0, dp_desc_size), desc.dp_desc);
+
+            return desc;
+        }
     };
 
+} // namespace multipart
 } // namespace messages
-
-using messages::description_request;
-using messages::description_reply;
-
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_SWITCH_DESC_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_DESCRIPTION_HPP

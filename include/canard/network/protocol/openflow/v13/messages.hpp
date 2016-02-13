@@ -37,7 +37,7 @@ namespace v13 {
     >;
 
     using default_multipart_reply_list = std::tuple<
-          messages::description_reply
+          messages::multipart::description_reply
         , messages::multipart::flow_stats_reply
         , messages::aggregate_stats_reply
         , messages::table_stats_reply
