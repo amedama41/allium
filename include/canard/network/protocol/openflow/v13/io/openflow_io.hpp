@@ -225,7 +225,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, aggregate_stats_reply const& reply)
+    auto operator<<(OStream& os, messages::multipart::aggregate_stats_reply const& reply)
         -> OStream&
     {
         return os << boost::format{"%s: xid=%#x, flags=%#x, packet_count=%llu, byte_count=%#x, flow_count=%lu"}
