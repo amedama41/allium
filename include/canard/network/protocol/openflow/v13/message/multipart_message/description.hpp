@@ -2,6 +2,7 @@
 #define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_DESCRIPTION_HPP
 
 #include <cstdint>
+#include <algorithm>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/utility/string_ref.hpp>
