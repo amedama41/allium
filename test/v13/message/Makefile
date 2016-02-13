@@ -21,6 +21,7 @@ SRCS = error_test.cpp \
 	   barrier_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
+TARGET_LIB = libmessage_test.dylib
 TARGET = message_test
 
 ALL_TESTS = $(OBJS:.o=)
@@ -42,11 +43,14 @@ all: $(DEPENDS) $(TARGET)
 %: %.o
 	$(build_test)
 
-$(TARGET): $(OBJS)
+$(TARGET_LIB): $(OBJS)
+	$(CXX) -dynamiclib $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(TARGET): $(TARGET_LIB)
 	$(build_test)
 
 run: all
-	./$(TARGET)
+	./$(TARGET) -l message
 
 run_each: $(ALL_TESTS)
 	for test in $(ALL_TESTS); do \
@@ -56,7 +60,7 @@ run_each: $(ALL_TESTS)
 	done
 
 clean:
-	-rm *.o $(DEPENDS) $(ALL_TESTS) $(TARGET) 2> /dev/null
+	-rm *.o $(DEPENDS) $(ALL_TESTS) $(TARGET_LIB) $(TARGET) 2> /dev/null
 
 -include $(DEPENDS)
 
