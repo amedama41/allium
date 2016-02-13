@@ -5,7 +5,8 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 # CXX = g++-4.9
 # CXXFLAGS = -std=c++11 -Wall -pedantic $(INCLUDES)
 
-SRCS = flow_stats_test.cpp
+SRCS = description_test.cpp \
+	   flow_stats_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libmultipart_test.dylib
