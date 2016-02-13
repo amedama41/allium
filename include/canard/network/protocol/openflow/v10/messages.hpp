@@ -60,7 +60,7 @@ namespace v10 {
           messages::statistics::description_reply
         , messages::statistics::flow_stats_reply
         , messages::statistics::aggregate_stats_reply
-        , messages::table_stats_reply
+        , messages::statistics::table_stats_reply
         , messages::port_stats_reply
         , messages::queue_stats_reply
     >;

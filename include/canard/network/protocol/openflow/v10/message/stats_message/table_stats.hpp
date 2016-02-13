@@ -1,30 +1,64 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V10_MESSAGES_TABLE_STATS_HPP
-#define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_TABLE_STATS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V10_MESSAGES_STATISTICS_TABLE_STATS_HPP
+#define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_STATISTICS_TABLE_STATS_HPP
 
 #include <cstddef>
 #include <cstdint>
+#include <algorithm>
 #include <utility>
-#include <vector>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <canard/network/protocol/openflow/get_xid.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v10/detail/stats_adaptor.hpp>
+#include <canard/network/protocol/openflow/v10/detail/basic_stats.hpp>
+#include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v10 {
-
-namespace stats {
+namespace messages {
+namespace statistics {
 
     class table_stats
     {
     public:
-        static std::uint16_t const base_size = sizeof(v10_detail::ofp_table_stats);
+        static constexpr std::size_t base_size
+            = sizeof(v10_detail::ofp_table_stats);
 
-        auto table_id() const
+        table_stats(std::uint8_t const table_id
+                  , boost::string_ref name
+                  , std::uint32_t const wildcards
+                  , std::uint32_t const max_entries
+                  , std::uint32_t const active_count
+                  , std::uint64_t const lookup_count
+                  , std::uint64_t const matched_count)
+            : table_stats_{
+                  table_id
+                , { 0, 0, 0 }
+                , { 0 }
+                , wildcards
+                , max_entries
+                , active_count
+                , lookup_count
+                , matched_count
+              }
+        {
+            auto const name_size
+                = std::min(name.size(), sizeof(table_stats_.name) - 1);
+            using boost::adaptors::sliced;
+            boost::copy(name | sliced(0, name_size), table_stats_.name);
+        }
+
+        static constexpr auto length() noexcept
+            -> std::uint16_t
+        {
+            return sizeof(v10_detail::ofp_table_stats);
+        }
+
+        auto table_id() const noexcept
             -> std::uint8_t
         {
             return table_stats_.table_id;
@@ -36,32 +70,32 @@ namespace stats {
             return table_stats_.name;
         }
 
-        auto wildcards() const
+        auto wildcards() const noexcept
             -> std::uint32_t
         {
             return table_stats_.wildcards;
         }
 
-        auto max_entries() const
+        auto max_entries() const noexcept
             -> std::uint32_t
         {
             return table_stats_.max_entries;
         }
 
-        auto active_count() const
+        auto active_count() const noexcept
             -> std::uint32_t
         {
             return table_stats_.active_count;
         }
 
-        auto lookup_count() const
-            -> std::uint32_t
+        auto lookup_count() const noexcept
+            -> std::uint64_t
         {
             return table_stats_.lookup_count;
         }
 
-        auto matched_count() const
-            -> std::uint32_t
+        auto matched_count() const noexcept
+            -> std::uint64_t
         {
             return table_stats_.matched_count;
         }
@@ -92,91 +126,66 @@ namespace stats {
         v10_detail::ofp_table_stats table_stats_;
     };
 
-} // namespace stats
-
-namespace messages {
 
     class table_stats_request
-        : public v10_detail::stats_request_adaptor<
+        : public stats_detail::basic_stats_request<
                 table_stats_request, void
           >
     {
     public:
-        static protocol::ofp_stats_types const stats_type_value
+        static constexpr protocol::ofp_stats_types stats_type_value
             = protocol::OFPST_TABLE;
 
-        explicit table_stats_request(std::uint32_t const xid = get_xid())
-            : stats_request_adaptor{xid}
+        explicit table_stats_request(
+                std::uint32_t const xid = get_xid()) noexcept
+            : basic_stats_request{0, xid}
         {
         }
 
     private:
-        friend stats_request_adaptor;
+        friend basic_stats_request::base_type;
 
         explicit table_stats_request(
-                v10_detail::ofp_stats_request const& stats_request)
-            : stats_request_adaptor{stats_request}
+                v10_detail::ofp_stats_request const& stats_request) noexcept
+            : basic_stats_request{stats_request}
         {
         }
     };
 
 
     class table_stats_reply
-        : public v10_detail::stats_reply_adaptor<
-                table_stats_reply, stats::table_stats, true
+        : public stats_detail::basic_stats_reply<
+                table_stats_reply, table_stats[]
           >
     {
     public:
-        static protocol::ofp_stats_types const stats_type_value
+        static constexpr protocol::ofp_stats_types stats_type_value
             = protocol::OFPST_TABLE;
 
-        using iterator = std::vector<stats::table_stats>::const_iterator;
-        using const_iterator = std::vector<stats::table_stats>::const_iterator;
-
-        auto num_tables() const
-            -> std::uint8_t
+        explicit table_stats_reply(
+                  body_type table_stats
+                , std::uint16_t const flags = 0
+                , std::uint32_t const xid = get_xid())
+            : basic_stats_reply{flags, std::move(table_stats), xid}
         {
-            return table_stats_.size();
-        }
-
-        auto begin() const
-            -> const_iterator
-        {
-            return table_stats_.begin();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return table_stats_.end();
         }
 
     private:
-        friend stats_reply_adaptor;
-
-        auto body() const
-            -> std::vector<stats::table_stats> const&
-        {
-            return table_stats_;
-        }
+        friend basic_stats_reply::base_type;
 
         table_stats_reply(
                   v10_detail::ofp_stats_reply const& stats_reply
-                , std::vector<stats::table_stats> table_stats)
-            : stats_reply_adaptor{stats_reply}
-            , table_stats_(std::move(table_stats))
+                , body_type&& table_stats)
+            : basic_stats_reply{stats_reply, std::move(table_stats)}
         {
         }
-
-    private:
-        std::vector<stats::table_stats> table_stats_;
     };
 
+} // namespace statistics
 } // namespace messages
-
 } // namespace v10
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V10_MESSAGES_TABLE_STATS_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V10_MESSAGES_STATISTICS_TABLE_STATS_HPP

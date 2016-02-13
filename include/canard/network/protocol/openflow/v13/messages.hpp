@@ -40,7 +40,7 @@ namespace v13 {
           messages::multipart::description_reply
         , messages::multipart::flow_stats_reply
         , messages::multipart::aggregate_stats_reply
-        , messages::table_stats_reply
+        , messages::multipart::table_stats_reply
         , messages::port_stats_reply
         // , messages::queue_stats_reply
         // , messages::group_stats_reply

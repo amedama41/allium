@@ -1,56 +1,68 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_TABLE_STATS_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_TABLE_STATS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_TABLE_STATS_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_TABLE_STATS_HPP
 
+#include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <utility>
-#include <vector>
+#include <canard/network/protocol/openflow/get_xid.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
+namespace multipart {
 
     class table_stats
     {
     public:
-        explicit table_stats(std::uint8_t const table_id)
-            : table_stats_{table_id, {0, 0, 0}, 0, 0, 0}
-        {
-        }
+        static constexpr std::size_t base_size
+            = sizeof(v13_detail::ofp_table_stats);
 
         table_stats(std::uint8_t const table_id
-                , std::uint32_t const active_count
-                , std::uint64_t const lookup_count
-                , std::uint64_t const matched_count)
-            : table_stats_{table_id, {0, 0, 0}, active_count, lookup_count, matched_count}
+                  , std::uint32_t const active_count
+                  , std::uint64_t const lookup_count
+                  , std::uint64_t const matched_count) noexcept
+            : table_stats_{
+                  table_id
+                , { 0, 0, 0 }
+                , active_count
+                , lookup_count
+                , matched_count
+              }
         {
         }
 
-        auto table_id() const
+        static constexpr auto length() noexcept
+            -> std::uint16_t
+        {
+            return sizeof(v13_detail::ofp_table_stats);
+        }
+
+        auto table_id() const noexcept
             -> std::uint8_t
         {
             return table_stats_.table_id;
         }
 
-        auto active_count() const
+        auto active_count() const noexcept
             -> std::uint32_t
         {
             return table_stats_.active_count;
         }
 
-        auto lookup_count() const
+        auto lookup_count() const noexcept
             -> std::uint64_t
         {
             return table_stats_.lookup_count;
         }
 
-        auto matched_count() const
+        auto matched_count() const noexcept
             -> std::uint64_t
         {
             return table_stats_.matched_count;
@@ -67,7 +79,9 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> table_stats
         {
-            return table_stats{detail::decode<v13_detail::ofp_table_stats>(first, last)};
+            return table_stats{
+                detail::decode<v13_detail::ofp_table_stats>(first, last)
+            };
         }
 
     private:
@@ -80,81 +94,66 @@ namespace v13 {
         v13_detail::ofp_table_stats table_stats_;
     };
 
-namespace messages {
 
     class table_stats_request
-        : public v13_detail::basic_multipart_request<table_stats_request>
+        : public multipart_detail::basic_multipart_request<
+                table_stats_request, void
+          >
     {
     public:
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_TABLE;
 
-        table_stats_request()
-            : basic_multipart_request{0, 0}
+        explicit table_stats_request(
+                std::uint32_t const xid = get_xid()) noexcept
+            : basic_multipart_request{0, xid}
+        {
+        }
+
+    private:
+        friend basic_multipart_request::base_type;
+
+        explicit table_stats_request(
+                v13_detail::ofp_multipart_request const& multipart_request) noexcept
+            : basic_multipart_request{multipart_request}
         {
         }
     };
 
 
     class table_stats_reply
-        : public v13_detail::basic_multipart_reply<table_stats_reply>
+        : public multipart_detail::basic_multipart_reply<
+                table_stats_reply, table_stats[]
+          >
     {
-        using table_stats_list = std::vector<table_stats>;
     public:
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_TABLE;
 
-        using iterator = table_stats_list::iterator;
-        using const_iterator = table_stats_list::const_iterator;
-
-        auto begin() const
-            -> const_iterator
-        {
-            return table_stats_list_.begin();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return table_stats_list_.end();
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> table_stats_reply
-        {
-            auto const reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
-                throw 2;
-            }
-
-            auto stats_list = table_stats_list{};
-            stats_list.reserve(std::distance(first, last) / sizeof(v13_detail::ofp_table_stats));
-            while (first != last) {
-                stats_list.push_back(table_stats::decode(first, last));
-            }
-            return {reply, std::move(stats_list)};
-        }
-
-    private:
-        table_stats_reply(v13_detail::ofp_multipart_reply const& reply, table_stats_list stats_list)
-            : basic_multipart_reply{reply}
-            , table_stats_list_(std::move(stats_list))
+        explicit table_stats_reply(
+                  body_type table_stats
+                , std::uint16_t const flags = 0
+                , std::uint32_t const xid = get_xid())
+            : basic_multipart_reply{flags, std::move(table_stats), xid}
         {
         }
 
     private:
-        table_stats_list table_stats_list_;
+        friend basic_multipart_reply::base_type;
+
+        table_stats_reply(
+                  v13_detail::ofp_multipart_reply const& reply
+                , body_type&& table_stats)
+            : basic_multipart_reply{reply, std::move(table_stats)}
+        {
+        }
     };
 
+} // namespace multipart
 } // namespace messages
-
-using messages::table_stats_request;
-using messages::table_stats_reply;
-
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_TABLE_STATS_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_TABLE_STATS_HPP
