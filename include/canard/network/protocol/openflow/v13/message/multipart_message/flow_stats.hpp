@@ -1,17 +1,21 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_FLOW_STATS_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_FLOW_STATS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_FLOW_STATS_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_FLOW_STATS_HPP
 
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
+#include <limits>
+#include <stdexcept>
 #include <utility>
-#include <vector>
-#include <boost/range/algorithm/for_each.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/get_xid.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/detail/flow_entry_adaptor.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/flow_entry.hpp>
 #include <canard/network/protocol/openflow/v13/instruction_set.hpp>
-#include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match.hpp>
 
@@ -19,240 +23,311 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
+namespace multipart {
 
     class flow_stats
+        : public v13_detail::flow_entry_adaptor<
+                flow_stats, v13_detail::ofp_flow_stats
+          >
     {
     public:
+        static constexpr std::size_t base_size
+            = sizeof(v13_detail::ofp_flow_stats)
+            + sizeof(v13_detail::ofp_match);
+
+        flow_stats(v13::flow_entry entry
+                 , std::uint8_t const table_id
+                 , std::uint16_t const flags
+                 , v13::timeouts const& timeouts
+                 , v13::elapsed_time const& elapsed_time
+                 , v13::counters const& counters)
+            : flow_stats_{
+                  std::uint16_t(
+                          sizeof(v13_detail::ofp_flow_stats)
+                        + v13_detail::exact_length(entry.match().length())
+                        + entry.instructions().length())
+                , table_id
+                , 0
+                , elapsed_time.duration_sec()
+                , elapsed_time.duration_nsec()
+                , entry.priority()
+                , timeouts.idle_timeout()
+                , timeouts.hard_timeout()
+                , flags
+                , { 0, 0, 0, 0 }
+                , entry.cookie()
+                , counters.packet_count()
+                , counters.byte_count()
+              }
+            , match_(std::move(entry).match())
+            , instructions_(std::move(entry).instructions())
+        {
+        }
+
+        flow_stats(flow_stats const&) = default;
+
+        flow_stats(flow_stats&& other)
+            : flow_stats_(other.flow_stats_)
+            , match_(std::move(other).match_)
+            , instructions_(std::move(other).instructions_)
+        {
+            other.flow_stats_.length = base_size;
+        }
+
+        auto operator=(flow_stats const&)
+            -> flow_stats& = default;
+
+        auto operator=(flow_stats&& other)
+            -> flow_stats&
+        {
+            auto tmp = std::move(other);
+            swap(tmp);
+            return *this;
+        }
+
+        void swap(flow_stats& other)
+        {
+            std::swap(flow_stats_, other.flow_stats_);
+            match_.swap(other.match_);
+            instructions_.swap(other.instructions_);
+        }
+
+        auto length() const noexcept
+            -> std::uint16_t
+        {
+            return flow_stats_.length;
+        }
+
+        auto match() const noexcept
+            -> oxm_match const&
+        {
+            return match_;
+        }
+
+        auto instructions() const noexcept
+            -> instruction_set const&
+        {
+            return instructions_;
+        }
+
         auto entry() const
-            -> flow_entry const&
+            -> flow_entry
         {
-            return entry_;
-        }
-
-        auto table_id() const
-            -> std::uint8_t
-        {
-            return table_id_;
-        }
-
-        auto flags() const
-            -> std::uint16_t
-        {
-            return flags_;
-        }
-
-        auto duration_sec() const
-            -> std::uint32_t
-        {
-            return duration_sec_;
-        }
-
-        auto duration_nsec() const
-            -> std::uint32_t
-        {
-            return duration_nsec_;
-        }
-
-        auto length() const
-            -> std::uint16_t
-        {
-            return v13_detail::exact_length(sizeof(v13_detail::ofp_flow_stats)
-                    + entry().match().length() + entry().instructions().length());
+            return flow_entry{match(), priority(), cookie(), instructions()};
         }
 
         template <class Container>
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, v13_detail::ofp_flow_stats{
-                      length()
-                    , table_id_
-                    , 0
-                    , duration_sec_
-                    , duration_nsec_
-                    , entry().priority()
-                    , entry().idle_timeout()
-                    , entry().hard_timeout()
-                    , flags_
-                    , {0, 0, 0, 0}
-                    , entry().cookie()
-                    , entry().packet_count()
-                    , entry().byte_count()
-            });
-            entry().match().encode(container);
-            return entry().instructions().encode(container);
+            detail::encode(container, flow_stats_);
+            match_.encode(container);
+            return instructions_.encode(container);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> flow_stats
         {
-            auto const stats = detail::decode<v13_detail::ofp_flow_stats>(first, last);
-            last = std::next(first, stats.length - sizeof(v13_detail::ofp_flow_stats));
+            auto const stats
+                = detail::decode<v13_detail::ofp_flow_stats>(first, last);
+            if (std::distance(first, last) + sizeof(v13_detail::ofp_flow_stats)
+                    < stats.length) {
+                throw std::runtime_error{"invalid flow_stats length"};
+            }
+            last = std::next(
+                    first, stats.length - sizeof(v13_detail::ofp_flow_stats));
+
+            auto copy_first = first;
+            auto const ofp_match
+                = detail::decode<v13_detail::ofp_match>(copy_first, last);
+            oxm_match::validate(ofp_match);
+            if (std::distance(first, last)
+                    < v13_detail::exact_length(ofp_match.length)) {
+                throw std::runtime_error{"invalid oxm_match length"};
+            }
             auto match = oxm_match::decode(first, last);
+
             auto instructions = instruction_set::decode(first, last);
 
-            return {stats, std::move(match), std::move(instructions)};
+            return flow_stats{stats, std::move(match), std::move(instructions)};
         }
 
     private:
-        flow_stats(v13_detail::ofp_flow_stats const& stats, oxm_match match, instruction_set instructions)
-            : entry_{
-                  {std::move(match), stats.priority}
-                , std::move(instructions)
-                , {stats.packet_count, stats.byte_count}
-                , {stats.idle_timeout, stats.hard_timeout}
-                , stats.cookie
-              }
-            , duration_sec_(stats.duration_sec)
-            , duration_nsec_(stats.duration_nsec)
-            , flags_(stats.flags)
-            , table_id_(stats.table_id)
+        flow_stats(v13_detail::ofp_flow_stats const& stats
+                 , oxm_match&& match
+                 , instruction_set&& instructions)
+            : flow_stats_(stats)
+            , match_(std::move(match))
+            , instructions_(std::move(instructions))
         {
         }
 
+        friend flow_entry_adaptor;
+
+        auto ofp_flow_entry() const noexcept
+            -> v13_detail::ofp_flow_stats const&
+        {
+            return flow_stats_;
+        }
+
     private:
-        flow_entry entry_;
-        std::uint32_t duration_sec_;
-        std::uint32_t duration_nsec_;
-        std::uint16_t flags_;
-        std::uint8_t table_id_;
+        v13_detail::ofp_flow_stats flow_stats_;
+        oxm_match match_;
+        instruction_set instructions_;
     };
 
 
-namespace messages {
-
     class flow_stats_request
-        : public v13_detail::basic_multipart_request<flow_stats_request>
+        : public multipart_detail::basic_multipart_request<
+              flow_stats_request, v13_detail::ofp_flow_stats_request, true
+          >
     {
     public:
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_FLOW;
 
-        explicit flow_stats_request(oxm_match match)
+        flow_stats_request(
+                  flow_entry entry
+                , std::uint8_t const table_id
+                , std::uint32_t const out_port = protocol::OFPP_ANY
+                , std::uint32_t const out_group = protocol::OFPG_ANY
+                , std::uint32_t const xid = get_xid())
             : basic_multipart_request{
-                  v13_detail::exact_length(sizeof(v13_detail::ofp_flow_stats_request) + match.length())
-                , 0
+                  0
+                , v13_detail::ofp_flow_stats_request{
+                      table_id
+                    , { 0, 0, 0 }
+                    , out_port
+                    , out_group
+                    , { 0, 0, 0, 0 }
+                    , entry.cookie()
+                    , std::numeric_limits<std::uint64_t>::max()
+                  }
+                , std::move(std::move(entry).match())
+                , xid
               }
-            , flow_stats_request_{
-                  protocol::OFPTT_ALL, {0, 0, 0}
-                , protocol::OFPP_ANY, protocol::OFPG_ANY
-                , {0, 0, 0, 0}, 0, 0
-              }
-            , match_(std::move(match))
         {
         }
 
-        using basic_openflow_message::encode;
-
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
+        flow_stats_request(
+                  oxm_match match
+                , std::uint8_t const table_id
+                , v13::cookie_mask const& cookie_mask
+                , std::uint32_t const out_port = protocol::OFPP_ANY
+                , std::uint32_t const out_group = protocol::OFPG_ANY
+                , std::uint32_t const xid = get_xid())
+            : basic_multipart_request{
+                  0
+                , v13_detail::ofp_flow_stats_request{
+                      table_id
+                    , { 0, 0, 0 }
+                    , out_port
+                    , out_group
+                    , { 0, 0, 0, 0 }
+                    , cookie_mask.value()
+                    , cookie_mask.mask()
+                  }
+                , std::move(match)
+                , xid
+              }
         {
-            basic_multipart_request::encode(container);
-            detail::encode(container, flow_stats_request_);
-            return match_.encode(container);
         }
 
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> flow_stats_request
+        flow_stats_request(
+                  oxm_match match
+                , std::uint8_t const table_id
+                , std::uint32_t const out_port = protocol::OFPP_ANY
+                , std::uint32_t const out_group = protocol::OFPG_ANY
+                , std::uint32_t const xid = get_xid())
+            : flow_stats_request{
+                  std::move(match)
+                , table_id
+                , v13::cookie_mask{0, 0}
+                , out_port
+                , out_group
+                , xid
+              }
         {
-            auto const request = basic_multipart_request::decode(first, last);
-            auto const stats_reqeust = detail::decode<v13_detail::ofp_flow_stats_request>(first, last);
-            auto match = oxm_match::decode(first, last);
-            return flow_stats_request{request, stats_reqeust, std::move(match)};
+        }
+
+        auto table_id() const noexcept
+            -> std::uint8_t
+        {
+            return body().table_id;
+        }
+
+        auto cookie() const noexcept
+            -> std::uint64_t
+        {
+            return body().cookie;
+        }
+
+        auto cookie_mask() const noexcept
+            -> std::uint64_t
+        {
+            return body().cookie_mask;
+        }
+
+        auto out_port() const noexcept
+            -> std::uint32_t
+        {
+            return body().out_port;
+        }
+
+        auto out_group() const noexcept
+            -> std::uint32_t
+        {
+            return body().out_group;
         }
 
     private:
-        flow_stats_request(v13_detail::ofp_multipart_request const& request
-                , v13_detail::ofp_flow_stats_request const& stats_request, oxm_match match)
-            : basic_multipart_request{request}
-            , flow_stats_request_(stats_request)
-            , match_(std::move(match))
+        friend basic_multipart_request::base_type;
+
+        flow_stats_request(
+                  v13_detail::ofp_multipart_request const& request
+                , v13_detail::ofp_flow_stats_request const& stats_request
+                , oxm_match&& match)
+            : basic_multipart_request{request, stats_request, std::move(match)}
         {
         }
-
-    private:
-        v13_detail::ofp_flow_stats_request flow_stats_request_;
-        oxm_match match_;
     };
 
 
     class flow_stats_reply
-        : public v13_detail::basic_multipart_reply<flow_stats_reply>
+        : public multipart_detail::basic_multipart_reply<
+              flow_stats_reply, flow_stats[]
+          >
     {
-        using flow_stats_list = std::vector<flow_stats>;
-
     public:
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_FLOW;
 
-        using const_iterator = flow_stats_list::const_iterator;
-
-        auto begin() const
-            -> const_iterator
-        {
-            return flow_stats_list_.begin();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return flow_stats_list_.end();
-        }
-
-        using basic_openflow_message::encode;
-
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
-        {
-            basic_multipart_reply::encode(container);
-            boost::for_each(flow_stats_list_, [&](flow_stats const& stats) {
-                stats.encode(container);
-            });
-            return container;
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> flow_stats_reply
-        {
-            auto reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
-                throw 2;
-            }
-
-            auto stats_list = std::vector<flow_stats>{};
-            stats_list.reserve(std::distance(first, last) / (sizeof(v13_detail::ofp_flow_stats) + sizeof(v13_detail::ofp_match)));
-            while (first != last) {
-                stats_list.push_back(flow_stats::decode(first, last));
-            }
-
-            return flow_stats_reply{reply, std::move(stats_list)};
-        }
-
-    private:
-        flow_stats_reply(v13_detail::ofp_multipart_reply const& reply, flow_stats_list stats_list)
-            : basic_multipart_reply{reply}
-            , flow_stats_list_(std::move(stats_list))
+        explicit flow_stats_reply(
+                  body_type flow_stats
+                , std::uint16_t const flags = 0
+                , std::uint32_t const xid = get_xid())
+            : basic_multipart_reply{flags, std::move(flow_stats), xid}
         {
         }
 
     private:
-        flow_stats_list flow_stats_list_;
+        friend basic_multipart_reply::base_type;
+
+        flow_stats_reply(
+                  v13_detail::ofp_multipart_reply const& multipart_reply
+                , body_type&& flow_stats)
+            : basic_multipart_reply{multipart_reply, std::move(flow_stats)}
+        {
+        }
     };
 
+} // namespace multipart
 } // namespace messages
-
-using messages::flow_stats_request;
-using messages::flow_stats_reply;
-
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_FLOW_STATS_HPP
-// vim: path+=../../
+#endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_FLOW_STATS_HPP

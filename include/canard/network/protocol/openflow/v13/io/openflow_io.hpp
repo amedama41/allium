@@ -38,7 +38,7 @@ namespace v13 {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, flow_stats const& stats)
+    auto operator<<(OStream& os, messages::multipart::flow_stats const& stats)
         -> OStream&
     {
         return os << boost::format{"flow_stats[entry=##, table_id=%u, flags=%#x, duration_sec=%u, duration_nsec=%u]"}
@@ -210,7 +210,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, flow_stats_reply const& reply)
+    auto operator<<(OStream& os, messages::multipart::flow_stats_reply const& reply)
         -> OStream&
     {
         os << boost::format{"%s: xid=%#x, flags=%#x, "}
@@ -218,7 +218,7 @@ namespace messages {
             % reply.xid()
             % reply.flags();
             ;
-        boost::for_each(reply, [&](flow_stats const& stats) {
+        boost::for_each(reply, [&](messages::multipart::flow_stats const& stats) {
             os << "\n\t" << stats;
         });
         return os;

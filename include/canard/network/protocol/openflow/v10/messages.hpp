@@ -58,7 +58,7 @@ namespace v10 {
 
     using default_stats_reply_list = std::tuple<
           messages::description_reply
-        , messages::flow_stats_reply
+        , messages::statistics::flow_stats_reply
         , messages::aggregate_stats_reply
         , messages::table_stats_reply
         , messages::port_stats_reply
