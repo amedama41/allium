@@ -18,7 +18,8 @@ SRCS = error_test.cpp \
 	   flow_modify_test.cpp \
 	   flow_delete_test.cpp \
 	   port_mod.cpp \
-	   barrier_test.cpp
+	   barrier_test.cpp \
+	   queue_config_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libmessage_test.dylib
