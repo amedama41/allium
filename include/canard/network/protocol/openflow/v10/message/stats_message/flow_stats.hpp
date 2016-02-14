@@ -123,8 +123,11 @@ namespace statistics {
         {
             auto const stats
                 = detail::decode<v10_detail::ofp_flow_stats>(first, last);
+            if (stats.length < base_size) {
+                throw std::runtime_error{"flow_stats length is too small"};
+            }
             if (std::distance(first, last) + base_size < stats.length) {
-                throw std::runtime_error{"invalid flow_stats length"};
+                throw std::runtime_error{"flow_stats length is too big"};
             }
             last = std::next(first, stats.length - base_size);
 

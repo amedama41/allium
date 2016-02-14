@@ -132,9 +132,12 @@ namespace multipart {
         {
             auto const stats
                 = detail::decode<v13_detail::ofp_flow_stats>(first, last);
+            if (stats.length < base_size) {
+                throw std::runtime_error{"flow_stats length is too small"};
+            }
             if (std::distance(first, last) + sizeof(v13_detail::ofp_flow_stats)
                     < stats.length) {
-                throw std::runtime_error{"invalid flow_stats length"};
+                throw std::runtime_error{"flow_stats length is too big"};
             }
             last = std::next(
                     first, stats.length - sizeof(v13_detail::ofp_flow_stats));
