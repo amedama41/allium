@@ -61,7 +61,7 @@ namespace v10 {
         , messages::statistics::flow_stats_reply
         , messages::statistics::aggregate_stats_reply
         , messages::statistics::table_stats_reply
-        , messages::port_stats_reply
+        , messages::statistics::port_stats_reply
         , messages::queue_stats_reply
     >;
 

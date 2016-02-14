@@ -62,7 +62,7 @@ namespace v13 {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, port_stats const& stats)
+    auto operator<<(OStream& os, messages::multipart::port_stats const& stats)
         -> OStream&
     {
         return os << boost::format{
@@ -79,9 +79,9 @@ namespace v13 {
         % stats.tx_dropped()
         % stats.rx_errors()
         % stats.tx_errors()
-        % stats.rx_frame_err()
-        % stats.rx_over_err()
-        % stats.rx_crc_err()
+        % stats.rx_frame_errors()
+        % stats.rx_over_errors()
+        % stats.rx_crc_errors()
         % stats.collisions()
         % stats.duration_sec()
         % stats.duration_nsec()
@@ -254,7 +254,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, port_stats_reply const& reply)
+    auto operator<<(OStream& os, messages::multipart::port_stats_reply const& reply)
         -> OStream&
     {
         os << boost::format{"%s: xid=%#x, flags=%#x, "}
@@ -262,7 +262,7 @@ namespace messages {
             % reply.xid()
             % reply.flags();
             ;
-        boost::for_each(reply, [&](port_stats const& stats) {
+        boost::for_each(reply, [&](messages::multipart::port_stats const& stats) {
             os << "\n\t" << stats;
         });
         return os;

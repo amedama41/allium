@@ -41,7 +41,7 @@ namespace v13 {
         , messages::multipart::flow_stats_reply
         , messages::multipart::aggregate_stats_reply
         , messages::multipart::table_stats_reply
-        , messages::port_stats_reply
+        , messages::multipart::port_stats_reply
         // , messages::queue_stats_reply
         // , messages::group_stats_reply
         // , messages::group_description_reply
