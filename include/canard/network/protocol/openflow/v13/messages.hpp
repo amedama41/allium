@@ -12,6 +12,7 @@
 #include <canard/network/protocol/openflow/v13/message/multipart_messages.hpp>
 #include <canard/network/protocol/openflow/v13/message/packet_out.hpp>
 #include <canard/network/protocol/openflow/v13/message/barrier.hpp>
+#include <canard/network/protocol/openflow/v13/message/queue_config.hpp>
 #include <canard/network/protocol/openflow/v13/message/packet_in.hpp>
 #include <canard/network/protocol/openflow/v13/message/flow_removed.hpp>
 #include <canard/network/protocol/openflow/v13/message/port_status.hpp>
@@ -31,7 +32,7 @@ namespace v13 {
         , messages::flow_removed
         , messages::port_status
         , messages::barrier_reply
-        // , messages::queue_get_config_reply
+        , messages::queue_get_config_reply
         // , messages::role_reply
         // , messages::get_async_reply
     >;
