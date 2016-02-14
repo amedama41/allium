@@ -43,7 +43,7 @@ namespace v13 {
         , messages::multipart::aggregate_stats_reply
         , messages::multipart::table_stats_reply
         , messages::multipart::port_stats_reply
-        // , messages::queue_stats_reply
+        , messages::multipart::queue_stats_reply
         // , messages::group_stats_reply
         // , messages::group_description_reply
         // , messages::gruop_features_reply
