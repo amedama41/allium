@@ -25,6 +25,7 @@ test/**/all_test
 test/utility_test
 test/**/message_test
 test/**/multipart_test
+test/**/queue_property_test
 test/oxm_match_field_test
 test/action_test
 
