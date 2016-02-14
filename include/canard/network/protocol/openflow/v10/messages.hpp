@@ -62,7 +62,7 @@ namespace v10 {
         , messages::statistics::aggregate_stats_reply
         , messages::statistics::table_stats_reply
         , messages::statistics::port_stats_reply
-        , messages::queue_stats_reply
+        , messages::statistics::queue_stats_reply
     >;
 
 } // namespace v10
