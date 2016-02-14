@@ -21,7 +21,7 @@ namespace v10 {
         inline auto max_num_of_properties(std::size_t const properties_length)
             -> std::size_t
         {
-            return properties_length / any_queue_property::min_raw_size;
+            return properties_length / any_queue_property::min_base_size;
         }
 
     } // namespace packet_queue_detail
