@@ -10,7 +10,8 @@ SRCS = description_test.cpp \
 	   aggregate_stats_test.cpp \
 	   table_stats_test.cpp \
 	   port_stats_test.cpp \
-	   queue_stats_test.cpp
+	   queue_stats_test.cpp \
+	   port_description_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libmultipart_test.dylib
