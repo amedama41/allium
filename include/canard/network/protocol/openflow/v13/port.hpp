@@ -1,6 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_PORT_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_PORT_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
@@ -17,6 +18,14 @@ namespace v13 {
         : public v13_detail::port_adaptor<port>
     {
     public:
+        static constexpr std::size_t base_size = sizeof(v13_detail::ofp_port);
+
+        static constexpr auto length() noexcept
+            -> std::uint16_t
+        {
+            return sizeof(v13_detail::ofp_port);
+        }
+
         auto ofp_port() const noexcept
             -> v13_detail::ofp_port const&
         {

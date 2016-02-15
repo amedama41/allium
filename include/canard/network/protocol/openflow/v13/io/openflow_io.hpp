@@ -284,7 +284,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, port_description_reply const& reply)
+    auto operator<<(OStream& os, messages::multipart::port_description_reply const& reply)
         -> OStream&
     {
         os << boost::format("%s: xid=%#x, flags=%#x, ")

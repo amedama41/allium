@@ -51,7 +51,7 @@ namespace v13 {
         // , messages::meter_config_reply
         // , messages::meter_features_reply
         , messages::table_features_reply
-        , messages::port_description_reply
+        , messages::multipart::port_description_reply
     >;
 
 } // namespace v13
