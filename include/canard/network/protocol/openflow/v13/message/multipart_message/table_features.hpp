@@ -1,103 +1,134 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURES_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURES_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_TABLE_FEATURES_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_TABLE_FEATURES_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <initializer_list>
+#include <algorithm>
 #include <iterator>
-#include <map>
+#include <stdexcept>
 #include <utility>
-#include <vector>
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/range/algorithm/for_each.hpp>
-#include <boost/range/numeric.hpp>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/utility/string_ref.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/get_xid.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v13/message/multipart_message/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/table_feature_property.hpp>
+#include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/network/protocol/openflow/v13/utility/table_feature_property_set.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace messages {
+namespace multipart {
 
     class table_features
     {
-    public:
-        using value_type = table_feature_property_set::value_type;
-        using reference = table_feature_property_set::reference;
-        using const_reference = table_feature_property_set::const_reference;
-        using iterator = table_feature_property_set::const_iterator;
-        using const_iterator = table_feature_property_set::const_iterator;
+        using raw_ofp_type = v13_detail::ofp_table_features;
 
-        table_features(std::uint8_t const table_id, std::string const& name
-                , std::uint64_t const metadata_match, std::uint64_t const metadata_write
-                , std::uint32_t const config, std::uint32_t const max_entries
+    public:
+        static constexpr std::size_t base_size = sizeof(raw_ofp_type);
+
+        table_features(
+                  std::uint8_t const table_id
+                , boost::string_ref const name
+                , std::uint64_t const metadata_match
+                , std::uint64_t const metadata_write
+                , std::uint32_t const config
+                , std::uint32_t const max_entries
                 , table_feature_property_set properties)
             : table_features_{
-                  std::uint16_t(sizeof(v13_detail::ofp_table_features) + properties.length())
-                , table_id, {0, 0, 0, 0, 0}, ""
-                , metadata_match, metadata_write, config, max_entries
+                  std::uint16_t(
+                            sizeof(v13_detail::ofp_table_features)
+                          + properties.length())
+                , table_id
+                , { 0, 0, 0, 0, 0 }
+                , ""
+                , metadata_match
+                , metadata_write
+                , config
+                , max_entries
               }
             , properties_(std::move(properties))
         {
-            std::strncpy(table_features_.name, name.c_str(), sizeof(table_features_.name));
+            auto const name_size
+                = std::min(name.size(), sizeof(table_features_.name) - 1);
+            using boost::adaptors::sliced;
+            boost::copy(name | sliced(0, name_size), table_features_.name);
         }
 
-        auto length() const
+        table_features(table_features const&) = default;
+
+        table_features(table_features&& other)
+            : table_features_(other.table_features_)
+            , properties_(std::move(other).properties_)
+        {
+            other.table_features_.length = base_size;
+        }
+
+        auto operator=(table_features const&)
+            -> table_features& = default;
+
+        auto operator=(table_features&& other)
+            -> table_features&
+        {
+            auto tmp = std::move(other);
+            std::swap(table_features_, tmp.table_features_);
+            properties_.swap(properties_);
+            return *this;
+        }
+
+        auto length() const noexcept
             -> std::uint16_t
         {
             return table_features_.length;
         }
 
-        auto table_id() const
+        auto table_id() const noexcept
             -> std::uint8_t
         {
             return table_features_.table_id;
         }
 
         auto name() const
-            -> char const*
+            -> boost::string_ref
         {
             return table_features_.name;
         }
 
-        auto metadata_match() const
+        auto metadata_match() const noexcept
             -> std::uint64_t
         {
             return table_features_.metadata_match;
         }
 
-        auto metadata_write() const
+        auto metadata_write() const noexcept
             -> std::uint64_t
         {
             return table_features_.metadata_write;
         }
 
-        auto config() const
+        auto config() const noexcept
             -> std::uint32_t
         {
             return table_features_.config;
         }
 
-        auto max_entries() const
+        auto max_entries() const noexcept
             -> std::uint32_t
         {
             return table_features_.max_entries;
         }
 
-        auto begin() const
-            -> const_iterator
+        auto properties() const noexcept
+            -> table_feature_property_set const&
         {
-            return properties_.begin();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return properties_.end();
+            return properties_;
         }
 
         template <class Container>
@@ -112,17 +143,24 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> table_features
         {
-            auto const features = detail::decode<v13_detail::ofp_table_features>(first, last);
-            if (std::distance(first, last) < features.length - sizeof(v13_detail::ofp_table_features)) {
-                throw 2;
+            auto const features = detail::decode<raw_ofp_type>(first, last);
+            if (features.length < sizeof(raw_ofp_type)) {
+                throw std::runtime_error{"table_features length is too small"};
             }
-            last = std::next(first, features.length - sizeof(v13_detail::ofp_table_features));
+            if (std::distance(first, last)
+                    < features.length - sizeof(raw_ofp_type)) {
+                throw std::runtime_error{"table_features length is too big"};
+            }
+
+            last = std::next(first, features.length - sizeof(raw_ofp_type));
             auto properties = table_feature_property_set::decode(first, last);
             return table_features{features, std::move(properties)};
         }
 
     private:
-        table_features(v13_detail::ofp_table_features const& features, table_feature_property_set properties)
+        table_features(
+                  v13_detail::ofp_table_features const& features
+                , table_feature_property_set&& properties)
             : table_features_(features)
             , properties_(std::move(properties))
         {
@@ -133,135 +171,76 @@ namespace v13 {
         table_feature_property_set properties_;
     };
 
-namespace messages {
 
     class table_features_request
-        : public v13_detail::basic_multipart_request<table_features_request>
+        : public multipart_detail::basic_multipart_request<
+                table_features_request, table_features[]
+          >
     {
-        using table_features_list = std::vector<table_features>;
-
     public:
-        using const_iterator = table_features_list::const_iterator;
-
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_TABLE_FEATURES;
 
-        table_features_request()
-            : basic_multipart_request{0, 0}
-            , features_{}
+        explicit table_features_request(std::uint32_t const xid = get_xid())
+            : basic_multipart_request{0, {}, xid}
         {
         }
 
-        table_features_request(std::initializer_list<table_features> features)
-            : basic_multipart_request{
-                  boost::accumulate(features | boost::adaptors::transformed([](table_features const& features) {
-                        return features.length();
-                  }), std::size_t{0})
-                , 0
-              }
-            , features_{std::move(features)}
+        table_features_request(
+                  body_type table_features
+                , std::uint16_t const flags = 0
+                , std::uint32_t const xid = get_xid())
+            : basic_multipart_request{flags, std::move(table_features), xid}
         {
-        }
-
-        auto begin() const
-            -> const_iterator
-        {
-            return features_.begin();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return features_.end();
-        }
-
-        using basic_openflow_message::encode;
-
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
-        {
-            basic_multipart_request::encode(container);
-            boost::for_each(features_, [&](table_features const& features) {
-                features.encode(container);
-            });
-            return container;
         }
 
     private:
-        table_features_list features_;
+        friend basic_multipart_request::base_type;
+
+        table_features_request(
+                  v13_detail::ofp_multipart_request const& multipart_request
+                , body_type&& table_features)
+            : basic_multipart_request{
+                multipart_request, std::move(table_features)
+              }
+        {
+        }
     };
 
 
     class table_features_reply
-        : public v13_detail::basic_multipart_reply<table_features_reply>
+        : public multipart_detail::basic_multipart_reply<
+                table_features_reply, table_features[]
+          >
     {
-        using table_features_list = std::vector<table_features>;
-
     public:
-        using const_iterator = table_features_list::const_iterator;
-
-        static protocol::ofp_multipart_type const multipart_type_value
+        static constexpr protocol::ofp_multipart_type multipart_type_value
             = protocol::OFPMP_TABLE_FEATURES;
 
-        table_features_reply(std::initializer_list<table_features> features)
-            : basic_multipart_reply{
-                  boost::accumulate(features | boost::adaptors::transformed([](table_features const& features) {
-                        return features.length();
-                  }), std::size_t{0})
-                , 0
-              }
-            , features_{std::move(features)}
-        {
-        }
-
-        auto begin() const
-            -> const_iterator
-        {
-            return features_.begin();
-        }
-
-        auto end() const
-            -> const_iterator
-        {
-            return features_.end();
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> table_features_reply
-        {
-            auto const reply = basic_multipart_reply::decode(first, last);
-            if (std::distance(first, last) != reply.header.length - sizeof(v13_detail::ofp_multipart_reply)) {
-                throw 2;
-            }
-            auto features = table_features_list{};
-            features.reserve(std::distance(first, last) / (sizeof(v13_detail::ofp_table_features) * 4));
-            while (first != last) {
-                features.emplace_back(table_features::decode(first, last));
-            }
-            return table_features_reply{reply, std::move(features)};
-        }
-
-    private:
-        table_features_reply(v13_detail::ofp_multipart_reply const& reply, table_features_list features)
-            : basic_multipart_reply{reply}
-            , features_(std::move(features))
+        table_features_reply(
+                  body_type table_features
+                , std::uint16_t const flags = 0
+                , std::uint32_t const xid = get_xid())
+            : basic_multipart_reply{flags, std::move(table_features), xid }
         {
         }
 
     private:
-        table_features_list features_;
+        friend basic_multipart_reply::base_type;
+
+        table_features_reply(
+                  v13_detail::ofp_multipart_reply const& multipart_reply
+                , body_type&& table_features)
+            : basic_multipart_reply{multipart_reply, std::move(table_features)}
+        {
+        }
     };
 
+} // namespace multipart
 } // namespace messages
-
-using messages::table_features_request;
-using messages::table_features_reply;
-
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURES_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_MESSAGES_MULTIPART_TABLE_FEATURES_HPP

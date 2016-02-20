@@ -111,7 +111,7 @@ namespace v13 {
     };
 
     template <class OStream>
-    auto operator<<(OStream& os, table_features const& features)
+    auto operator<<(OStream& os, messages::multipart::table_features const& features)
         -> OStream&
     {
         os << boost::format{"table_features[table_id=%u, name=%s, metadata_match=%#x, metadata_write=%#x, config=%#x, max_entries=%u]"}
@@ -122,7 +122,7 @@ namespace v13 {
             % features.config()
             % features.max_entries()
             ;
-        boost::for_each(features, [&](table_feature_properties::variant const& prop) {
+        boost::for_each(features.properties(), [&](table_feature_properties::variant const& prop) {
             // auto const visitor = ostream_visitor<OStream>{os};
             // boost::apply_visitor(visitor, prop);
         });
@@ -269,7 +269,7 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, table_features_reply const& reply)
+    auto operator<<(OStream& os, messages::multipart::table_features_reply const& reply)
         -> OStream&
     {
         os << boost::format("%s: xid=%#x, flags=%#x, ")
@@ -277,7 +277,7 @@ namespace messages {
             % reply.xid()
             % reply.flags()
             ;
-        boost::for_each(reply, [&](table_features const& features) {
+        boost::for_each(reply, [&](messages::multipart::table_features const& features) {
             os << "\n\t" << features;
         });
         return os;
