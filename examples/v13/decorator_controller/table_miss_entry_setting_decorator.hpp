@@ -13,8 +13,9 @@ struct table_miss_entry_setting_decorator
     {
         namespace v13 = canard::network::openflow::v13;
 
-        channel->async_send(v13::flow_mod_add{{
+        channel->async_send(v13::messages::flow_add{{
                   v13::flow_entry_id::table_miss()
+                , 0x00000000
                 , v13::instructions::write_actions{v13::actions::output::to_controller()}
         }, 0, v13::protocol::OFPFF_SEND_FLOW_REM});
         forward(this, channel, std::move(hello));

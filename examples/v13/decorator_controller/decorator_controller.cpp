@@ -9,6 +9,7 @@
 
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
+namespace msg = v13::messages;
 
 struct flooding_handler
     : of::decorate<
@@ -26,9 +27,10 @@ struct flooding_handler
     }
 
     template <class Channel>
-    void handle(Channel const& channel, v13::packet_in const& pkt_in)
+    void handle(Channel const& channel, msg::packet_in const& pkt_in)
     {
-        channel->async_send(v13::packet_out{pkt_in.frame()
+        channel->async_send(msg::packet_out{
+                  of::binary_data{pkt_in.frame()}
                 , v13::protocol::OFPP_CONTROLLER
                 , v13::actions::output{v13::protocol::OFPP_ALL}});
     }
