@@ -10,6 +10,7 @@
 #include <boost/range/numeric.hpp>
 #include <canard/network/protocol/openflow/detail/add_helper.hpp>
 #include <canard/network/protocol/openflow/v10/any_action.hpp>
+#include <canard/network/protocol/openflow/v10/decorder/action_decoder.hpp>
 #include <canard/type_traits.hpp>
 
 namespace canard {
@@ -65,7 +66,7 @@ namespace v10 {
         {
             auto actions = action_list{};
             while (first != last) {
-                v10_detail::decode_action<void>(
+                action_decoder::decode<void>(
                         first, last, detail::add_helper<action_list>{actions});
             }
             return actions;

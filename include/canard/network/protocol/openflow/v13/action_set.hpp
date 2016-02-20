@@ -12,7 +12,7 @@
 #include <canard/type_traits.hpp>
 #include <canard/network/protocol/openflow/detail/add_helper.hpp>
 #include <canard/network/protocol/openflow/v13/any_action.hpp>
-#include <canard/network/protocol/openflow/v13/detail/decode_action.hpp>
+#include <canard/network/protocol/openflow/v13/decoder/action_decoder.hpp>
 
 namespace canard {
 namespace network {
@@ -74,7 +74,8 @@ namespace v13 {
         {
             auto act_set = action_set{};
             while (first != last) {
-                v13_detail::decode_action<void>(first, last, detail::add_helper<action_set>{act_set});
+                action_decoder::decode<void>(
+                        first, last, detail::add_helper<action_set>{act_set});
             }
             return act_set;
         }

@@ -81,7 +81,7 @@ namespace v13 {
         {
             template <class Instruction>
             auto operator()(Instruction&& instruction) const
-                -> any_action
+                -> any_instruction
             {
                 return any_instruction{std::forward<Instruction>(instruction)};
             }
