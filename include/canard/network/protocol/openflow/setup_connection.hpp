@@ -26,7 +26,6 @@
 #include <boost/utility/string_ref.hpp>
 #include <canard/asio/asio_handler_hook_propagation.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
-#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/error.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
@@ -337,7 +336,8 @@ namespace detail {
               , std::uint32_t const xid)
         {
             auto error = openflow::error{
-                openflow::OFPET_HELLO_FAILED, openflow::OFPHFC_INCOMPATIBLE, {}//, xid
+                  openflow::OFPET_HELLO_FAILED, openflow::OFPHFC_INCOMPATIBLE
+                , openflow::binary_data{"incompatible openflow version"}, xid
             };
             boost::asio::async_write(
                     socket_

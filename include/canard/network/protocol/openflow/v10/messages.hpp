@@ -57,12 +57,12 @@ namespace v10 {
     >;
 
     using default_stats_reply_list = std::tuple<
-          messages::description_reply
-        , messages::flow_stats_reply
-        , messages::aggregate_stats_reply
-        , messages::table_stats_reply
-        , messages::port_stats_reply
-        , messages::queue_stats_reply
+          messages::statistics::description_reply
+        , messages::statistics::flow_stats_reply
+        , messages::statistics::aggregate_stats_reply
+        , messages::statistics::table_stats_reply
+        , messages::statistics::port_stats_reply
+        , messages::statistics::queue_stats_reply
     >;
 
 } // namespace v10

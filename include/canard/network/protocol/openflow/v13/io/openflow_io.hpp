@@ -31,61 +31,24 @@ namespace v13 {
             % port.port_no()
             % port.name()
             % port.config()
-            % port_state_string(port.state().to_ulong())
-            % port.curr_speed()
+            % port_state_string(port.state())
+            % port.current_speed()
             % port.max_speed()
             ;
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, flow_stats const& stats)
+    auto operator<<(OStream& os, packet_queue const& queue)
         -> OStream&
     {
-        return os << boost::format{"flow_stats[entry=##, table_id=%u, flags=%#x, duration_sec=%u, duration_nsec=%u]"}
-            % std::uint16_t{stats.table_id()}
-            % stats.flags()
-            % stats.duration_sec()
-            % stats.duration_nsec()
+        os << boost::format{"packet_queue[queue_id=%u, port_no=%u]"}
+            % queue.queue_id()
+            % queue.port_no()
             ;
-    }
-
-    template <class OStream>
-    auto operator<<(OStream& os, table_stats const& stats)
-        -> OStream&
-    {
-        return os << boost::format{"table_stats[table_id=%u, active_count=%u, lookup_count=%u, matched_count=%u]"}
-            % std::uint16_t{stats.table_id()}
-            % stats.active_count()
-            % stats.lookup_count()
-            % stats.matched_count()
-            ;
-    }
-
-    template <class OStream>
-    auto operator<<(OStream& os, port_stats const& stats)
-        -> OStream&
-    {
-        return os << boost::format{
-            "port_stats[port_no=%u, "
-            "rx_packets=%u, tx_packets=%u, rx_bytes=%#x, tx_bytes=%#x, rx_dropped=%u, tx_dropped=%u, rx_errors=%u, tx_errors=%u, "
-            "rx_frame_err=%u, rx_over_err=%u, rx_crc_err=%u, collisions=%u, duration_sec=%u, duration_nsec=%u]"
-        }
-        % stats.port_no()
-        % stats.rx_packets()
-        % stats.tx_packets()
-        % stats.rx_bytes()
-        % stats.tx_bytes()
-        % stats.rx_dropped()
-        % stats.tx_dropped()
-        % stats.rx_errors()
-        % stats.tx_errors()
-        % stats.rx_frame_err()
-        % stats.rx_over_err()
-        % stats.rx_crc_err()
-        % stats.collisions()
-        % stats.duration_sec()
-        % stats.duration_nsec()
-        ;
+        boost::for_each(queue.properties(), [&](any_queue_property const& prop) {
+            // os << "\n\t" << prop;
+        });
+        return os;
     }
 
     template <class OStream>
@@ -109,25 +72,6 @@ namespace v13 {
     private:
         OStream& os;
     };
-
-    template <class OStream>
-    auto operator<<(OStream& os, table_features const& features)
-        -> OStream&
-    {
-        os << boost::format{"table_features[table_id=%u, name=%s, metadata_match=%#x, metadata_write=%#x, config=%#x, max_entries=%u]"}
-            % std::uint16_t{features.table_id()}
-            % features.name()
-            % features.metadata_match()
-            % features.metadata_write()
-            % features.config()
-            % features.max_entries()
-            ;
-        boost::for_each(features, [&](table_feature_properties::variant const& prop) {
-            // auto const visitor = ostream_visitor<OStream>{os};
-            // boost::apply_visitor(visitor, prop);
-        });
-        return os;
-    }
 
 namespace messages {
 
@@ -194,6 +138,160 @@ namespace messages {
     }
 
     template <class OStream>
+    auto operator<<(OStream& os, barrier_reply const& rep)
+        -> OStream&
+    {
+        return os << boost::format("%s: xid=%#x")
+            % v13::to_string(rep.type())
+            % rep.xid()
+            ;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, queue_get_config_reply const& rep)
+        -> OStream&
+    {
+        os << boost::format("%s: xid=%#x, port=%u, ")
+            % v13::to_string(rep.type())
+            % rep.xid()
+            % rep.port_no()
+            ;
+        boost::for_each(rep.queues(), [&](packet_queue const& queue) {
+            os << "\n\t" << queue;
+        });
+        return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, packet_in const& pkt_in)
+        -> OStream&
+    {
+        return os << boost::format("%s: xid=%#x, reason=%#x, table_id=%u, buffer_id=%#x, total_len=%u, cookie=%#x")
+            % v13::to_string(pkt_in.type())
+            % pkt_in.xid()
+            % v13::to_string(pkt_in.reason())
+            % std::uint32_t{pkt_in.table_id()}
+            % pkt_in.buffer_id()
+            % pkt_in.total_length()
+            % pkt_in.cookie()
+            ;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, flow_removed const& removed)
+        -> OStream&
+    {
+        return os << boost::format{"%s: xid=%#x, reason=%s, match=##, priority=%u, table_id=%u, duration_sec=%u, duration_nsec=%u"}
+            % v13::to_string(removed.type())
+            % removed.xid()
+            % v13::to_string(removed.reason())
+            % removed.priority()
+            % std::uint16_t{removed.table_id()}
+            % removed.duration_sec()
+            % removed.duration_nsec()
+            ;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, port_status const& port_status)
+        -> OStream&
+    {
+        return os << boost::format("%s: xid=%#x, reason=%#x, %s")
+            % v13::to_string(port_status.type())
+            % port_status.xid()
+            % v13::to_string(port_status.reason())
+            % port_status.port()
+            ;
+    }
+
+namespace multipart {
+
+    template <class OStream>
+    auto operator<<(OStream& os, flow_stats const& stats)
+        -> OStream&
+    {
+        return os << boost::format{"flow_stats[entry=##, table_id=%u, flags=%#x, duration_sec=%u, duration_nsec=%u]"}
+            % std::uint16_t{stats.table_id()}
+            % stats.flags()
+            % stats.duration_sec()
+            % stats.duration_nsec()
+            ;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, table_stats const& stats)
+        -> OStream&
+    {
+        return os << boost::format{"table_stats[table_id=%u, active_count=%u, lookup_count=%u, matched_count=%u]"}
+            % std::uint16_t{stats.table_id()}
+            % stats.active_count()
+            % stats.lookup_count()
+            % stats.matched_count()
+            ;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, port_stats const& stats)
+        -> OStream&
+    {
+        return os << boost::format{
+            "port_stats[port_no=%u, "
+            "rx_packets=%u, tx_packets=%u, rx_bytes=%#x, tx_bytes=%#x, rx_dropped=%u, tx_dropped=%u, rx_errors=%u, tx_errors=%u, "
+            "rx_frame_err=%u, rx_over_err=%u, rx_crc_err=%u, collisions=%u, duration_sec=%u, duration_nsec=%u]"
+        }
+        % stats.port_no()
+        % stats.rx_packets()
+        % stats.tx_packets()
+        % stats.rx_bytes()
+        % stats.tx_bytes()
+        % stats.rx_dropped()
+        % stats.tx_dropped()
+        % stats.rx_errors()
+        % stats.tx_errors()
+        % stats.rx_frame_errors()
+        % stats.rx_over_errors()
+        % stats.rx_crc_errors()
+        % stats.collisions()
+        % stats.duration_sec()
+        % stats.duration_nsec()
+        ;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, table_features const& features)
+        -> OStream&
+    {
+        os << boost::format{"table_features[table_id=%u, name=%s, metadata_match=%#x, metadata_write=%#x, config=%#x, max_entries=%u]"}
+            % std::uint16_t{features.table_id()}
+            % features.name()
+            % features.metadata_match()
+            % features.metadata_write()
+            % features.config()
+            % features.max_entries()
+            ;
+        boost::for_each(features.properties(), [&](table_feature_properties::variant const& prop) {
+            // auto const visitor = ostream_visitor<OStream>{os};
+            // boost::apply_visitor(visitor, prop);
+        });
+        return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, queue_stats const& stats)
+        -> OStream&
+    {
+        return os << boost::format{"queue_stats[queue_id=%u, port_no=%u, tx_packets=%llu, tx_bytes=%llu, tx_errors=%llu, duration_sec=%u, duration_nsec=%u"}
+            % stats.queue_id()
+            % stats.port_no()
+            % stats.tx_packets()
+            % stats.tx_bytes()
+            % stats.tx_errors()
+            % stats.duration_sec()
+            % stats.duration_nsec()
+            ;
+    }
+
+    template <class OStream>
     auto operator<<(OStream& os, description_reply const& reply)
         -> OStream&
     {
@@ -205,7 +303,7 @@ namespace messages {
             % reply.hardware_desc()
             % reply.software_desc()
             % reply.serial_number()
-            % reply.datapah_desc()
+            % reply.datapath_desc()
             ;
     }
 
@@ -299,58 +397,24 @@ namespace messages {
     }
 
     template <class OStream>
-    auto operator<<(OStream& os, barrier_reply const& rep)
+    auto operator<<(OStream& os, queue_stats_reply const& reply)
         -> OStream&
     {
-        return os << boost::format("%s: xid=%#x")
-            % v13::to_string(rep.type())
-            % rep.xid()
+        os << boost::format("%s: xid=%#x, flags=%#x, ")
+            % v13::to_string(reply.multipart_type())
+            % reply.xid()
+            % reply.flags()
             ;
+        boost::for_each(reply, [&](queue_stats const& stats) {
+            os << "\n\t" << stats;
+        });
+        return os;
     }
 
-    template <class OStream>
-    auto operator<<(OStream& os, packet_in const& pkt_in)
-        -> OStream&
-    {
-        return os << boost::format("%s: xid=%#x, reason=%#x, table_id=%u, buffer_id=%#x, total_len=%u, cookie=%#x")
-            % v13::to_string(pkt_in.type())
-            % pkt_in.xid()
-            % v13::to_string(pkt_in.reason())
-            % std::uint32_t{pkt_in.table_id()}
-            % pkt_in.buffer_id()
-            % pkt_in.total_length()
-            % pkt_in.cookie()
-            ;
-    }
-
-    template <class OStream>
-    auto operator<<(OStream& os, flow_removed const& removed)
-        -> OStream&
-    {
-        return os << boost::format{"%s: xid=%#x, reason=%s, match=##, priority=%u, table_id=%u, duration_sec=%u, duration_nsec=%u"}
-            % v13::to_string(removed.type())
-            % removed.xid()
-            % v13::to_string(removed.reason())
-            % removed.priority()
-            % std::uint16_t{removed.table_id()}
-            % removed.duration_sec()
-            % removed.duration_nsec()
-            ;
-    }
-
-    template <class OStream>
-    auto operator<<(OStream& os, port_status const& port_status)
-        -> OStream&
-    {
-        return os << boost::format("%s: xid=%#x, reason=%#x, %s")
-            % v13::to_string(port_status.type())
-            % port_status.xid()
-            % v13::to_string(port_status.reason())
-            % port_status.port()
-            ;
-    }
+} // namespace multipart
 
 } // namespace messages
+
 } // namespace v13
 } // namespace openflow
 } // namespace network

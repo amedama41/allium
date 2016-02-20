@@ -1,5 +1,6 @@
 *.o
 *.depends
+*.dylib
 examples/v13/coroutine/coroutine
 examples/v13/decorator_controller/decorator_controller
 examples/v13/dump_table_features/dump_table_features
@@ -22,7 +23,9 @@ ofparser/of10/ofparser
 ofparser/**/*.pyc
 test/**/all_test
 test/utility_test
-test/message_test
+test/**/message_test
+test/**/multipart_test
+test/**/queue_property_test
 test/oxm_match_field_test
 test/action_test
 

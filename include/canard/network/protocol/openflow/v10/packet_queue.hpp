@@ -3,12 +3,18 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
+#include <limits>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 #include <boost/range/algorithm/for_each.hpp>
+#include <boost/range/numeric.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/queue_id.hpp>
 #include <canard/network/protocol/openflow/v10/any_queue_property.hpp>
+#include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
@@ -16,48 +22,80 @@ namespace network {
 namespace openflow {
 namespace v10 {
 
-    namespace packet_queue_detail {
-
-        inline auto max_num_of_properties(std::size_t const properties_length)
-            -> std::size_t
-        {
-            return properties_length / any_queue_property::min_raw_size;
-        }
-
-    } // namespace packet_queue_detail
-
-
     class packet_queue
     {
-        using property_container = std::vector<any_queue_property>;
+        static constexpr std::size_t base_packet_queue_size
+            = sizeof(v10_detail::ofp_packet_queue);
 
     public:
-        using value_type = property_container::value_type;
-        using reference = property_container::const_reference;
-        using const_reference = property_container::const_reference;
-        using iterator = property_container::const_iterator;
-        using const_iterator = property_container::const_iterator;
-        using difference_type = property_container::difference_type;
+        using properties_type = std::vector<any_queue_property>;
+        using iterator = properties_type::const_iterator;
+        using const_iterator = properties_type::const_iterator;
 
-        auto queue_id() const
+        packet_queue(std::uint32_t const queue_id
+                   , properties_type properties)
+            : packet_queue_{
+                  queue_id
+                , std::uint16_t(
+                          base_packet_queue_size
+                        + calc_propertis_length(properties))
+                , { 0, 0 }
+              }
+            , properties_(std::move(properties))
+        {
+        }
+
+        packet_queue(queue_id const& id, properties_type properties)
+            : packet_queue{id.queue(), std::move(properties)}
+        {
+        }
+
+        packet_queue(packet_queue const&) = default;
+
+        packet_queue(packet_queue&& other)
+            : packet_queue_(other.packet_queue_)
+            , properties_(std::move(other).properties_)
+        {
+            other.packet_queue_.len = base_packet_queue_size;
+        }
+
+        auto operator=(packet_queue const&)
+            -> packet_queue& = default;
+
+        auto operator=(packet_queue&& other)
+            -> packet_queue&
+        {
+            auto tmp = std::move(other);
+            std::swap(packet_queue_, tmp.packet_queue_);
+            properties_.swap(tmp.properties_);
+            return *this;
+        }
+
+        auto queue_id() const noexcept
             -> std::uint32_t
         {
             return packet_queue_.queue_id;
         }
 
-        auto length() const
+        auto length() const noexcept
             -> std::uint16_t
         {
             return packet_queue_.len;
         }
 
-        auto begin() const
+        auto properties() const noexcept
+            -> properties_type const&
+        {
+            return properties_;
+        }
+
+        auto begin() const noexcept
             -> const_iterator
         {
             return properties_.begin();
         }
 
-        auto end() const
+        auto end() const noexcept
             -> const_iterator
         {
             return properties_.end();
@@ -68,8 +106,8 @@ namespace v10 {
             -> Container&
         {
             detail::encode(container, packet_queue_);
-            boost::for_each(properties_, [&](any_queue_property const& prop) {
-                prop.encode(container);
+            boost::for_each(properties_, [&](any_queue_property const& e) {
+                e.encode(container);
             });
             return container;
         }
@@ -80,32 +118,57 @@ namespace v10 {
         {
             auto const pkt_queue
                 = detail::decode<v10_detail::ofp_packet_queue>(first, last);
-            auto const properties_length = pkt_queue.len - sizeof(pkt_queue);
-            if (std::distance(first, last) < properties_length) {
+            if (pkt_queue.len < base_packet_queue_size) {
+                throw std::runtime_error{"packet_queue length is too small"};
+            }
+            if (std::distance(first, last)
+                    < pkt_queue.len - base_packet_queue_size) {
+                throw std::runtime_error{"packet_queue length is too big"};
+            }
+            auto const properties_length
+                = pkt_queue.len - base_packet_queue_size;
+            last = std::next(first, properties_length);
+
+            auto properties = properties_type{};
+            properties.reserve(
+                    properties_length / any_queue_property::min_base_size);
+            while (std::distance(first, last)
+                    >= sizeof(v10_detail::ofp_queue_prop_header)) {
+                properties.push_back(any_queue_property::decode(first, last));
+            }
+            if (first != last) {
                 throw std::runtime_error{"invalid packet_queue length"};
             }
-            auto properties = property_container{};
-            properties.reserve(
-                    packet_queue_detail::max_num_of_properties(properties_length));
-            auto const prop_last = std::next(first, properties_length);
-            while (first != prop_last) {
-                properties.push_back(any_queue_property::decode(first, prop_last));
-            }
+
             return packet_queue{pkt_queue, std::move(properties)};
         }
 
     private:
-        packet_queue(
-                  v10_detail::ofp_packet_queue const& pkt_queue
-                , property_container properties)
+        packet_queue(v10_detail::ofp_packet_queue const& pkt_queue
+                   , properties_type&& properties)
             : packet_queue_(pkt_queue)
             , properties_(std::move(properties))
         {
         }
 
+        static auto calc_propertis_length(properties_type const& properties)
+            -> std::size_t
+        {
+            auto const properties_length = boost::accumulate(
+                      properties, std::size_t{0}
+                    , [](std::size_t const sum, any_queue_property const& e) {
+                            return sum + e.length();
+                      });
+            if (properties_length + sizeof(v10_detail::ofp_packet_queue)
+                    > std::numeric_limits<std::uint16_t>::max()) {
+                throw std::runtime_error{"properties length is too big"};
+            }
+            return properties_length;
+        }
+
     private:
         v10_detail::ofp_packet_queue packet_queue_;
-        property_container properties_;
+        properties_type properties_;
     };
 
 } // namespace v10

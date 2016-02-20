@@ -1,7 +1,7 @@
-#ifndef CANARD_NETWORK_OPENFLOW_MIN_RAW_SIZE_HPP
-#define CANARD_NETWORK_OPENFLOW_MIN_RAW_SIZE_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_MIN_BASE_SIZE_ELEMENT_HPP
+#define CANARD_NETWORK_OPENFLOW_MIN_BASE_SIZE_ELEMENT_HPP
 
-#include <cstdint>
+#include <cstddef>
 #include <type_traits>
 #include <boost/fusion/sequence/intrinsic/value_at.hpp>
 #include <boost/fusion/algorithm/iteration/accumulate.hpp>
@@ -12,13 +12,13 @@ namespace network {
 namespace openflow {
 namespace detail {
 
-    struct raw_size_min
+    struct min_base_size
     {
         template <class LHS, class RHS>
         struct apply
         {
             using type = typename std::conditional<
-                (LHS::raw_size < RHS::raw_size), LHS, RHS
+                (LHS::base_size < RHS::base_size), LHS, RHS
             >::type;
         };
 
@@ -27,18 +27,18 @@ namespace detail {
             -> typename apply<LHS, RHS>::type;
     };
 
-    template <class HaveRawSizeElements>
-    struct raw_size_min_element
+    template <class Sequence>
+    struct min_base_size_element
     {
-        using first_type = typename boost::fusion::result_of::value_at_c<
-            HaveRawSizeElements, 0
+        using head = typename boost::fusion::result_of::value_at_c<
+            Sequence, 0
         >::type;
 
         using type = typename boost::fusion::result_of::accumulate<
-            HaveRawSizeElements, first_type, raw_size_min
+            Sequence, head, min_base_size
         >::type;
 
-        static std::uint16_t const value = type::raw_size;
+        static constexpr std::size_t value = type::base_size;
     };
 
 } // namespace detail
@@ -46,4 +46,4 @@ namespace detail {
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_MIN_RAW_SIZE_HPP
+#endif // CANARD_NETWORK_OPENFLOW_MIN_BASE_SIZE_ELEMENT_HPP

@@ -1,5 +1,4 @@
 #define BOOST_TEST_DYN_LINK
-#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/table_features.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -12,10 +11,10 @@ BOOST_AUTO_TEST_SUITE(table_features_test)
 
 struct table_features_fixture {
     static auto create_features(std::uint8_t const table_id)
-        -> table_features
+        -> messages::multipart::table_features
     {
         auto const table_name = "table" + std::to_string(table_id);
-        return table_features{table_id, table_name.c_str(), 0xffffffffffffffff, 0xffffffffffffffff, 0, 0xffffffff
+        return messages::multipart::table_features{table_id, table_name.c_str(), 0xffffffffffffffff, 0xffffffffffffffff, 0, 0xffffffff
             , {
                   table_feature_properties::prop_instructions{
                       instruction_id{protocol::OFPIT_GOTO_TABLE}, instruction_id{protocol::OFPIT_WRITE_METADATA}
@@ -107,14 +106,14 @@ struct table_features_fixture {
         }; // 64 + 432 = 496
     }
 
-    table_features features0 = create_features(0);
-    table_features features1 = create_features(1);
-    table_features features2 = create_features(2);
-    table_features features3 = create_features(3);
-    table_features features4 = create_features(4);
-    table_features features5 = create_features(5);
-    table_features features6 = create_features(6);
-    table_features features7 = create_features(7);
+    messages::multipart::table_features features0 = create_features(0);
+    messages::multipart::table_features features1 = create_features(1);
+    messages::multipart::table_features features2 = create_features(2);
+    messages::multipart::table_features features3 = create_features(3);
+    messages::multipart::table_features features4 = create_features(4);
+    messages::multipart::table_features features5 = create_features(5);
+    messages::multipart::table_features features6 = create_features(6);
+    messages::multipart::table_features features7 = create_features(7);
 };
 
 BOOST_AUTO_TEST_SUITE(table_features_request_test)
@@ -123,7 +122,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_AUTO_TEST_CASE(default_constructor_test)
     {
-        auto const sut = table_features_request{};
+        auto const sut = messages::multipart::table_features_request{};
 
         BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_MULTIPART_REQUEST);
@@ -134,8 +133,8 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_FIXTURE_TEST_CASE(constructor_test, table_features_fixture)
     {
-        auto const sut = table_features_request{
-            features0, features1, features2, features3, features4, features5, features6, features7
+        auto const sut = messages::multipart::table_features_request{
+            {features0, features1, features2, features3, features4, features5, features6, features7}
         };
 
         BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
@@ -148,8 +147,8 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 
 struct encode_decode_fixture : table_features_fixture {
-    table_features_request const sut = table_features_request{
-        features0, features1, features2, features3, features4, features5, features6, features7
+    messages::multipart::table_features_request const sut = messages::multipart::table_features_request{
+        {features0, features1, features2, features3, features4, features5, features6, features7}
     };
     std::vector<std::uint8_t> buffer{};
 };
@@ -173,7 +172,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_AUTO_TEST_CASE(default_constructor_test)
     {
-        auto const sut = table_features_reply{{}};
+        auto const sut = messages::multipart::table_features_reply{{}};
 
         BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
         BOOST_CHECK_EQUAL(sut.type(), protocol::OFPT_MULTIPART_REPLY);
@@ -184,8 +183,8 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_FIXTURE_TEST_CASE(constructor_test, table_features_fixture)
     {
-        auto const sut = table_features_reply{
-            features0, features1, features2, features3, features4, features5, features6, features7
+        auto const sut = messages::multipart::table_features_reply{
+            {features0, features1, features2, features3, features4, features5, features6, features7}
         };
 
         BOOST_CHECK_EQUAL(sut.version(), protocol::OFP_VERSION);
@@ -198,13 +197,15 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 
 struct encode_decode_fixture : table_features_fixture { // TODO
-    table_features_request const request = table_features_request{
-        features0, features1, features2, features3, features4, features5, features6, features7
+    messages::multipart::table_features_request const request = messages::multipart::table_features_request{
+        {features0, features1, features2, features3, features4, features5, features6, features7}
     };
-    table_features_reply const sut = table_features_reply{
-        features0, features1, features2, features3, features4, features5, features6, features7
+    messages::multipart::table_features_reply const sut = messages::multipart::table_features_reply{
+        {features0, features1, features2, features3, features4, features5, features6, features7}
     };
-    std::vector<std::uint8_t> buffer = request.encode();
+    std::vector<std::uint8_t> buffer{};
+
+    encode_decode_fixture() { request.encode(buffer); }
 };
 BOOST_FIXTURE_TEST_SUITE(encode_decode_test, encode_decode_fixture)
 
@@ -214,7 +215,7 @@ BOOST_FIXTURE_TEST_SUITE(encode_decode_test, encode_decode_fixture)
         buffer[1] = protocol::OFPT_MULTIPART_REPLY;
         auto it = buffer.begin();
 
-        auto const decoded_msg = table_features_reply::decode(it, buffer.end());
+        auto const decoded_msg = messages::multipart::table_features_reply::decode(it, buffer.end());
 
         BOOST_REQUIRE(it == buffer.end());
         BOOST_CHECK_EQUAL(decoded_msg.version(), sut.version());

@@ -12,18 +12,14 @@ UTILITY_TEST_SRCS = byteorder_test.cpp \
 					any_oxm_match_field_test.cpp \
 					instruction_set_test.cpp \
 					oxm_match_test.cpp \
+					packet_queue_test.cpp \
 					port_test.cpp
 UTILITY_TEST_OBJS = $(UTILITY_TEST_SRCS:.cpp=.o)
 
 MESSAGE_TEST_SRCS = hello_test.cpp hello_elements_test.cpp \
-					error_msg_test.cpp \
-					echo_test.cpp \
-					flow_mod_test.cpp \
 					group_mod_test.cpp \
 					table_feature_property_test.cpp \
-					table_features_test.cpp \
-					barrier_test.cpp \
-					packet_in_test.cpp
+					table_features_test.cpp
 MESSAGE_TEST_OBJS = $(MESSAGE_TEST_SRCS:.cpp=.o)
 
 ACTION_TEST_SRCS = output_test.cpp \

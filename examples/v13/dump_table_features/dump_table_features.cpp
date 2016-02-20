@@ -5,6 +5,7 @@
 
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
+namespace msg = v13::messages;
 
 struct dump_table_features
 {
@@ -13,11 +14,11 @@ struct dump_table_features
     template <class Channel>
     void handle(Channel const& channel, of::hello const&)
     {
-        channel->async_send(v13::table_features_request{});
+        channel->async_send(msg::multipart::table_features_request{});
     }
 
     template <class Channel>
-    void handle(Channel const& channel, v13::table_features_reply const& reply)
+    void handle(Channel const& channel, msg::multipart::table_features_reply const& reply)
     {
         std::cout << reply << std::endl;
     }

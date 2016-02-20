@@ -2,10 +2,8 @@
 #define CANARD_NETWORK_OPENFLOW_V10_FLOW_ENTRY_ADAPTOR_HPP
 
 #include <cstdint>
-#include <chrono>
-#include <canard/network/protocol/openflow/v10/detail/match_adaptor.hpp>
+#include <canard/network/protocol/openflow/v10/flow_entry.hpp>
 #include <canard/network/protocol/openflow/v10/match_set.hpp>
-#include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
 namespace network {
@@ -15,59 +13,90 @@ namespace v10_detail {
 
     template <class T, class FlowEntry>
     class flow_entry_adaptor
-        : public match_adaptor<T>
     {
     public:
-        auto match() const
+        auto match() const noexcept
             -> match_set
         {
             return match_set{ofp_match()};
         }
 
-        auto priority() const
+        auto priority() const noexcept
             -> std::uint16_t
         {
             return base_flow_entry().priority;
         }
 
-        auto idle_timeout() const
-            -> std::uint16_t
+        auto id() const
+            -> v10::flow_entry_id
         {
-            return base_flow_entry().idle_timeout;
+            return v10::flow_entry_id{
+                static_cast<T const*>(this)->match(), priority()
+            };
         }
 
-        auto hard_timeout() const
-            -> std::uint16_t
-        {
-            return base_flow_entry().hard_timeout;
-        }
-
-        auto cookie() const
+        auto cookie() const noexcept
             -> std::uint64_t
         {
             return base_flow_entry().cookie;
         }
 
-        auto packet_count() const
+        auto duration_sec() const noexcept
+            -> std::uint32_t
+        {
+            return base_flow_entry().duration_sec;
+        }
+
+        auto duration_nsec() const noexcept
+            -> std::uint32_t
+        {
+            return base_flow_entry().duration_nsec;
+        }
+
+        auto elapsed_time() const noexcept
+            -> v10::elapsed_time
+        {
+            return v10::elapsed_time{duration_sec(), duration_nsec()};
+        }
+
+        auto idle_timeout() const noexcept
+            -> std::uint16_t
+        {
+            return base_flow_entry().idle_timeout;
+        }
+
+        auto hard_timeout() const noexcept
+            -> std::uint16_t
+        {
+            return base_flow_entry().hard_timeout;
+        }
+
+        auto timeouts() const noexcept
+            -> v10::timeouts
+        {
+            return v10::timeouts{idle_timeout(), hard_timeout()};
+        }
+
+        auto packet_count() const noexcept
             -> std::uint64_t
         {
             return base_flow_entry().packet_count;
         }
 
-        auto byte_count() const
+        auto byte_count() const noexcept
             -> std::uint64_t
         {
             return base_flow_entry().byte_count;
         }
 
-        auto ofp_match() const
-            -> v10_detail::ofp_match const&
+        auto counters() const noexcept
+            -> v10::counters
         {
-            return base_flow_entry().match;
+            return v10::counters{packet_count(), byte_count()};
         }
 
     private:
-        auto base_flow_entry() const
+        auto base_flow_entry() const noexcept
             -> FlowEntry const&
         {
             return static_cast<T const*>(this)->ofp_flow_entry();

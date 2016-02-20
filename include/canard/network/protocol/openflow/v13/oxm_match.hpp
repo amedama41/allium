@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <stdexcept>
 #include <utility>
 #include <canard/constant_range.hpp>
 #include <canard/type_traits.hpp>
@@ -24,31 +25,68 @@ namespace v13 {
     class oxm_match
     {
     public:
-        static protocol::ofp_match_type const match_type = protocol::OFPMT_OXM;
-        static std::uint16_t const match_base_length = offsetof(v13_detail::ofp_match, pad);
+        static constexpr protocol::ofp_match_type match_type
+            = protocol::OFPMT_OXM;
+        static constexpr std::uint16_t match_base_length
+            = offsetof(v13_detail::ofp_match, pad);
 
-        template <class... OXMMatchFields, typename std::enable_if<!is_related<oxm_match, OXMMatchFields...>::value>::type* = nullptr>
+        template <
+              class... OXMMatchFields
+            , typename std::enable_if<
+                    !is_related<oxm_match, OXMMatchFields...>::value
+              >::type* = nullptr
+        >
         oxm_match(OXMMatchFields&&... oxm_fields)
             : oxm_match_fields_{std::forward<OXMMatchFields>(oxm_fields)...}
+            , length_(match_base_length + oxm_match_fields_.length())
         {
         }
 
-        auto type() const
+        oxm_match(oxm_match const&) = default;
+
+        oxm_match(oxm_match&& other)
+            : oxm_match_fields_(std::move(other.oxm_match_fields_))
+            , length_(other.length_)
+        {
+            other.length_ = match_base_length;
+        }
+
+        auto operator=(oxm_match const&)
+            -> oxm_match& = default;
+
+        auto operator=(oxm_match&& other)
+            -> oxm_match&
+        {
+            auto match = std::move(other);
+            this->swap(match);
+            return *this;
+        }
+
+        void swap(oxm_match& other)
+        {
+            oxm_match_fields_.swap(other.oxm_match_fields_);
+            std::swap(length_, other.length_);
+        }
+
+        auto type() const noexcept
             -> protocol::ofp_match_type
         {
             return match_type;
         }
 
-        auto length() const
+        auto length() const noexcept
             -> std::uint16_t
         {
-            return match_base_length + oxm_match_fields_.length();
+            return length_;
         }
 
         template <class OXMMatchField>
         void add(OXMMatchField&& field)
         {
-            oxm_match_fields_.add(std::forward<OXMMatchField>(field));
+            auto const field_length = field.length();
+            length_ -= oxm_match_fields_.add(
+                    std::forward<OXMMatchField>(field));
+            length_ += field_length;
         }
 
         template <class OXMMatchField>
@@ -64,13 +102,13 @@ namespace v13 {
             return oxm_match_fields_[oxm_type];
         }
 
-        auto begin() const
+        auto begin() const noexcept
             -> decltype(v13_detail::oxm_match_field_set{}.begin())
         {
             return oxm_match_fields_.begin();
         }
 
-        auto end() const
+        auto end() const noexcept
             -> decltype(v13_detail::oxm_match_field_set{}.end())
         {
             return oxm_match_fields_.end();
@@ -89,32 +127,40 @@ namespace v13 {
                     , v13_detail::padding_length(length()));
         }
 
-    private:
-        oxm_match(v13_detail::oxm_match_field_set&& oxm_field)
-            : oxm_match_fields_{std::move(oxm_field)}
-        {
-        }
-
-    public:
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_match
         {
-            auto const type = detail::decode<std::uint16_t>(first, last);
-            if (type != match_type) {
-                throw 1;
-            }
+            std::advance(first, sizeof(std::uint16_t));
             auto const length = detail::decode<std::uint16_t>(first, last);
-            auto oxm_fields = v13_detail::oxm_match_field_set::decode(first, std::next(first, length - match_base_length));
-            if (length != match_base_length + oxm_fields.length()) {
-                throw 2;
-            }
+            last = std::next(first, length - match_base_length);
+            auto oxm_fields
+                = v13_detail::oxm_match_field_set::decode(first, last);
             std::advance(first, v13_detail::padding_length(length));
-            return oxm_match{std::move(oxm_fields)};
+            return oxm_match{length, std::move(oxm_fields)};
+        }
+
+        static void validate(v13_detail::ofp_match const& match)
+        {
+            if (match.type != protocol::OFPMT_OXM) {
+                throw std::runtime_error{"match_type is not OFPMT_OXM"};
+            }
+            if (match.length < offsetof(v13_detail::ofp_match, pad)) {
+                throw std::runtime_error{"invalid oxm_match length"};
+            }
+        }
+
+    private:
+        oxm_match(std::uint16_t const length
+                , v13_detail::oxm_match_field_set&& oxm_field)
+            : oxm_match_fields_{std::move(oxm_field)}
+            , length_(length)
+        {
         }
 
     private:
         v13_detail::oxm_match_field_set oxm_match_fields_;
+        std::uint16_t length_;
     };
 
 } // namespace v13

@@ -1,7 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-#include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/v13/message/multipart_message/table_feature_property.hpp>
 #include <iterator>
 #include <boost/endian/conversion.hpp>

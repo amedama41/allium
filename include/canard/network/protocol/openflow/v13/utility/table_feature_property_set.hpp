@@ -1,8 +1,11 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_SET_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_TABLE_FEATURE_PROPERTY_SET_HPP
 
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <map>
+#include <stdexcept>
 #include <utility>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -21,20 +24,30 @@ namespace v13 {
 
     class table_feature_property_set
     {
-        using property_map = std::map<std::uint16_t, table_feature_properties::variant>;
+        using property_map
+            = std::map<std::uint16_t, table_feature_properties::variant>;
 
     public:
         using value_type = property_map::mapped_type;
         using reference = value_type const&;
         using const_reference = value_type const&;
-        using iterator = boost::range_iterator<boost::select_second_const_range<property_map> const>::type;
-        using const_iterator = boost::range_iterator<boost::select_second_const_range<property_map> const>::type;
+        using iterator = boost::range_iterator<
+            boost::select_second_const_range<property_map> const
+        >::type;
+        using const_iterator = boost::range_iterator<
+            boost::select_second_const_range<property_map> const
+        >::type;
 
         template <class... Properties>
         table_feature_property_set(Properties&&... properties)
             : properties_{}
         {
             add_impl(std::forward<Properties>(properties)...);
+        }
+
+        void swap(table_feature_property_set& other)
+        {
+            properties_.swap(other.properties_);
         }
 
         template <class Property>
@@ -54,19 +67,28 @@ namespace v13 {
             -> std::uint16_t
         {
             using boost::adaptors::transformed;
-            return boost::accumulate(*this | transformed([](const_reference prop) {
-                    auto const visitor = v13_detail::calculating_exact_length_visitor{};
-                    return boost::apply_visitor(visitor, prop);
-            }), std::uint16_t{0});
+            return boost::accumulate(
+                      *this | transformed([](const_reference prop) {
+                          auto const visitor
+                              = v13_detail::calculating_exact_length_visitor{};
+                          return boost::apply_visitor(visitor, prop);
+                      })
+                    , std::uint16_t{0});
         }
 
-        auto begin() const
+        auto size() const noexcept
+            -> std::size_t
+        {
+            return properties_.size();
+        }
+
+        auto begin() const noexcept
             -> const_iterator
         {
             return boost::begin(properties_ | boost::adaptors::map_values);
         }
 
-        auto end() const
+        auto end() const noexcept
             -> const_iterator
         {
             return boost::end(properties_ | boost::adaptors::map_values);
@@ -88,9 +110,14 @@ namespace v13 {
             -> table_feature_property_set
         {
             auto properties = table_feature_property_set{};
-            while (first != last) {
-                table_feature_properties::decode<void>(first, last
+            while (std::distance(first, last)
+                    >= sizeof(v13_detail::ofp_table_feature_prop_header)) {
+                table_feature_properties::decode<void>(
+                          first, last
                         , detail::add_helper<table_feature_property_set>{properties});
+            }
+            if (first != last) {
+                throw std::runtime_error{"invalid properties length"};
             }
             return properties;
         }

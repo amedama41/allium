@@ -31,9 +31,9 @@ namespace v13 {
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
-                      std::tuple_size<default_switch_message_list>::value == 9
+                      std::tuple_size<default_switch_message_list>::value == 10
                     , "not match to the number of message types");
-            BOOST_PP_REPEAT(9, CANARD_NETWORK_OPENFLOW_V13_MESSAGES_CASE, _)
+            BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V13_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V13_MESSAGES_CASE
             case protocol::OFPT_MULTIPART_REPLY:
                 if (header.length < sizeof(v13_detail::ofp_multipart_reply)) {
@@ -64,10 +64,10 @@ namespace v13 {
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
-                      std::tuple_size<default_multipart_reply_list>::value == 7
+                      std::tuple_size<default_multipart_reply_list>::value == 8
                     , "not match to the number of multipart reply types");
             BOOST_PP_REPEAT(
-                    7, CANARD_NETWORK_OPENFLOW_V13_MULTIPART_REPLY_CASE, _)
+                    8, CANARD_NETWORK_OPENFLOW_V13_MULTIPART_REPLY_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V13_MULTIPART_REPLY_CASE
             default:
                 break;

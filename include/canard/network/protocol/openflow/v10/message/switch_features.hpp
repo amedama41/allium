@@ -22,15 +22,20 @@ namespace messages {
         : public v10_detail::basic_openflow_message<features_request>
     {
     public:
-        static protocol::ofp_type const message_type
+        static constexpr protocol::ofp_type message_type
             = protocol::OFPT_FEATURES_REQUEST;
 
-        explicit features_request(std::uint32_t const xid = get_xid())
-            : header_{protocol::OFP_VERSION, message_type, sizeof(header_), xid}
+        explicit features_request(std::uint32_t const xid = get_xid()) noexcept
+            : header_{
+                  protocol::OFP_VERSION
+                , message_type
+                , sizeof(v10_detail::ofp_header)
+                , xid
+              }
         {
         }
 
-        auto header() const
+        auto header() const noexcept
             -> v10_detail::ofp_header
         {
             return header_;
@@ -47,20 +52,28 @@ namespace messages {
         static auto decode(Iterator& first, Iterator last)
             -> features_request
         {
-            auto const header = detail::decode<v10_detail::ofp_header>(first, last);
+            auto const header
+                = detail::decode<v10_detail::ofp_header>(first, last);
             return features_request{header};
         }
 
+        static void validate(v10_detail::ofp_header const& header)
+        {
+            if (header.version != protocol::OFP_VERSION) {
+                throw std::runtime_error{"invalid version"};
+            }
+            if (header.type != message_type) {
+                throw std::runtime_error{"invalid message type"};
+            }
+            if (header.length != sizeof(v10_detail::ofp_header)) {
+                throw std::runtime_error{"invalid length"};
+            }
+        }
+
     private:
-        explicit features_request(v10_detail::ofp_header const header)
+        explicit features_request(v10_detail::ofp_header const& header)
             : header_(header)
         {
-            if (version() != protocol::OFP_VERSION) {
-                throw std::runtime_error("invalid version");
-            }
-            if (type() != message_type) {
-                throw std::runtime_error("invalid message type");
-            }
         }
 
     private:
@@ -71,91 +84,139 @@ namespace messages {
         : public v10_detail::basic_openflow_message<features_reply>
     {
     public:
-        static protocol::ofp_type const message_type
+        static constexpr protocol::ofp_type message_type
             = protocol::OFPT_FEATURES_REPLY;
 
         using iterator = std::vector<v10::port>::const_iterator;
         using const_iterator = std::vector<v10::port>::const_iterator;
 
-        auto header() const
+        features_reply(features_request const& request
+                     , std::uint64_t const dpid
+                     , std::uint32_t const n_buffers
+                     , std::uint8_t const n_tables
+                     , std::uint32_t const capabilities
+                     , std::uint32_t const actions
+                     , std::vector<v10::port> ports)
+            : switch_features_{
+                  v10_detail::ofp_header{
+                      protocol::OFP_VERSION
+                    , message_type
+                    , std::uint16_t(
+                            sizeof(v10_detail::ofp_switch_features)
+                          + ports.size() * sizeof(v10_detail::ofp_phy_port))
+                    , request.xid()
+                  }
+                , dpid
+                , n_buffers
+                , n_tables
+                , { 0, 0, 0 }
+                , capabilities
+                , actions
+              }
+            , ports_(std::move(ports))
+        {
+        }
+
+        auto header() const noexcept
             -> v10_detail::ofp_header
         {
-            return features_.header;
+            return switch_features_.header;
         }
 
-        auto datapath_id() const
+        auto datapath_id() const noexcept
             -> std::uint64_t
         {
-            return features_.datapath_id;
+            return switch_features_.datapath_id;
         }
 
-        auto num_buffers() const
+        auto num_buffers() const noexcept
             -> std::uint32_t
         {
-            return features_.n_buffers;
+            return switch_features_.n_buffers;
         }
 
-        auto num_tables() const
+        auto num_tables() const noexcept
             -> std::uint8_t
         {
-            return features_.n_tables;
+            return switch_features_.n_tables;
         }
 
-        auto capabilities() const
+        auto capabilities() const noexcept
             -> std::uint32_t
         {
-            return features_.capabilities;
+            return switch_features_.capabilities;
         }
 
-        auto actions() const
+        auto actions() const noexcept
             -> std::uint32_t
         {
-            return features_.actions;
+            return switch_features_.actions;
         }
 
-        auto begin() const
+        auto begin() const noexcept
             -> const_iterator
         {
             return ports_.begin();
         }
 
-        auto end() const
+        auto end() const noexcept
             -> const_iterator
         {
             return ports_.end();
+        }
+
+        template <class Container>
+        auto encode(Container& container) const
+            -> Container&
+        {
+            detail::encode(container, switch_features_);
+            boost::for_each(ports_, [&](v10::port const& port) {
+                port.encode(container);
+            });
+            return container;
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> features_reply
         {
-            auto const features = detail::decode<v10_detail::ofp_switch_features>(first, last);
+            auto const features
+                = detail::decode<v10_detail::ofp_switch_features>(first, last);
             auto ports = std::vector<port>{};
-            ports.reserve((features.header.length - sizeof(features)) / sizeof(v10_detail::ofp_phy_port));
+            ports.reserve(
+                    (features.header.length - sizeof(features))
+                    / sizeof(v10_detail::ofp_phy_port));
             while (first != last) {
                 ports.emplace_back(port::decode(first, last));
             }
             return features_reply{features, std::move(ports)};
         }
 
-    private:
-        features_reply(v10_detail::ofp_switch_features const& features, std::vector<port> ports)
-            : features_(features)
-            , ports_(std::move(ports))
+        static void validate(v10_detail::ofp_header const& header)
         {
-            if (version() != protocol::OFP_VERSION) {
-                throw std::runtime_error("invalid version");
+            if (header.version != protocol::OFP_VERSION) {
+                throw std::runtime_error{"invalid version"};
             }
-            if (type() != message_type) {
-                throw std::runtime_error("invalid message type");
+            if (header.type != message_type) {
+                throw std::runtime_error{"invalid message type"};
             }
-            if (length() != sizeof(v10_detail::ofp_switch_features) + ports_.size() * sizeof(v10_detail::ofp_phy_port)) {
-                throw std::runtime_error("invalid length");
+            if (header.length < sizeof(v10_detail::ofp_switch_features)
+                    || ((header.length - sizeof(v10_detail::ofp_switch_features))
+                        % sizeof(v10_detail::ofp_phy_port) != 0)) {
+                throw std::runtime_error{"invalid length"};
             }
         }
 
     private:
-        v10_detail::ofp_switch_features features_;
+        features_reply(v10_detail::ofp_switch_features const& features
+                     , std::vector<port>&& ports)
+            : switch_features_(features)
+            , ports_(std::move(ports))
+        {
+        }
+
+    private:
+        v10_detail::ofp_switch_features switch_features_;
         std::vector<v10::port> ports_;
     };
 

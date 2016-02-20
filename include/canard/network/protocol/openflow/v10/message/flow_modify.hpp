@@ -3,11 +3,9 @@
 
 #include <cstdint>
 #include <utility>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/get_xid.hpp>
 #include <canard/network/protocol/openflow/v10/action_list.hpp>
-#include <canard/network/protocol/openflow/v10/detail/basic_openflow_message.hpp>
+#include <canard/network/protocol/openflow/v10/detail/flow_mod_base.hpp>
 #include <canard/network/protocol/openflow/v10/flow_entry.hpp>
 #include <canard/network/protocol/openflow/v10/match_set.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
@@ -19,91 +17,72 @@ namespace v10 {
 namespace messages {
 
     class flow_modify
-        : public v10_detail::basic_openflow_message<flow_modify>
+        : public flow_mod_detail::flow_mod_base<flow_modify>
     {
     public:
-        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
-        static protocol::ofp_flow_mod_command const command_type
+        static constexpr protocol::ofp_flow_mod_command command_type
             = protocol::OFPFC_MODIFY;
 
         flow_modify(
-                  match_set const& match, action_list actions
-                , std::uint64_t const cookie = 0
+                  match_set const& match
+                , std::uint64_t const cookie
+                , action_list actions
                 , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
-            : flow_mod_{
-                  v10_detail::ofp_header{
-                      protocol::OFP_VERSION, message_type
-                    , std::uint16_t(sizeof(flow_mod_) + actions.length())
-                    , xid
-                  }
-                , match.ofp_match(), cookie, command_type
-                , 0, 0, 0, buffer_id, protocol::OFPP_NONE, 0
+            : flow_mod_base{
+                match, 0, cookie, std::move(actions), 0, 0, 0, buffer_id, xid
               }
-            , actions_(std::move(actions))
         {
         }
 
-        auto header() const
-            -> v10_detail::ofp_header
+        auto match() const noexcept
+            -> match_set
         {
-            return flow_mod_.header;
+            return match_set{ofp_flow_mod().match};
         }
 
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
+        auto cookie() const noexcept
+            -> std::uint64_t
         {
-            detail::encode(container, flow_mod_);
-            return actions_.encode(container);
-        }
-
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> flow_modify
-        {
-            auto const flow_mod
-                = detail::decode<v10_detail::ofp_flow_mod>(first, last);
-            auto actions = action_list::decode(first, last);
-            return flow_modify{flow_mod, std::move(actions)};
+            return ofp_flow_mod().cookie;
         }
 
     private:
-        flow_modify(v10_detail::ofp_flow_mod const& flow_mod, action_list actions)
-            : flow_mod_(flow_mod), actions_(std::move(actions))
+        friend flow_mod_base;
+
+        flow_modify(v10_detail::ofp_flow_mod const& flow_mod
+                  , action_list&& actions)
+            : flow_mod_base{flow_mod, std::move(actions)}
         {
         }
-
-    private:
-        v10_detail::ofp_flow_mod flow_mod_;
-        action_list actions_;
     };
 
 
     class flow_modify_strict
-        : public v10_detail::basic_openflow_message<flow_modify_strict>
+        : public flow_mod_detail::flow_mod_base<flow_modify_strict>
     {
     public:
-        static protocol::ofp_type const message_type = protocol::OFPT_FLOW_MOD;
-        static protocol::ofp_flow_mod_command const command_type
+        static constexpr protocol::ofp_flow_mod_command command_type
             = protocol::OFPFC_MODIFY_STRICT;
 
         flow_modify_strict(
-                  match_set const& match, std::uint16_t const priority
+                  match_set const& match
+                , std::uint16_t const priority
                 , action_list actions
                 , std::uint64_t const cookie = 0
                 , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
-            : flow_mod_{
-                  v10_detail::ofp_header{
-                      protocol::OFP_VERSION, message_type
-                    , std::uint16_t(sizeof(flow_mod_) + actions.length())
-                    , xid
-                  }
-                , match.ofp_match(), cookie, command_type
-                , 0, 0, priority, buffer_id, protocol::OFPP_NONE, 0
+            : flow_mod_base{
+                  match
+                , priority
+                , cookie
+                , std::move(actions)
+                , 0
+                , 0
+                , 0
+                , buffer_id
+                , xid
               }
-            , actions_(std::move(actions))
         {
         }
 
@@ -111,53 +90,46 @@ namespace messages {
                   flow_entry const& entry, action_list actions
                 , std::uint32_t const buffer_id = protocol::OFP_NO_BUFFER
                 , std::uint32_t const xid = get_xid())
-            : flow_mod_{
-                  v10_detail::ofp_header{
-                      protocol::OFP_VERSION, message_type
-                    , std::uint16_t(sizeof(flow_mod_) + actions.length())
-                    , xid
-                  }
-                , entry.ofp_match(), entry.cookie(), command_type, 0, 0
-                , entry.priority(), buffer_id, protocol::OFPP_NONE, 0
+            : flow_mod_base{
+                  entry.match()
+                , entry.priority()
+                , entry.cookie()
+                , std::move(actions)
+                , 0
+                , 0
+                , 0
+                , buffer_id
+                , xid
               }
-            , actions_(std::move(actions))
         {
         }
 
-        auto header() const
-            -> v10_detail::ofp_header
+        auto match() const noexcept
+            -> match_set
         {
-            return flow_mod_.header;
+            return match_set{ofp_flow_mod().match};
         }
 
-        template <class Container>
-        auto encode(Container& container) const
-            -> Container&
+        auto priority() const noexcept
+            -> std::uint16_t
         {
-            detail::encode(container, flow_mod_);
-            return actions_.encode(container);
+            return ofp_flow_mod().priority;
         }
 
-        template <class Iterator>
-        static auto decode(Iterator& first, Iterator last)
-            -> flow_modify_strict
+        auto cookie() const noexcept
+            -> std::uint64_t
         {
-            auto const flow_mod
-                = detail::decode<v10_detail::ofp_flow_mod>(first, last);
-            auto actions = action_list::decode(first, last);
-            return flow_modify_strict{flow_mod, std::move(actions)};
+            return ofp_flow_mod().cookie;
         }
 
     private:
+        friend flow_mod_base;
+
         flow_modify_strict(
-                v10_detail::ofp_flow_mod const& flow_mod, action_list actions)
-            : flow_mod_(flow_mod), actions_(std::move(actions))
+                v10_detail::ofp_flow_mod const& flow_mod, action_list&& actions)
+            : flow_mod_base{flow_mod, std::move(actions)}
         {
         }
-
-    private:
-        v10_detail::ofp_flow_mod flow_mod_;
-        action_list actions_;
     };
 
 } // namespace messages

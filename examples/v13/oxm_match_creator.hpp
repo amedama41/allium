@@ -167,13 +167,11 @@ struct oxm_match_creator
     canard::network::openflow::v13::oxm_match& match;
 };
 
-auto oxm_match_from_packet(std::vector<unsigned char> const& packet)
+auto oxm_match_from_packet(boost::iterator_range<unsigned char const*> packet)
     -> canard::network::openflow::v13::oxm_match
 {
     auto match = canard::network::openflow::v13::oxm_match{};
-    auto byte_range
-        = boost::make_iterator_range_n(packet.data(), packet.size());
-    canard::for_each_header(byte_range, oxm_match_creator{match});
+    canard::for_each_header(packet, oxm_match_creator{match});
     return match;
 }
 

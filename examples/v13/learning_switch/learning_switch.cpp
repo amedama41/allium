@@ -16,6 +16,7 @@
 
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
+namespace msg = v13::messages;
 
 class forwarding_db
 {
@@ -89,20 +90,25 @@ public:
     using versions = std::tuple<v13::version>;
 
     template <class Channel>
-    void handle(Channel const& channel, v13::packet_in const& pkt_in)
+    void handle(Channel const& channel, msg::packet_in pkt_in)
     {
-        auto const& frame = pkt_in.frame();
-        canard::packet{&frame.front(), &frame.back() + 1}.ether_header([&](canard::ether_header const& header) {
+        auto const frame = pkt_in.frame();
+        canard::packet{frame.begin(), frame.end()}.ether_header(
+                [&](canard::ether_header const& header) {
             auto const in_port = pkt_in.in_port();
             auto& fdb = channel->template get_data<learning_switch>();
             fdb.learn(header.source(), in_port);
 
             if (auto const outport = fdb.get(header.destination())) {
                 flow_mod(channel, pkt_in.frame(), outport.get());
-                channel->async_send(v13::packet_out{pkt_in.frame(), in_port, v13::actions::output{outport.get()}});
+                channel->async_send(
+                          msg::packet_out{pkt_in.extract_frame()
+                        , in_port, v13::actions::output{outport.get()}});
             }
             else {
-                channel->async_send(v13::packet_out{pkt_in.frame(), in_port, v13::actions::output{v13::protocol::OFPP_ALL}});
+                channel->async_send(
+                          msg::packet_out{pkt_in.extract_frame()
+                        , in_port, v13::actions::output{v13::protocol::OFPP_ALL}});
             }
         });
     }
@@ -113,9 +119,12 @@ public:
         auto& fdb = channel->template get_data<learning_switch>();
         fdb.start_age_out_timer(channel->get_context(), channel);
         channel->async_send(
-                v13::flow_mod_add{{
+                msg::flow_add{{
                       v13::flow_entry_id::table_miss()
-                    , v13::instructions::apply_actions{v13::actions::output::to_controller()}
+                    , 0x00000000
+                    , v13::instructions::apply_actions{
+                            v13::actions::output::to_controller()
+                      }
                 }, 0, v13::protocol::OFPFF_SEND_FLOW_REM}
         );
     }
@@ -128,16 +137,22 @@ public:
     }
 
     template <class Channel, class Message>
-    void handle(Channel const&, Message const&) {}
+    void handle(Channel const&, Message const&)
+    {
+        static_assert(!std::is_same<Message, msg::packet_in>::value
+                    , "packet_in message must not be passed to this function");
+    }
 
 private:
-    template <class Channel>
+    template <class Channel, class Frame>
     void flow_mod(Channel const& channel
-            , std::vector<std::uint8_t> const& frame, std::uint32_t const port)
+            , Frame frame, std::uint32_t const port)
     {
+        static thread_local auto cookie = std::uint64_t{0};
         channel->async_send(
-              v13::flow_mod_add{{
-                    {oxm_match_from_packet(frame), 65535}
+              msg::flow_add{{
+                    oxm_match_from_packet(frame), 65535
+                  , cookie++
                   , v13::instructions::apply_actions{v13::actions::output{port}}
               }
             , 0, v13::protocol::OFPFF_SEND_FLOW_REM}
