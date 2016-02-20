@@ -3,7 +3,7 @@
 
 #include <canard/network/protocol/openflow/detail/any_action.hpp>
 #include <canard/network/protocol/openflow/v10/actions.hpp>
-#include <canard/network/protocol/openflow/v10/decorder/action_decoder.hpp>
+#include <canard/network/protocol/openflow/v10/decoder/action_decoder.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
