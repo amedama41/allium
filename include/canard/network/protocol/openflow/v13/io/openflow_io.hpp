@@ -38,6 +38,20 @@ namespace v13 {
     }
 
     template <class OStream>
+    auto operator<<(OStream& os, packet_queue const& queue)
+        -> OStream&
+    {
+        os << boost::format{"packet_queue[queue_id=%u, port_no=%u]"}
+            % queue.queue_id()
+            % queue.port_no()
+            ;
+        boost::for_each(queue.properties(), [&](any_queue_property const& prop) {
+            // os << "\n\t" << prop;
+        });
+        return os;
+    }
+
+    template <class OStream>
     class ostream_visitor
     {
     public:
@@ -131,6 +145,21 @@ namespace messages {
             % v13::to_string(rep.type())
             % rep.xid()
             ;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, queue_get_config_reply const& rep)
+        -> OStream&
+    {
+        os << boost::format("%s: xid=%#x, port=%u, ")
+            % v13::to_string(rep.type())
+            % rep.xid()
+            % rep.port_no()
+            ;
+        boost::for_each(rep.queues(), [&](packet_queue const& queue) {
+            os << "\n\t" << queue;
+        });
+        return os;
     }
 
     template <class OStream>
@@ -248,6 +277,21 @@ namespace multipart {
     }
 
     template <class OStream>
+    auto operator<<(OStream& os, queue_stats const& stats)
+        -> OStream&
+    {
+        return os << boost::format{"queue_stats[queue_id=%u, port_no=%u, tx_packets=%llu, tx_bytes=%llu, tx_errors=%llu, duration_sec=%u, duration_nsec=%u"}
+            % stats.queue_id()
+            % stats.port_no()
+            % stats.tx_packets()
+            % stats.tx_bytes()
+            % stats.tx_errors()
+            % stats.duration_sec()
+            % stats.duration_nsec()
+            ;
+    }
+
+    template <class OStream>
     auto operator<<(OStream& os, description_reply const& reply)
         -> OStream&
     {
@@ -348,6 +392,21 @@ namespace multipart {
             ;
         boost::for_each(reply, [&](port const& port) {
             os << "\n\t" << port;
+        });
+        return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, queue_stats_reply const& reply)
+        -> OStream&
+    {
+        os << boost::format("%s: xid=%#x, flags=%#x, ")
+            % v13::to_string(reply.multipart_type())
+            % reply.xid()
+            % reply.flags()
+            ;
+        boost::for_each(reply, [&](queue_stats const& stats) {
+            os << "\n\t" << stats;
         });
         return os;
     }
