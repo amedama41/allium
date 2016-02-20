@@ -20,9 +20,12 @@
 #include <boost/asio/write.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/mpl/sort.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <canard/asio/asio_handler_hook_propagation.hpp>
+#include <canard/mpl/adapted/std_tuple.hpp>
 #include <canard/network/protocol/openflow/vector_buffer.hpp>
 #include <canard/network/protocol/openflow/error.hpp>
 #include <canard/network/protocol/openflow/hello.hpp>
@@ -34,6 +37,20 @@ namespace openflow {
 namespace detail {
 
     namespace setup_connection_detail {
+
+        struct greater_version
+        {
+            template <class Lhs, class Rhs>
+            struct apply
+            {
+               using type = boost::mpl::bool_<(Lhs::value > Rhs::value)>;
+            };
+        };
+
+        template <class SupportedVersions>
+        using sort_t = typename boost::mpl::sort<
+            SupportedVersions, greater_version
+        >::type;
 
         auto is_valid_hello(openflow::ofp_header const header)
             -> bool
@@ -157,7 +174,9 @@ namespace detail {
             setup_connection<ControllerHandler>
           >
     {
-        using supported_versions = typename ControllerHandler::versions;
+        using supported_versions = setup_connection_detail::sort_t<
+            typename ControllerHandler::versions
+        >;
         using tcp = boost::asio::ip::tcp;
 
         enum { timeout = 30 };
