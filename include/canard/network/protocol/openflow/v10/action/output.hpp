@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
-#include <canard/network/protocol/openflow/v10/detail/action_adaptor.hpp>
+#include <type_traits>
+#include <utility>
+#include <canard/network/protocol/openflow/v10/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
@@ -14,58 +16,79 @@ namespace v10 {
 namespace actions {
 
     class output
-        : public v10_detail::action_adaptor<output, v10_detail::ofp_action_output>
+        : public actions_detail::basic_action<
+                output, v10_detail::ofp_action_output
+          >
     {
-        using ofp_action_t = v10_detail::ofp_action_output;
+        using raw_ofp_type = v10_detail::ofp_action_output;
 
     public:
-        static protocol::ofp_action_type const action_type
+        static constexpr protocol::ofp_action_type action_type
             = protocol::OFPAT_OUTPUT;
 
         explicit output(
                   std::uint16_t const port
-                , std::uint16_t const max_len = std::numeric_limits<std::uint16_t>::max())
-            : output_{action_type, sizeof(ofp_action_t), port, max_len}
+                , std::uint16_t const max_len
+                    = std::numeric_limits<std::uint16_t>::max()) noexcept
+            : action_output_{
+                  action_type
+                , sizeof(raw_ofp_type)
+                , port
+                , max_len
+              }
         {
         }
 
-        auto port() const
+        auto port_no() const noexcept
             -> std::uint16_t
         {
-            return output_.port;
+            return action_output_.port;
         }
 
-        auto max_length() const
+        auto max_length() const noexcept
             -> std::uint16_t
         {
-            return output_.max_len;
+            return action_output_.max_len;
         }
 
-        static auto to_controller(std::uint16_t const max_len = std::numeric_limits<std::uint16_t>::max())
+        static auto to_controller(
+                std::uint16_t const max_len
+                    = std::numeric_limits<std::uint16_t>::max()) noexcept
             -> output
         {
             return output{protocol::OFPP_CONTROLLER, max_len};
         }
 
-    private:
-        friend action_adaptor;
-
-        auto ofp_action() const
-            -> ofp_action_t const&
+        template <class Action>
+        static auto validate(Action&& action)
+            -> typename std::enable_if<
+                  std::is_same<canard::remove_cvref_t<Action>, output>::value
+                , Action&&
+               >::type
         {
-            return output_;
-        }
-
-        explicit output(ofp_action_t const output)
-            : output_(output)
-        {
-            if (output_.port == 0 || output_.port == protocol::OFPP_NONE) {
-                throw std::runtime_error{"invalid outport"};
+            auto const port_no = action.port_no();
+            if (port_no == 0 || port_no == protocol::OFPP_NONE) {
+                throw std::runtime_error{"invalid port_no"};
             }
+            return std::forward<Action>(action);
         }
 
     private:
-        ofp_action_t output_;
+        friend basic_action;
+
+        explicit output(raw_ofp_type const output) noexcept
+            : action_output_(output)
+        {
+        }
+
+        auto ofp_action() const noexcept
+            -> raw_ofp_type const&
+        {
+            return action_output_;
+        }
+
+    private:
+        raw_ofp_type action_output_;
     };
 
 } // namespace actions

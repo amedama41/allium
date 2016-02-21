@@ -1,8 +1,11 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V10_ACTIONS_STRIP_VLAN_HPP
 #define CANARD_NETWORK_OPENFLOW_V10_ACTIONS_STRIP_VLAN_HPP
 
-#include <canard/network/protocol/openflow/v10/detail/action_adaptor.hpp>
+#include <type_traits>
+#include <utility>
+#include <canard/network/protocol/openflow/v10/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -11,35 +14,47 @@ namespace v10 {
 namespace actions {
 
     class strip_vlan
-        : public v10_detail::action_adaptor<strip_vlan, v10_detail::ofp_action_header>
+        : public actions_detail::basic_action<
+                strip_vlan, v10_detail::ofp_action_header
+          >
     {
-        using ofp_action_t = v10_detail::ofp_action_header;
+        using raw_ofp_type = v10_detail::ofp_action_header;
 
     public:
-        static protocol::ofp_action_type const action_type
+        static constexpr protocol::ofp_action_type action_type
             = protocol::OFPAT_STRIP_VLAN;
 
-        strip_vlan()
-            : strip_vlan_{action_type, sizeof(ofp_action_t), {0}}
+        strip_vlan() noexcept
+            : strip_vlan_{action_type, sizeof(raw_ofp_type), { 0, 0, 0, 0 }}
         {
+        }
+
+        template <class Action>
+        static auto validate(Action&& action)
+            -> typename std::enable_if<
+                  std::is_same<canard::remove_cvref_t<Action>, strip_vlan>::value
+                , Action&&
+               >::type
+        {
+            return std::forward<Action>(action);
         }
 
     private:
-        friend action_adaptor;
+        friend basic_action;
 
-        auto ofp_action() const
-            -> ofp_action_t const&
-        {
-            return strip_vlan_;
-        }
-
-        explicit strip_vlan(v10_detail::ofp_action_header const action_header)
+        explicit strip_vlan(raw_ofp_type const& action_header) noexcept
             : strip_vlan_(action_header)
         {
         }
 
+        auto ofp_action() const noexcept
+            -> raw_ofp_type const&
+        {
+            return strip_vlan_;
+        }
+
     private:
-        ofp_action_t strip_vlan_;
+        raw_ofp_type strip_vlan_;
     };
 
     using pop_vlan = strip_vlan;

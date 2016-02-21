@@ -1,32 +1,35 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V10_ACTION_ADAPTOR_HPP
-#define CANARD_NETWORK_OPENFLOW_V10_ACTION_ADAPTOR_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V10_ACTIONS_BASIC_ACTION_HPP
+#define CANARD_NETWORK_OPENFLOW_V10_ACTIONS_BASIC_ACTION_HPP
 
 #include <cstdint>
 #include <stdexcept>
+#include <utility>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
+#include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v10 {
-namespace v10_detail {
+namespace actions_detail {
 
     template <class T, class OFPAction>
-    class action_adaptor
+    class basic_action
     {
     protected:
-        action_adaptor() = default;
+        basic_action() = default;
 
     public:
-        auto type() const
+        auto type() const noexcept
             -> protocol::ofp_action_type
         {
             return T::action_type;
         }
 
-        auto length() const
+        auto length() const noexcept
             -> std::uint16_t
         {
             return sizeof(OFPAction);
@@ -43,28 +46,38 @@ namespace v10_detail {
         static auto decode(Iterator& first, Iterator last)
             -> T
         {
-            auto const ofp_action = detail::decode<OFPAction>(first, last);
-            if (ofp_action.type != T::action_type) {
+            return T{detail::decode<OFPAction>(first, last)};
+        }
+
+        template <class... Args>
+        static auto create(Args&&... args)
+            -> T
+        {
+            return T::validate(T{std::forward<Args>(args)...});
+        }
+
+        static void validate_header(v10_detail::ofp_action_header const& header)
+        {
+            if (header.type != T::action_type) {
                 throw std::runtime_error{"invalid action type"};
             }
-            if (ofp_action.len != sizeof(OFPAction)) {
+            if (header.len != sizeof(OFPAction)) {
                 throw std::runtime_error{"invalid action length"};
             }
-            return T{ofp_action};
         }
 
     private:
-        auto base_action() const
+        auto base_action() const noexcept
             -> OFPAction const&
         {
             return static_cast<T const*>(this)->ofp_action();
         }
     };
 
-} // namespace v10_detail
+} // namespace actions_detail
 } // namespace v10
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V10_ACTION_ADAPTOR_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V10_ACTIONS_BASIC_ACTION_HPP

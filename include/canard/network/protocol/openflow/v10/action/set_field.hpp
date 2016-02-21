@@ -1,19 +1,17 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V10_ACTIONS_SET_VLAN_VID_HPP
 #define CANARD_NETWORK_OPENFLOW_V10_ACTIONS_SET_VLAN_VID_HPP
 
-#include <cstdint>
-#include <stdexcept>
-#include <tuple>
 #include <type_traits>
-#include <boost/fusion/algorithm/query/find_if.hpp>
-#include <boost/fusion/iterator/deref.hpp>
+#include <utility>
+#include <boost/fusion/container/map.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
-#include <boost/mpl/placeholders.hpp>
-#include <canard/mpl/adapted/std_tuple.hpp>
-#include <canard/network/protocol/openflow/v10/detail/action_adaptor.hpp>
+#include <boost/fusion/sequence/intrinsic/value_at_key.hpp>
+#include <boost/fusion/support/pair.hpp>
+#include <canard/network/protocol/openflow/v10/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v10/detail/fusion_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/match_fields.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -23,87 +21,85 @@ namespace actions {
 
     namespace set_field_detail {
 
-        template <protocol::ofp_action_type ActionType>
-        using action_type
-            = std::integral_constant<protocol::ofp_action_type, ActionType>;
+        template <protocol::ofp_action_type ActionType, class OFPAction>
+        struct ofp_action_info
+        {
+            static constexpr protocol::ofp_action_type action_type = ActionType;
+            using raw_ofp_type = OFPAction;
+        };
 
-        using set_field_table = std::tuple<
-          //  ofp_match field type         action_type                                 set_field type
-          //+----------------------------+-------------------------------------------+---------------------------------+
-              std::tuple<match::eth_src  , action_type<protocol::OFPAT_SET_DL_SRC>   , v10_detail::ofp_action_dl_addr  >
-            , std::tuple<match::eth_dst  , action_type<protocol::OFPAT_SET_DL_DST>   , v10_detail::ofp_action_dl_addr  >
-            , std::tuple<match::vlan_vid , action_type<protocol::OFPAT_SET_VLAN_VID> , v10_detail::ofp_action_vlan_vid >
-            , std::tuple<match::vlan_pcp , action_type<protocol::OFPAT_SET_VLAN_PCP> , v10_detail::ofp_action_vlan_pcp >
-            , std::tuple<match::ipv4_tos , action_type<protocol::OFPAT_SET_NW_TOS>   , v10_detail::ofp_action_nw_tos   >
-            , std::tuple<match::ipv4_src , action_type<protocol::OFPAT_SET_NW_SRC>   , v10_detail::ofp_action_nw_addr  >
-            , std::tuple<match::ipv4_dst , action_type<protocol::OFPAT_SET_NW_DST>   , v10_detail::ofp_action_nw_addr  >
-            , std::tuple<match::tcp_src  , action_type<protocol::OFPAT_SET_TP_SRC>   , v10_detail::ofp_action_tp_port  >
-            , std::tuple<match::tcp_dst  , action_type<protocol::OFPAT_SET_TP_DST>   , v10_detail::ofp_action_tp_port  >
-          //+----------------------------+-------------------------------------------+---------------------------------+
+        using set_field_info_table = boost::fusion::map<
+              boost::fusion::pair<match::eth_src  , ofp_action_info<protocol::OFPAT_SET_DL_SRC   , v10_detail::ofp_action_dl_addr  > >
+            , boost::fusion::pair<match::eth_dst  , ofp_action_info<protocol::OFPAT_SET_DL_DST   , v10_detail::ofp_action_dl_addr  > >
+            , boost::fusion::pair<match::vlan_vid , ofp_action_info<protocol::OFPAT_SET_VLAN_VID , v10_detail::ofp_action_vlan_vid > >
+            , boost::fusion::pair<match::vlan_pcp , ofp_action_info<protocol::OFPAT_SET_VLAN_PCP , v10_detail::ofp_action_vlan_pcp > >
+            , boost::fusion::pair<match::ipv4_tos , ofp_action_info<protocol::OFPAT_SET_NW_TOS   , v10_detail::ofp_action_nw_tos   > >
+            , boost::fusion::pair<match::ipv4_src , ofp_action_info<protocol::OFPAT_SET_NW_SRC   , v10_detail::ofp_action_nw_addr  > >
+            , boost::fusion::pair<match::ipv4_dst , ofp_action_info<protocol::OFPAT_SET_NW_DST   , v10_detail::ofp_action_nw_addr  > >
+            , boost::fusion::pair<match::tcp_src  , ofp_action_info<protocol::OFPAT_SET_TP_SRC   , v10_detail::ofp_action_tp_port  > >
+            , boost::fusion::pair<match::tcp_dst  , ofp_action_info<protocol::OFPAT_SET_TP_DST   , v10_detail::ofp_action_tp_port  > >
         >;
 
         template <class MatchField>
         struct set_field_info
         {
-            template <class T>
-            struct is_same_match
-                : std::is_same<typename std::tuple_element<0, T>::type, MatchField>
-            {
-            };
+            using ofp_action_info
+                = typename boost::fusion::result_of::value_at_key<
+                        set_field_info_table, MatchField
+                  >::type;
 
-            using info_tuple = typename std::remove_reference<
-                typename boost::fusion::result_of::deref<
-                    typename boost::fusion::result_of::find_if<
-                        set_field_table, is_same_match<boost::mpl::_1>
-                    >::type
-                >::type
-            >::type;
+            static constexpr protocol::ofp_action_type action_type
+                = ofp_action_info::action_type;
 
-            static protocol::ofp_action_type const value
-                = std::tuple_element<1, info_tuple>::type::value;
-            using type = typename std::tuple_element<2, info_tuple>::type;
+            using raw_ofp_type = typename ofp_action_info::raw_ofp_type;
         };
 
         template <class ValueType, class SetFieldInfo>
-        auto to_ofp_action(ValueType value, SetFieldInfo)
-            -> typename SetFieldInfo::type
+        auto to_ofp_action(ValueType value, SetFieldInfo) noexcept
+            -> typename SetFieldInfo::raw_ofp_type
         {
-            using ofp_action_t = typename SetFieldInfo::type;
-            return ofp_action_t{
-                SetFieldInfo::value, sizeof(ofp_action_t), value
+            using raw_ofp_type = typename SetFieldInfo::raw_ofp_type;
+            return raw_ofp_type{
+                SetFieldInfo::action_type, sizeof(raw_ofp_type), value
             };
         }
 
         template <class SetFieldInfo>
-        auto to_ofp_action(boost::asio::ip::address_v4 const& value, SetFieldInfo)
-            -> typename SetFieldInfo::type
+        auto to_ofp_action(
+                boost::asio::ip::address_v4 const& value, SetFieldInfo) noexcept
+            -> typename SetFieldInfo::raw_ofp_type
         {
-            using ofp_action_t = typename SetFieldInfo::type;
-            return ofp_action_t{
-                SetFieldInfo::value, sizeof(ofp_action_t), value.to_ulong()
+            using raw_ofp_type = typename SetFieldInfo::raw_ofp_type;
+            return raw_ofp_type{
+                  SetFieldInfo::action_type
+                , sizeof(raw_ofp_type)
+                , value.to_ulong()
             };
         }
 
         template <class SetFieldInfo>
-        auto to_ofp_action(canard::mac_address const& value, SetFieldInfo)
-            -> typename SetFieldInfo::type
+        auto to_ofp_action(
+                canard::mac_address const& value, SetFieldInfo) noexcept
+            -> typename SetFieldInfo::raw_ofp_type
         {
-            using ofp_action_t = typename SetFieldInfo::type;
+            using raw_ofp_type = typename SetFieldInfo::raw_ofp_type;
             auto const& bytes = value.to_bytes();
-            return ofp_action_t{
-                  SetFieldInfo::value, sizeof(ofp_action_t)
-                , {bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]}
+            return raw_ofp_type{
+                  SetFieldInfo::action_type
+                , sizeof(raw_ofp_type)
+                , { bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5] }
+                , { 0, 0, 0, 0, 0, 0 }
             };
         }
 
         template <class OFPAction>
-        auto access(OFPAction const& action_set_field)
+        auto access(OFPAction const& action_set_field) noexcept
             -> typename boost::fusion::result_of::at_c<OFPAction, 2>::type
         {
             return boost::fusion::at_c<2>(action_set_field);
         }
 
-        auto access(v10_detail::ofp_action_dl_addr const& set_dl_addr)
+        auto access(v10_detail::ofp_action_dl_addr const& set_dl_addr) noexcept
             -> canard::mac_address
         {
             return canard::mac_address{set_dl_addr.dl_addr};
@@ -112,61 +108,70 @@ namespace actions {
     } // namespace set_field_detail
 
 
-    template <class MatchField>
+    template <
+          class MatchField
+        , class SetFieldInfo = set_field_detail::set_field_info<MatchField>
+    >
     class set_field
-        : public v10_detail::action_adaptor<
-              set_field<MatchField>
-            , typename set_field_detail::set_field_info<MatchField>::type
+        : public actions_detail::basic_action<
+                set_field<MatchField>, typename SetFieldInfo::raw_ofp_type
           >
     {
-        using set_field_info
-            = set_field_detail::set_field_info<MatchField>;
-        using ofp_action_t = typename set_field_info::type;
-        using match_field_t = MatchField;
-        using value_type = typename match_field_t::value_type;
+        using raw_ofp_type = typename SetFieldInfo::raw_ofp_type;
+        using value_type = typename MatchField::value_type;
 
     public:
-        static protocol::ofp_action_type const action_type
-            = set_field_info::value;
+        static constexpr protocol::ofp_action_type action_type
+            = SetFieldInfo::action_type;
 
-        explicit set_field(value_type const& value)
-            : set_field_(set_field_detail::to_ofp_action(value, set_field_info{}))
+        explicit set_field(value_type const& value) noexcept
+            : set_field_(set_field_detail::to_ofp_action(value, SetFieldInfo{}))
         {
         }
 
-        explicit set_field(match_field_t const& field)
+        explicit set_field(MatchField const& field) noexcept
             : set_field{field.value()}
         {
         }
 
-        auto value() const
+        auto value() const noexcept
             -> value_type
         {
             return set_field_detail::access(set_field_);
         };
 
-        auto match_field() const
-            -> match_field_t
+        auto match_field() const noexcept
+            -> MatchField
         {
-            return match_field_t{value()};
+            return MatchField{value()};
+        }
+
+        template <class Action>
+        static auto validate(Action&& action)
+            -> typename std::enable_if<
+                  std::is_same<canard::remove_cvref_t<Action>, set_field>::value
+                , Action&&
+               >::type
+        {
+            return std::forward<Action>(action);
         }
 
     private:
-        friend v10_detail::action_adaptor<set_field<MatchField>, ofp_action_t>;
+        friend actions_detail::basic_action<set_field<MatchField>, raw_ofp_type>;
 
-        auto ofp_action() const
-            -> ofp_action_t const&
+        auto ofp_action() const noexcept
+            -> raw_ofp_type const&
         {
             return set_field_;
         }
 
-        explicit set_field(ofp_action_t const& action)
+        explicit set_field(raw_ofp_type const& action) noexcept
             : set_field_(action)
         {
         }
 
     private:
-        ofp_action_t set_field_;
+        raw_ofp_type set_field_;
     };
 
     using set_eth_src = set_field<match::eth_src>;

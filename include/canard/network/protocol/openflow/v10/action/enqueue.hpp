@@ -3,8 +3,11 @@
 
 #include <cstdint>
 #include <stdexcept>
-#include <canard/network/protocol/openflow/v10/detail/action_adaptor.hpp>
+#include <type_traits>
+#include <utility>
+#include <canard/network/protocol/openflow/v10/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -13,56 +16,75 @@ namespace v10 {
 namespace actions {
 
     class enqueue
-        : public v10_detail::action_adaptor<enqueue, v10_detail::ofp_action_enqueue>
+        : public actions_detail::basic_action<
+                enqueue, v10_detail::ofp_action_enqueue
+          >
     {
-        using ofp_action_t = v10_detail::ofp_action_enqueue;
+        using raw_ofp_type = v10_detail::ofp_action_enqueue;
 
     public:
-        static protocol::ofp_action_type const action_type
+        static constexpr protocol::ofp_action_type action_type
             = protocol::OFPAT_ENQUEUE;
 
-        enqueue(std::uint16_t const port, std::uint32_t const queue_id)
-            : enqueue_{action_type, sizeof(ofp_action_t), port, {0}, queue_id}
+        enqueue(std::uint32_t const queue_id
+              , std::uint16_t const port_no) noexcept
+            : enqueue_{
+                  action_type
+                , sizeof(raw_ofp_type)
+                , port_no
+                , { 0, 0, 0, 0, 0, 0 }
+                , queue_id
+              }
         {
-            validate_port(enqueue_.port);
         }
 
-        auto port() const
-            -> std::uint16_t
-        {
-            return enqueue_.port;
-        }
-
-        auto queue_id() const
+        auto queue_id() const noexcept
             -> std::uint32_t
         {
             return enqueue_.queue_id;
         }
 
-    private:
-        friend action_adaptor;
+        auto port_no() const noexcept
+            -> std::uint16_t
+        {
+            return enqueue_.port;
+        }
 
-        auto ofp_action() const
-            -> ofp_action_t const&
+        template <class Action>
+        static auto validate(Action&& action)
+            -> typename std::enable_if<
+                  std::is_same<canard::remove_cvref_t<Action>, enqueue>::value
+                , Action&&
+               >::type
+        {
+            if (action.queue_id() == protocol::OFPQ_ALL) {
+                throw std::runtime_error{"invalid queue_id"};
+            }
+            auto const port_no = action.port_no();
+            if (port_no == 0
+                    || (port_no > protocol::OFPP_MAX
+                        && port_no != protocol::OFPP_IN_PORT)) {
+                throw std::runtime_error{"invalid port_no"};
+            }
+            return std::forward<Action>(action);
+        }
+
+    private:
+        friend basic_action;
+
+        explicit enqueue(raw_ofp_type const& action_enqueue) noexcept
+            : enqueue_(action_enqueue)
+        {
+        }
+
+        auto ofp_action() const noexcept
+            -> raw_ofp_type const&
         {
             return enqueue_;
         }
 
-        explicit enqueue(ofp_action_t const& action_enqueue)
-            : enqueue_(action_enqueue)
-        {
-            validate_port(enqueue_.port);
-        }
-
-        static void validate_port(std::uint16_t const port)
-        {
-            if (port > protocol::OFPP_MAX && port != protocol::OFPP_IN_PORT) {
-                throw std::runtime_error{"invalid port"};
-            }
-        }
-
     private:
-        ofp_action_t enqueue_;
+        raw_ofp_type enqueue_;
     };
 
 } // namespace actions
