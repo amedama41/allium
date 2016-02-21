@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <utility>
+#include <boost/asio/ip/address_v4.hpp>
 #include <boost/fusion/container/map.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
 #include <boost/fusion/sequence/intrinsic/value_at_key.hpp>
@@ -73,7 +74,7 @@ namespace actions {
             return raw_ofp_type{
                   SetFieldInfo::action_type
                 , sizeof(raw_ofp_type)
-                , value.to_ulong()
+                , std::uint32_t(value.to_ulong())
             };
         }
 
@@ -94,7 +95,7 @@ namespace actions {
 
         template <class OFPAction>
         auto access(OFPAction const& action_set_field) noexcept
-            -> typename boost::fusion::result_of::at_c<OFPAction, 2>::type
+            -> typename boost::fusion::result_of::at_c<OFPAction const, 2>::type
         {
             return boost::fusion::at_c<2>(action_set_field);
         }
@@ -103,6 +104,12 @@ namespace actions {
             -> canard::mac_address
         {
             return canard::mac_address{set_dl_addr.dl_addr};
+        }
+
+        auto access(v10_detail::ofp_action_nw_addr const& set_nw_addr)
+            -> boost::asio::ip::address_v4
+        {
+            return boost::asio::ip::address_v4{set_nw_addr.nw_addr};
         }
 
     } // namespace set_field_detail
@@ -173,6 +180,15 @@ namespace actions {
     private:
         raw_ofp_type set_field_;
     };
+
+    template <class MatchField>
+    auto operator==(
+              set_field<MatchField> const& lhs
+            , set_field<MatchField> const& rhs) noexcept
+        -> bool
+    {
+        return lhs.value() == rhs.value();
+    }
 
     using set_eth_src = set_field<match::eth_src>;
     using set_eth_dst = set_field<match::eth_dst>;

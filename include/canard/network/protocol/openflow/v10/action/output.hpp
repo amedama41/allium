@@ -91,6 +91,16 @@ namespace actions {
         raw_ofp_type action_output_;
     };
 
+    auto operator==(output const& lhs, output const& rhs) noexcept
+        -> bool
+    {
+        if (lhs.port_no() == protocol::OFPP_CONTROLLER) {
+            return rhs.port_no() == protocol::OFPP_CONTROLLER
+                && lhs.max_length() == rhs.max_length();
+        }
+        return lhs.port_no() == rhs.port_no();
+    }
+
 } // namespace actions
 } // namespace v10
 } // namespace openflow

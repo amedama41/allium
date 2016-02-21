@@ -87,6 +87,13 @@ namespace actions {
         raw_ofp_type enqueue_;
     };
 
+    auto operator==(enqueue const& lhs, enqueue const& rhs) noexcept
+        -> bool
+    {
+        return lhs.queue_id() == rhs.queue_id()
+            && lhs.port_no() == rhs.port_no();
+    }
+
 } // namespace actions
 } // namespace v10
 } // namespace openflow

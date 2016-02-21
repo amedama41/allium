@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <utility>
+#include <boost/operators.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
@@ -18,6 +19,7 @@ namespace actions_detail {
 
     template <class T, class OFPAction>
     class basic_action
+        : private boost::equality_comparable<T>
     {
     protected:
         basic_action() = default;
@@ -53,7 +55,7 @@ namespace actions_detail {
         static auto create(Args&&... args)
             -> T
         {
-            return T::validate(T{std::forward<Args>(args)...});
+            return T::validate(T(std::forward<Args>(args)...));
         }
 
         static void validate_header(v10_detail::ofp_action_header const& header)
