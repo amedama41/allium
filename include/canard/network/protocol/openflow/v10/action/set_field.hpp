@@ -159,6 +159,8 @@ namespace actions {
                   is_same_value_type<Action, set_field>::value, Action&&
                >::type
         {
+            match_detail::validate(
+                    action.value(), typename MatchField::field_type{});
             return std::forward<Action>(action);
         }
 

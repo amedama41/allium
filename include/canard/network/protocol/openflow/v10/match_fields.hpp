@@ -158,6 +158,7 @@ namespace v10 {
             >::type;
 
         public:
+            using field_type = FieldType;
             using value_type = typename boost::fusion::result_of::value_at<
                 v10_detail::ofp_match, member_index
             >::type;
@@ -255,6 +256,7 @@ namespace v10 {
             : private boost::equality_comparable<dl_addr_match_field<FieldType>>
         {
         public:
+            using field_type = FieldType;
             using value_type = canard::mac_address;
 
             explicit dl_addr_match_field(value_type const& value)
@@ -343,6 +345,7 @@ namespace v10 {
             using mask_info = match_detail::mask_info<FieldType>;
 
         public:
+            using field_type = FieldType;
             using value_type = boost::asio::ip::address_v4;
 
             explicit nw_addr_match_field(
