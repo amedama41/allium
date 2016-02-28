@@ -4,29 +4,32 @@
 #include <cstdint>
 #include <cstring>
 #include <algorithm>
+#include <stdexcept>
 #include <type_traits>
-#include <utility>
+#include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/fusion/container/map.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <boost/fusion/sequence/intrinsic/value_at.hpp>
 #include <boost/fusion/sequence/intrinsic/value_at_key.hpp>
 #include <boost/mpl/int.hpp>
+#include <boost/operators.hpp>
 #include <canard/mac_address.hpp>
 #include <canard/network/protocol/openflow/v10/detail/fusion_adaptor.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v10 {
 
-    namespace match_field_detail {
+    namespace match_detail {
 
         template <std::uint32_t Field>
         using field_type = std::integral_constant<std::uint32_t, Field>;
 
-        using match_field_table = boost::fusion::map<
+        using match_field_index_table = boost::fusion::map<
           //  ofp_match field type                                          ofp_match member index
           //+-------------------------------------------------------------+------------------------+
               boost::fusion::pair<field_type<protocol::OFPFW_IN_PORT>     , boost::mpl::int_<1>>
@@ -44,173 +47,275 @@ namespace v10 {
           //+-------------------------------------------------------------+------------------------+
         >;
 
-
-        template <class FieldType, class Enable = void>
-        struct field_value_type
-        {
-            using member_index = typename boost::fusion::result_of::value_at_key<
-                match_field_table, FieldType
-            >::type;
-
-            using type = typename boost::fusion::result_of::value_at<
-                v10_detail::ofp_match, member_index
-            >::type;
-        };
-
-        template <class FieldType>
-        struct field_value_type<
-                  FieldType
-                , typename std::enable_if<
-                           FieldType::value == protocol::OFPFW_DL_SRC
-                        || FieldType::value == protocol::OFPFW_DL_DST
-                  >::type>
-        {
-            using type = canard::mac_address;
-        };
-
-        template <class FieldType>
-        struct field_value_type<
-                  FieldType
-                , typename std::enable_if<
-                           FieldType::value == protocol::OFPFW_NW_SRC_ALL
-                        || FieldType::value == protocol::OFPFW_NW_DST_ALL
-                  >::type>
-        {
-            using type = boost::asio::ip::address_v4;
-        };
-
-
-        template <
-              class FieldType
-            , typename std::enable_if<
-                       FieldType::value != protocol::OFPFW_NW_SRC_ALL
-                    && FieldType::value != protocol::OFPFW_NW_DST_ALL
-              >::type* = nullptr>
-        void copy_to_match(
-                  v10_detail::ofp_match& match
-                , typename field_value_type<FieldType>::type const& value
-                , FieldType)
-        {
-            using member_index = typename boost::fusion::result_of::value_at_key<
-                match_field_table, FieldType
-            >::type;
-            boost::fusion::at<member_index>(match) = value;
-        }
-
-        void copy_to_match(
-                  v10_detail::ofp_match& match
-                , canard::mac_address const& macaddr
-                , field_type<protocol::OFPFW_DL_DST>)
-        {
-            std::memcpy(match.dl_dst, macaddr.to_bytes().data(), macaddr.to_bytes().size());
-        }
-
-        void copy_to_match(
-                  v10_detail::ofp_match& match
-                , canard::mac_address const& macaddr
-                , field_type<protocol::OFPFW_DL_SRC>)
-        {
-            std::memcpy(match.dl_src, macaddr.to_bytes().data(), macaddr.to_bytes().size());
-        }
-
-        template <
-              class FieldType
-            , typename std::enable_if<
-                       FieldType::value == protocol::OFPFW_NW_SRC_ALL
-                    || FieldType::value == protocol::OFPFW_NW_DST_ALL
-              >::type* = nullptr>
-        void copy_to_match(
-                  v10_detail::ofp_match& match
-                , typename field_value_type<FieldType>::type const& value
-                , FieldType)
-        {
-            using member_index = typename boost::fusion::result_of::value_at_key<
-                match_field_table, FieldType
-            >::type;
-            boost::fusion::at<member_index>(match) = value.to_ulong();
-        }
-
-
-        template <class FieldType>
-        auto field_value(v10_detail::ofp_match const& match, FieldType)
-            -> typename field_value_type<FieldType>::type
-        {
-            using member_index = typename boost::fusion::result_of::value_at_key<
-                match_field_table, FieldType
-            >::type;
-
-            return boost::fusion::at<member_index>(match);
-        }
-
-        auto field_value(v10_detail::ofp_match const& match, field_type<protocol::OFPFW_DL_DST>)
-            -> canard::mac_address
-        {
-            return canard::mac_address{match.dl_dst};
-        }
-
-        auto field_value(v10_detail::ofp_match const& match, field_type<protocol::OFPFW_DL_SRC>)
-            -> canard::mac_address
-        {
-            return canard::mac_address{match.dl_src};
-        }
-
-
-        template <class FieldType>
-        struct mask_info
-        {
-            static bool const has_mask = false;
-        };
+        template <class T>
+        struct mask_info;
 
         template <>
         struct mask_info<field_type<protocol::OFPFW_NW_SRC_ALL>>
         {
-            static bool const has_mask = true;
-            static std::uint32_t const shift = protocol::OFPFW_NW_SRC_SHIFT;
-            static std::uint32_t const mask = protocol::OFPFW_NW_SRC_MASK;
+            static constexpr std::uint32_t shift = protocol::OFPFW_NW_SRC_SHIFT;
+            static constexpr std::uint32_t mask = protocol::OFPFW_NW_SRC_MASK;
         };
 
         template <>
         struct mask_info<field_type<protocol::OFPFW_NW_DST_ALL>>
         {
-            static bool const has_mask = true;
-            static std::uint32_t const shift = protocol::OFPFW_NW_DST_SHIFT;
-            static std::uint32_t const mask = protocol::OFPFW_NW_DST_MASK;
+            static constexpr std::uint32_t shift = protocol::OFPFW_NW_DST_SHIFT;
+            static constexpr std::uint32_t mask = protocol::OFPFW_NW_DST_MASK;
         };
 
-
-        template <class FieldType, bool = match_field_detail::mask_info<FieldType>::has_mask>
-        class match_field
+        template <class T, class FieldType>
+        void validate(T const&, FieldType) noexcept
         {
-        public:
-            using value_type = typename match_field_detail::field_value_type<FieldType>::type;
+        }
 
-            match_field(value_type const& value)
+        inline void validate(
+                  std::uint16_t const in_port
+                , field_type<protocol::OFPFW_IN_PORT>)
+        {
+            if (in_port == 0) {
+                throw std::runtime_error{"in_port zero is invalid"};
+            }
+            if (in_port > protocol::OFPP_MAX
+                    && in_port != protocol::OFPP_CONTROLLER
+                    && in_port != protocol::OFPP_LOCAL) {
+                throw std::runtime_error{"invalid in_port"};
+            }
+        }
+
+        inline void validate(
+                  std::uint16_t const vlan_vid
+                , field_type<protocol::OFPFW_DL_VLAN>)
+        {
+            if (vlan_vid > 0x0fff && vlan_vid != protocol::OFP_VLAN_NONE) {
+                throw std::runtime_error{"invalid vlan vid"};
+            }
+        }
+
+        inline void validate(
+                  std::uint8_t const vlan_pcp
+                , field_type<protocol::OFPFW_DL_VLAN_PCP>)
+        {
+            if (vlan_pcp > 0x07) {
+                throw std::runtime_error{"invalid vlan pcp"};
+            }
+        }
+
+        inline void validate(
+                std::uint8_t const ip_dscp, field_type<protocol::OFPFW_NW_TOS>)
+        {
+            if (ip_dscp > 0x3f) {
+                throw std::runtime_error{"invalid dscp"};
+            }
+        }
+
+        inline auto get_dl_addr(
+                  v10_detail::ofp_match& match
+                , field_type<protocol::OFPFW_DL_DST>) noexcept
+            -> std::uint8_t(&)[protocol::OFP_ETH_ALEN]
+        {
+            return match.dl_dst;
+        }
+
+        inline auto get_dl_addr(
+                  v10_detail::ofp_match const& match
+                , field_type<protocol::OFPFW_DL_DST>) noexcept
+            -> std::uint8_t const(&)[protocol::OFP_ETH_ALEN]
+        {
+            return match.dl_dst;
+        }
+
+        inline auto get_dl_addr(
+                  v10_detail::ofp_match& match
+                , field_type<protocol::OFPFW_DL_SRC>) noexcept
+            -> std::uint8_t(&)[protocol::OFP_ETH_ALEN]
+        {
+            return match.dl_src;
+        }
+
+        inline auto get_dl_addr(
+                  v10_detail::ofp_match const& match
+                , field_type<protocol::OFPFW_DL_SRC>) noexcept
+            -> std::uint8_t const(&)[protocol::OFP_ETH_ALEN]
+        {
+            return match.dl_src;
+        }
+
+    } // namespace match_detail
+
+
+    class match_set;
+
+
+    namespace match {
+
+        template <class FieldType>
+        class match_field
+            : private boost::equality_comparable<match_field<FieldType>>
+        {
+            using member_index = typename boost::fusion::result_of::value_at_key<
+                match_detail::match_field_index_table, FieldType
+            >::type;
+
+        public:
+            using value_type = typename boost::fusion::result_of::value_at<
+                v10_detail::ofp_match, member_index
+            >::type;
+
+            explicit match_field(value_type const& value) noexcept
                 : value_(value)
             {
             }
 
-            auto value() const
+            auto value() const noexcept
                 -> value_type const&
             {
                 return value_;
             }
 
-            void set_value(v10_detail::ofp_match& match) const
+            template <class MatchField>
+            static auto validate(MatchField&& field)
+                -> typename std::enable_if<
+                      is_same_value_type<MatchField, match_field>::value
+                    , MatchField&&
+                   >::type
             {
-                match_field_detail::copy_to_match(match, value(), FieldType{});
+                match_detail::validate(field.value(), FieldType{});
+                return std::forward<MatchField>(field);
+            }
+
+            static auto create(value_type const& value)
+                -> match_field
+            {
+                return validate(match_field{value});
+            }
+
+        private:
+            friend match_set;
+
+            void set_value(v10_detail::ofp_match& match) const noexcept
+            {
+                boost::fusion::at<member_index>(match) = value();
                 match.wildcards &= ~FieldType::value;
             }
 
-            static auto is_wildcard(v10_detail::ofp_match const& match)
+            static auto is_wildcard(v10_detail::ofp_match const& match) noexcept
                 -> bool
             {
                 return match.wildcards & FieldType::value;
             }
 
-            static auto from_match(v10_detail::ofp_match const& match)
+            static auto create_from_match(
+                    v10_detail::ofp_match const& match) noexcept
                 -> match_field
             {
-                return match_field{match_field_detail::field_value(match, FieldType{})};
+                return match_field{boost::fusion::at<member_index>(match)};
+            }
+
+            static void erase_from_match(v10_detail::ofp_match& match) noexcept
+            {
+                boost::fusion::at<member_index>(match) = 0;
+                match.wildcards |= FieldType::value;
+            }
+
+        private:
+            value_type value_;
+        };
+
+        template <>
+        inline void
+        match_field<match_detail::field_type<protocol::OFPFW_NW_TOS>>
+        ::set_value(v10_detail::ofp_match& match) const noexcept
+        {
+            boost::fusion::at<member_index>(match) = value() << 2;
+            match.wildcards &= ~protocol::OFPFW_NW_TOS;
+        }
+
+        template <>
+        inline auto
+        match_field<match_detail::field_type<protocol::OFPFW_NW_TOS>>
+        ::create_from_match(v10_detail::ofp_match const& match) noexcept
+            -> match_field
+        {
+            return match_field{boost::fusion::at<member_index>(match) >> 2};
+        }
+
+        template <class FieldType>
+        auto operator==(
+                  match_field<FieldType> const& lhs
+                , match_field<FieldType> const& rhs) noexcept
+            -> bool
+        {
+            return lhs.value() == rhs.value();
+        }
+
+
+        template <class FieldType>
+        class dl_addr_match_field
+            : private boost::equality_comparable<dl_addr_match_field<FieldType>>
+        {
+        public:
+            using value_type = canard::mac_address;
+
+            explicit dl_addr_match_field(value_type const& value)
+                : value_(value)
+            {
+            }
+
+            auto value() const noexcept
+                -> value_type const&
+            {
+                return value_;
+            }
+
+            template <class MatchField>
+            static auto validate(MatchField&& field)
+                -> typename std::enable_if<
+                      is_same_value_type<MatchField, dl_addr_match_field>::value
+                    , MatchField&&
+                   >::type
+            {
+                return std::forward<MatchField>(field);
+            }
+
+            static auto create(value_type const& value)
+                -> dl_addr_match_field
+            {
+                return validate(dl_addr_match_field{value});
+            }
+
+        private:
+            friend match_set;
+
+            void set_value(v10_detail::ofp_match& match) const noexcept
+            {
+                std::memcpy(match_detail::get_dl_addr(match, FieldType{})
+                          , value().to_bytes().data()
+                          , value().to_bytes().size());
+                match.wildcards &= ~FieldType::value;
+            }
+
+            static auto is_wildcard(v10_detail::ofp_match const& match) noexcept
+                -> bool
+            {
+                return match.wildcards & FieldType::value;
+            }
+
+
+            static auto create_from_match(
+                    v10_detail::ofp_match const& match) noexcept
+                -> dl_addr_match_field
+            {
+                return dl_addr_match_field{
+                    value_type{match_detail::get_dl_addr(match, FieldType{})}
+                };
+            }
+
+            static void erase_from_match(v10_detail::ofp_match& match) noexcept
+            {
+                std::memset(match_detail::get_dl_addr(match, FieldType{})
+                          , 0, protocol::OFP_ETH_ALEN);
+                match.wildcards |= FieldType::value;
             }
 
         private:
@@ -218,89 +323,157 @@ namespace v10 {
         };
 
         template <class FieldType>
-        class match_field<FieldType, true>
+        auto operator==(
+                  dl_addr_match_field<FieldType> const& lhs
+                , dl_addr_match_field<FieldType> const& rhs) noexcept
+            -> bool
         {
-            using mask_info = match_field_detail::mask_info<FieldType>;
+            return lhs.value() == rhs.value();
+        }
+
+
+        template <class FieldType>
+        class nw_addr_match_field
+            : private boost::equality_comparable<nw_addr_match_field<FieldType>>
+        {
+            using member_index = typename boost::fusion::result_of::value_at_key<
+                match_detail::match_field_index_table, FieldType
+            >::type;
+
+            using mask_info = match_detail::mask_info<FieldType>;
 
         public:
-            using value_type = typename match_field_detail::field_value_type<FieldType>::type;
+            using value_type = boost::asio::ip::address_v4;
 
-            explicit match_field(value_type const value, std::uint8_t const cidr_suffix = 32)
+            explicit nw_addr_match_field(
+                      value_type const& value
+                    , std::uint8_t const prefix_length = 32)
                 : value_(value)
-                , cidr_suffix_(cidr_suffix)
+                , prefix_length_(prefix_length)
             {
             }
 
-            auto value() const
+            explicit nw_addr_match_field(
+                      boost::asio::ip::address const value
+                    , std::uint8_t const prefix_length = 32)
+                : nw_addr_match_field{value.to_v4(), prefix_length}
+            {
+            }
+
+            auto value() const noexcept
                 -> value_type const&
             {
                 return value_;
             }
 
-            auto cidr_suffix() const
+            auto prefix_length() const noexcept
                 -> std::uint8_t
             {
-                return cidr_suffix_;
+                return prefix_length_;
             }
 
-            void set_value(v10_detail::ofp_match& match) const
+            auto wildcard_bit_count() const noexcept
+                -> std::uint32_t
             {
-                match_field_detail::copy_to_match(match, value(), FieldType{});
-                match.wildcards &= ~mask_info::mask;
-                match.wildcards |= (std::uint32_t{32} - cidr_suffix_) << mask_info::shift;
+                return 32 - prefix_length();
             }
 
-            static auto is_wildcard(v10_detail::ofp_match const& match)
-                -> bool
+            template <class MatchField>
+            static auto validate(MatchField&& field)
+                -> typename std::enable_if<
+                      is_same_value_type<MatchField, nw_addr_match_field>::value
+                    , MatchField&&
+                   >::type
             {
-                return cidr_suffix(match) == 0;
+                if (field.prefix_length() > 32) {
+                    throw std::runtime_error{"invalid prefix length"};
+                }
+                return std::forward<MatchField>(field);
             }
 
-            static auto from_match(v10_detail::ofp_match const& match)
-                -> match_field
+            template <class IPAddress>
+            static auto create(
+                    IPAddress const& value, std::uint8_t const prefix_length)
+                -> nw_addr_match_field
             {
-                return match_field{
-                      match_field_detail::field_value(match, FieldType{})
-                    , cidr_suffix(match)
-                };
+                return validate(nw_addr_match_field{value, prefix_length});
             }
 
         private:
-            static auto cidr_suffix(v10_detail::ofp_match const& match)
+            friend match_set;
+
+            void set_value(v10_detail::ofp_match& match) const noexcept
+            {
+                boost::fusion::at<member_index>(match) = value().to_ulong();
+                match.wildcards &= ~mask_info::mask;
+                match.wildcards |= (wildcard_bit_count() << mask_info::shift);
+            }
+
+            static auto is_wildcard(v10_detail::ofp_match const& match) noexcept
+                -> bool
+            {
+                return match.wildcards & FieldType::value;
+            }
+
+            static auto create_from_match(v10_detail::ofp_match const& match)
+                -> nw_addr_match_field
+            {
+                return nw_addr_match_field{
+                      value_type{boost::fusion::at<member_index>(match)}
+                    , calc_prefix_length(match)
+                };
+            }
+
+            static void erase_from_match(v10_detail::ofp_match& match) noexcept
+            {
+                boost::fusion::at<member_index>(match) = 0;
+                match.wildcards |= FieldType::value;
+            }
+
+            static auto calc_prefix_length(
+                    v10_detail::ofp_match const& match) noexcept
                 -> std::uint8_t
             {
                 auto const mask_value
-                    = (mask_info::mask & match.wildcards) >> mask_info::shift;
-                return 32 - std::min<std::uint8_t>(mask_value, 32);
+                    = (match.wildcards & mask_info::mask) >> mask_info::shift;
+                return 32 - mask_value;
             }
 
         private:
             value_type value_;
-            std::uint8_t cidr_suffix_;
+            std::uint8_t prefix_length_;
         };
 
-    } // namespace match_field_detail
+        template <class FieldType>
+        auto operator==(
+                  nw_addr_match_field<FieldType> const& lhs
+                , nw_addr_match_field<FieldType> const& rhs) noexcept
+            -> bool
+        {
+            return lhs.prefix_length() == rhs.prefix_length()
+                && (lhs.value().to_ulong() >> lhs.wildcard_bit_count())
+                == (rhs.value().to_ulong() >> rhs.wildcard_bit_count());
+        }
 
-    namespace match {
 
-        using in_port = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_IN_PORT>>;
-        using eth_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_SRC>>;
-        using eth_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_DST>>;
-        using vlan_vid = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_VLAN>>;
-        using vlan_pcp = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_VLAN_PCP>>;
-        using eth_type = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_TYPE>>;
-        using ipv4_tos = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_DL_TYPE>>;
-        using ip_proto = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_PROTO>>;
-        using ipv4_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_SRC_ALL>>;
-        using ipv4_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_DST_ALL>>;
-        using arp_spa = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_SRC_ALL>>;
-        using arp_tpa = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_NW_DST_ALL>>;
-        using tcp_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_SRC>>;
-        using tcp_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_DST>>;
-        using udp_src = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_SRC>>;
-        using udp_dst = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_DST>>;
-        using icmpv4_type = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_SRC>>;
-        using icmpv4_code = match_field_detail::match_field<match_field_detail::field_type<protocol::OFPFW_TP_DST>>;
+        using in_port = match_field<match_detail::field_type<protocol::OFPFW_IN_PORT>>;
+        using eth_src = dl_addr_match_field<match_detail::field_type<protocol::OFPFW_DL_SRC>>;
+        using eth_dst = dl_addr_match_field<match_detail::field_type<protocol::OFPFW_DL_DST>>;
+        using vlan_vid = match_field<match_detail::field_type<protocol::OFPFW_DL_VLAN>>;
+        using vlan_pcp = match_field<match_detail::field_type<protocol::OFPFW_DL_VLAN_PCP>>;
+        using eth_type = match_field<match_detail::field_type<protocol::OFPFW_DL_TYPE>>;
+        using ip_dscp = match_field<match_detail::field_type<protocol::OFPFW_NW_TOS>>;
+        using ip_proto = match_field<match_detail::field_type<protocol::OFPFW_NW_PROTO>>;
+        using ipv4_src = nw_addr_match_field<match_detail::field_type<protocol::OFPFW_NW_SRC_ALL>>;
+        using ipv4_dst = nw_addr_match_field<match_detail::field_type<protocol::OFPFW_NW_DST_ALL>>;
+        using arp_spa = nw_addr_match_field<match_detail::field_type<protocol::OFPFW_NW_SRC_ALL>>;
+        using arp_tpa = nw_addr_match_field<match_detail::field_type<protocol::OFPFW_NW_DST_ALL>>;
+        using tcp_src = match_field<match_detail::field_type<protocol::OFPFW_TP_SRC>>;
+        using tcp_dst = match_field<match_detail::field_type<protocol::OFPFW_TP_DST>>;
+        using udp_src = match_field<match_detail::field_type<protocol::OFPFW_TP_SRC>>;
+        using udp_dst = match_field<match_detail::field_type<protocol::OFPFW_TP_DST>>;
+        using icmpv4_type = match_field<match_detail::field_type<protocol::OFPFW_TP_SRC>>;
+        using icmpv4_code = match_field<match_detail::field_type<protocol::OFPFW_TP_DST>>;
 
     } // namespace match
 
