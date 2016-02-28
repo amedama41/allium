@@ -1,6 +1,9 @@
 #define BOOST_TEST_DYN_LINK
 #include <canard/network/protocol/openflow/v10/action/set_field.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/data/monomorphic.hpp>
+#include <boost/test/data/monomorphic/generators/xrange.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -12,6 +15,8 @@ namespace of = canard::network::openflow;
 namespace v10 = of::v10;
 namespace detail = v10::v10_detail;
 namespace actions = v10::actions;
+
+namespace bdata = boost::unit_test::data;
 
 namespace {
 
@@ -50,6 +55,72 @@ struct set_tcp_src_fixture
 }
 
 BOOST_AUTO_TEST_SUITE(actions_test)
+
+BOOST_AUTO_TEST_SUITE(set_vlan_vid_test)
+
+    BOOST_AUTO_TEST_CASE(construct_test)
+    {
+        auto const vid = std::uint16_t{0x0fff};
+
+        auto const sut = actions::set_vlan_vid{vid};
+
+        BOOST_TEST(sut.type() == v10::protocol::OFPAT_SET_VLAN_VID);
+        BOOST_TEST(sut.length() == sizeof(detail::ofp_action_vlan_vid));
+        BOOST_TEST(sut.value() == vid);
+    }
+
+    BOOST_DATA_TEST_CASE(
+              create_success_test
+            , bdata::make(std::vector<std::uint16_t>{
+                0x0000, 0x1000 / 2, 0x0fff, v10::protocol::OFP_VLAN_NONE
+              })
+            , vid)
+    {
+        auto const sut = actions::set_vlan_vid::create(vid);
+
+        BOOST_TEST(sut.value() == vid);
+    }
+
+    BOOST_DATA_TEST_CASE(
+              create_failure_test
+            , bdata::make(std::vector<std::uint16_t>{
+                0x1000, (0x1000 + 0xffff) / 2, 0xfffe
+              })
+            , vid)
+    {
+        BOOST_CHECK_THROW(
+                actions::set_vlan_vid::create(vid), std::runtime_error);
+    }
+
+BOOST_AUTO_TEST_SUITE_END() // set_vlan_vid_test
+
+BOOST_AUTO_TEST_SUITE(set_vlan_pcp_test)
+
+    BOOST_AUTO_TEST_CASE(construct_test)
+    {
+        auto const pcp = std::uint8_t{0x01};
+
+        auto const sut = actions::set_vlan_pcp{pcp};
+
+        BOOST_TEST(sut.type() == v10::protocol::OFPAT_SET_VLAN_PCP);
+        BOOST_TEST(sut.length() == sizeof(detail::ofp_action_vlan_pcp));
+        BOOST_TEST(sut.value() == pcp);
+    }
+
+    BOOST_DATA_TEST_CASE(create_success_test, bdata::xrange(0x00, 0x08), pcp)
+    {
+        auto const sut = actions::set_vlan_pcp::create(pcp);
+
+        BOOST_TEST(sut.value() == pcp);
+    }
+
+    BOOST_DATA_TEST_CASE(create_failure_test, bdata::xrange(0x08, 0xff), pcp)
+    {
+        BOOST_CHECK_THROW(
+                actions::set_vlan_pcp::create(pcp), std::runtime_error);
+    }
+
+BOOST_AUTO_TEST_SUITE_END() // set_vlan_pcp_test
 
 BOOST_AUTO_TEST_SUITE(set_eth_src_test)
 
@@ -179,6 +250,34 @@ BOOST_AUTO_TEST_SUITE(set_ipv4_dst_test)
     }
 
 BOOST_AUTO_TEST_SUITE_END() // set_ipv4_dst_test
+
+BOOST_AUTO_TEST_SUITE(set_ip_dscp_test)
+
+    BOOST_AUTO_TEST_CASE(construct_test)
+    {
+        auto const dscp = std::uint8_t{0x01};
+
+        auto const sut = actions::set_ip_dscp{dscp};
+
+        BOOST_TEST(sut.type() == v10::protocol::OFPAT_SET_NW_TOS);
+        BOOST_TEST(sut.length() == sizeof(detail::ofp_action_nw_tos));
+        BOOST_TEST(sut.value() == dscp);
+    }
+
+    BOOST_DATA_TEST_CASE(create_success_test, bdata::xrange(0x00, 0x40), dscp)
+    {
+        auto const sut = actions::set_ip_dscp::create(dscp);
+
+        BOOST_TEST(sut.value() == dscp);
+    }
+
+    BOOST_DATA_TEST_CASE(create_failure_test, bdata::xrange(0x40, 0xff), dscp)
+    {
+        BOOST_CHECK_THROW(
+                actions::set_ip_dscp::create(dscp), std::runtime_error);
+    }
+
+BOOST_AUTO_TEST_SUITE_END() // set_ip_dscp_test
 
 BOOST_AUTO_TEST_SUITE(set_tcp_src_test)
 
