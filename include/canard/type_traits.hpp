@@ -20,6 +20,12 @@ namespace canard {
     template <class T>
     using remove_cv_and_reference_t = remove_cvref_t<T>;
 
+    template <class T, class U>
+    struct is_same_value_type
+        : std::is_same<remove_cvref_t<T>, remove_cvref_t<U>>
+    {
+    };
+
     template <class T, class... U>
     struct is_related : std::false_type {};
 
