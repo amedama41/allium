@@ -34,7 +34,7 @@ namespace actions {
             , boost::fusion::pair<match::eth_dst  , ofp_action_info<protocol::OFPAT_SET_DL_DST   , v10_detail::ofp_action_dl_addr  > >
             , boost::fusion::pair<match::vlan_vid , ofp_action_info<protocol::OFPAT_SET_VLAN_VID , v10_detail::ofp_action_vlan_vid > >
             , boost::fusion::pair<match::vlan_pcp , ofp_action_info<protocol::OFPAT_SET_VLAN_PCP , v10_detail::ofp_action_vlan_pcp > >
-            , boost::fusion::pair<match::ipv4_tos , ofp_action_info<protocol::OFPAT_SET_NW_TOS   , v10_detail::ofp_action_nw_tos   > >
+            , boost::fusion::pair<match::ip_dscp  , ofp_action_info<protocol::OFPAT_SET_NW_TOS   , v10_detail::ofp_action_nw_tos   > >
             , boost::fusion::pair<match::ipv4_src , ofp_action_info<protocol::OFPAT_SET_NW_SRC   , v10_detail::ofp_action_nw_addr  > >
             , boost::fusion::pair<match::ipv4_dst , ofp_action_info<protocol::OFPAT_SET_NW_DST   , v10_detail::ofp_action_nw_addr  > >
             , boost::fusion::pair<match::tcp_src  , ofp_action_info<protocol::OFPAT_SET_TP_SRC   , v10_detail::ofp_action_tp_port  > >
@@ -193,7 +193,7 @@ namespace actions {
     using set_eth_dst = set_field<match::eth_dst>;
     using set_vlan_vid = set_field<match::vlan_vid>;
     using set_vlan_pcp = set_field<match::vlan_pcp>;
-    using set_ipv4_tos = set_field<match::ipv4_tos>;
+    using set_ip_dscp = set_field<match::ip_dscp>;
     using set_ipv4_src = set_field<match::ipv4_src>;
     using set_ipv4_dst = set_field<match::ipv4_dst>;
     using set_tcp_dst = set_field<match::tcp_dst>;
