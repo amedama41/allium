@@ -32,8 +32,7 @@ namespace actions {
         template <class Action>
         static auto validate(Action&& action)
             -> typename std::enable_if<
-                  std::is_same<canard::remove_cvref_t<Action>, strip_vlan>::value
-                , Action&&
+                  is_same_value_type<Action, strip_vlan>::value, Action&&
                >::type
         {
             return std::forward<Action>(action);

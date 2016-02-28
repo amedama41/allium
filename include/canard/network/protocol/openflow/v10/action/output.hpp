@@ -8,6 +8,7 @@
 #include <utility>
 #include <canard/network/protocol/openflow/v10/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v10/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -62,8 +63,7 @@ namespace actions {
         template <class Action>
         static auto validate(Action&& action)
             -> typename std::enable_if<
-                  std::is_same<canard::remove_cvref_t<Action>, output>::value
-                , Action&&
+                  is_same_value_type<Action, output>::value, Action&&
                >::type
         {
             auto const port_no = action.port_no();

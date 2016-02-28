@@ -156,8 +156,7 @@ namespace actions {
         template <class Action>
         static auto validate(Action&& action)
             -> typename std::enable_if<
-                  std::is_same<canard::remove_cvref_t<Action>, set_field>::value
-                , Action&&
+                  is_same_value_type<Action, set_field>::value, Action&&
                >::type
         {
             return std::forward<Action>(action);

@@ -53,8 +53,7 @@ namespace actions {
         template <class Action>
         static auto validate(Action&& action)
             -> typename std::enable_if<
-                  std::is_same<canard::remove_cvref_t<Action>, enqueue>::value
-                , Action&&
+                  is_same_value_type<Action, enqueue>::value, Action&&
                >::type
         {
             if (action.queue_id() == protocol::OFPQ_ALL) {
