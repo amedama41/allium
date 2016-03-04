@@ -22,7 +22,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    class oxm_match
+    class oxm_match_set
     {
     public:
         static constexpr protocol::ofp_match_type match_type
@@ -33,36 +33,36 @@ namespace v13 {
         template <
               class... OXMMatchFields
             , typename std::enable_if<
-                    !is_related<oxm_match, OXMMatchFields...>::value
+                    !is_related<oxm_match_set, OXMMatchFields...>::value
               >::type* = nullptr
         >
-        oxm_match(OXMMatchFields&&... oxm_fields)
+        oxm_match_set(OXMMatchFields&&... oxm_fields)
             : oxm_match_fields_{std::forward<OXMMatchFields>(oxm_fields)...}
             , length_(match_base_length + oxm_match_fields_.length())
         {
         }
 
-        oxm_match(oxm_match const&) = default;
+        oxm_match_set(oxm_match_set const&) = default;
 
-        oxm_match(oxm_match&& other)
+        oxm_match_set(oxm_match_set&& other)
             : oxm_match_fields_(std::move(other.oxm_match_fields_))
             , length_(other.length_)
         {
             other.length_ = match_base_length;
         }
 
-        auto operator=(oxm_match const&)
-            -> oxm_match& = default;
+        auto operator=(oxm_match_set const&)
+            -> oxm_match_set& = default;
 
-        auto operator=(oxm_match&& other)
-            -> oxm_match&
+        auto operator=(oxm_match_set&& other)
+            -> oxm_match_set&
         {
             auto match = std::move(other);
             this->swap(match);
             return *this;
         }
 
-        void swap(oxm_match& other)
+        void swap(oxm_match_set& other)
         {
             oxm_match_fields_.swap(other.oxm_match_fields_);
             std::swap(length_, other.length_);
@@ -129,7 +129,7 @@ namespace v13 {
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
-            -> oxm_match
+            -> oxm_match_set
         {
             std::advance(first, sizeof(std::uint16_t));
             auto const length = detail::decode<std::uint16_t>(first, last);
@@ -137,7 +137,7 @@ namespace v13 {
             auto oxm_fields
                 = v13_detail::oxm_match_field_set::decode(first, last);
             std::advance(first, v13_detail::padding_length(length));
-            return oxm_match{length, std::move(oxm_fields)};
+            return oxm_match_set{length, std::move(oxm_fields)};
         }
 
         static void validate(v13_detail::ofp_match const& match)
@@ -151,7 +151,7 @@ namespace v13 {
         }
 
     private:
-        oxm_match(std::uint16_t const length
+        oxm_match_set(std::uint16_t const length
                 , v13_detail::oxm_match_field_set&& oxm_field)
             : oxm_match_fields_{std::move(oxm_field)}
             , length_(length)

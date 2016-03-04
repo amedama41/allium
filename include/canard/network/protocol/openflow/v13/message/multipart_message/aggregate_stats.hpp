@@ -27,7 +27,7 @@ namespace multipart {
             = protocol::OFPMP_AGGREGATE;
 
         aggregate_stats_request(
-                  oxm_match match
+                  oxm_match_set match
                 , std::uint8_t const table_id
                 , v13::cookie_mask const& cookie_mask
                 , std::uint32_t const out_port = protocol::OFPP_ANY
@@ -51,7 +51,7 @@ namespace multipart {
         }
 
         aggregate_stats_request(
-                  oxm_match match
+                  oxm_match_set match
                 , std::uint8_t const table_id
                 , std::uint32_t const out_port = protocol::OFPP_ANY
                 , std::uint32_t const out_group = protocol::OFPG_ANY
@@ -103,7 +103,7 @@ namespace multipart {
         aggregate_stats_request(
                   v13_detail::ofp_multipart_request const& multipart_request
                 , v13_detail::ofp_aggregate_stats_request const& aggregate_stats_request
-                , oxm_match&& match)
+                , oxm_match_set&& match)
             : basic_multipart_request{
                   multipart_request, aggregate_stats_request, std::move(match)
               }

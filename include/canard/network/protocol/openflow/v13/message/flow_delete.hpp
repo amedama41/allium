@@ -42,7 +42,7 @@ namespace messages {
             }
 
             auto match() const noexcept
-                -> oxm_match const&
+                -> oxm_match_set const&
             {
                 return match_;
             }
@@ -98,12 +98,12 @@ namespace messages {
                 auto copy_first = first;
                 auto const ofp_match
                     = detail::decode<v13_detail::ofp_match>(copy_first, last);
-                oxm_match::validate(ofp_match);
+                oxm_match_set::validate(ofp_match);
                 if (std::distance(first, last)
                         != v13_detail::exact_length(ofp_match.length)) {
                     throw std::runtime_error{"oxm_match length is too big"};
                 }
-                auto match = oxm_match::decode(first, last);
+                auto match = oxm_match_set::decode(first, last);
 
                 return FlowDeleteType{flow_mod, std::move(match)};
             }
@@ -123,7 +123,7 @@ namespace messages {
 
         protected:
             flow_delete_base(
-                      oxm_match&& match
+                      oxm_match_set&& match
                     , std::uint16_t const priority
                     , std::uint64_t const cookie
                     , std::uint64_t const cookie_mask
@@ -159,7 +159,7 @@ namespace messages {
 
             flow_delete_base(
                       v13_detail::ofp_flow_mod const& flow_mod
-                    , oxm_match&& match)
+                    , oxm_match_set&& match)
                 : flow_mod_(flow_mod)
                 , match_(std::move(match))
             {
@@ -194,7 +194,7 @@ namespace messages {
 
         private:
             v13_detail::ofp_flow_mod flow_mod_;
-            oxm_match match_;
+            oxm_match_set match_;
         };
 
     } // namespace flow_mod_detail
@@ -207,7 +207,7 @@ namespace messages {
         static constexpr protocol::ofp_flow_mod_command command_type
             = protocol::OFPFC_DELETE;
 
-        flow_delete(oxm_match match
+        flow_delete(oxm_match_set match
                   , std::uint8_t const table_id
                   , v13::cookie_mask const cookie_mask
                   , std::uint32_t const out_port = protocol::OFPP_ANY
@@ -226,7 +226,7 @@ namespace messages {
         {
         }
 
-        flow_delete(oxm_match match
+        flow_delete(oxm_match_set match
                   , std::uint8_t const table_id
                   , std::uint32_t const out_port = protocol::OFPP_ANY
                   , std::uint32_t const out_group = protocol::OFPG_ANY
@@ -246,7 +246,7 @@ namespace messages {
         friend flow_delete_base;
 
         flow_delete(v13_detail::ofp_flow_mod const& flow_mod
-                  , oxm_match&& match)
+                  , oxm_match_set&& match)
             : flow_delete_base{flow_mod, std::move(match)}
         {
         }
@@ -280,7 +280,7 @@ namespace messages {
         }
 
         flow_delete_strict(
-                  oxm_match match
+                  oxm_match_set match
                 , std::uint16_t const priority
                 , std::uint8_t const table_id
                 , v13::cookie_mask const& cookie_mask
@@ -301,7 +301,7 @@ namespace messages {
         }
 
         flow_delete_strict(
-                  oxm_match match
+                  oxm_match_set match
                 , std::uint16_t const priority
                 , std::uint8_t const table_id
                 , std::uint32_t const out_port = protocol::OFPP_ANY
@@ -336,7 +336,7 @@ namespace messages {
 
         flow_delete_strict(
                   v13_detail::ofp_flow_mod const& flow_mod
-                , oxm_match&& match)
+                , oxm_match_set&& match)
             : flow_delete_base{flow_mod, std::move(match)}
         {
         }

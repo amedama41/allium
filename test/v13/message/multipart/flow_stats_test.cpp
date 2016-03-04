@@ -25,7 +25,7 @@ struct flow_entry_fixture {
     std::array<std::uint8_t, 6> eth_dst = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}};
     std::array<std::uint8_t, 6> eth_src = {{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}};
     v13::flow_entry entry = {
-          v13::oxm_match{
+          v13::oxm_match_set{
               v13::oxm_in_port{4}
             , v13::oxm_eth_dst{eth_dst}
             , v13::oxm_eth_src{eth_src}
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_SUITE(flow_stats_test)
     BOOST_FIXTURE_TEST_CASE(copy_assignment_test, flow_stats_fixture)
     {
         auto copy = multipart::flow_stats{
-              v13::flow_entry{v13::oxm_match{}, 0, 0, v13::instruction_set{}}
+              v13::flow_entry{v13::oxm_match_set{}, 0, 0, v13::instruction_set{}}
             , 0, 0
             , v13::timeouts{0, 0}, v13::elapsed_time{0, 0}, v13::counters{0, 0}
         };
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_SUITE(flow_stats_test)
     BOOST_FIXTURE_TEST_CASE(move_assignment_test, flow_stats_fixture)
     {
         auto copy = multipart::flow_stats{
-              v13::flow_entry{v13::oxm_match{}, 0, 0, v13::instruction_set{}}
+              v13::flow_entry{v13::oxm_match_set{}, 0, 0, v13::instruction_set{}}
             , 0, 0
             , v13::timeouts{0, 0}, v13::elapsed_time{0, 0}, v13::counters{0, 0}
         };
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_SUITE(flow_stats_request_test)
 
     BOOST_FIXTURE_TEST_CASE(copy_assignment_test, flow_stats_request_fixture)
     {
-        auto copy = multipart::flow_stats_request{v13::oxm_match{}, 0};
+        auto copy = multipart::flow_stats_request{v13::oxm_match_set{}, 0};
 
         copy = sut;
 
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_SUITE(flow_stats_request_test)
 
     BOOST_FIXTURE_TEST_CASE(move_assignment_test, flow_stats_request_fixture)
     {
-        auto copy = multipart::flow_stats_request{v13::oxm_match{}, 0};
+        auto copy = multipart::flow_stats_request{v13::oxm_match_set{}, 0};
         auto src = sut;
 
         copy = std::move(src);

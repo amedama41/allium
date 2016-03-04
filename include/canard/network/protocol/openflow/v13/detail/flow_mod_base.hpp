@@ -40,7 +40,7 @@ namespace flow_mod_detail {
         }
 
         auto match() const noexcept
-            -> oxm_match const&
+            -> oxm_match_set const&
         {
             return match_;
         }
@@ -79,12 +79,12 @@ namespace flow_mod_detail {
             auto copy_first = first;
             auto const ofp_match
                 = detail::decode<v13_detail::ofp_match>(copy_first, last);
-            oxm_match::validate(ofp_match);
+            oxm_match_set::validate(ofp_match);
             if (std::distance(first, last)
                     < v13_detail::exact_length(ofp_match.length)) {
                 throw std::runtime_error{"oxm_match length is too big"};
             }
-            auto match = oxm_match::decode(first, last);
+            auto match = oxm_match_set::decode(first, last);
 
             auto instructions = instruction_set::decode(first, last);
 
@@ -108,7 +108,7 @@ namespace flow_mod_detail {
 
     protected:
         flow_mod_base(
-                  oxm_match&& match
+                  oxm_match_set&& match
                 , std::uint16_t const priority
                 , std::uint64_t const cookie
                 , std::uint64_t const cookie_mask
@@ -149,7 +149,7 @@ namespace flow_mod_detail {
 
         flow_mod_base(
                  v13_detail::ofp_flow_mod const& flow_mod
-               , oxm_match&& match
+               , oxm_match_set&& match
                , instruction_set&& instructions)
             : flow_mod_(flow_mod)
             , match_(std::move(match))
@@ -188,7 +188,7 @@ namespace flow_mod_detail {
 
     private:
         v13_detail::ofp_flow_mod flow_mod_;
-        oxm_match match_;
+        oxm_match_set match_;
         instruction_set instructions_;
     };
 

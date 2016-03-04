@@ -87,7 +87,7 @@ namespace messages {
         friend flow_mod_base;
 
         flow_add(v13_detail::ofp_flow_mod const& flow_mod
-               , oxm_match&& match
+               , oxm_match_set&& match
                , instruction_set&& instructions)
             : flow_mod_base{
                 flow_mod, std::move(match), std::move(instructions)

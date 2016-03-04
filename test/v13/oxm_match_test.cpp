@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_AUTO_TEST_CASE(constructor_test)
     {
-        auto const sut = oxm_match{};
+        auto const sut = oxm_match_set{};
 
         BOOST_CHECK_EQUAL(sut.type(), protocol::OFPMT_OXM);
         BOOST_CHECK_EQUAL(sut.length(), 4);
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
         auto lvalue = oxm_in_port{1};
         auto const clvalue = oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}};
         auto rvalue = oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}};
-        auto const sut = oxm_match{
+        auto const sut = oxm_match_set{
               oxm_in_port{2}, oxm_eth_type{0x0806}
             , lvalue, clvalue, std::move(rvalue), oxm_eth_type{0x0800}
         };
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_AUTO_TEST_CASE(copy_constructor_test)
     {
-        auto sut = oxm_match{
+        auto sut = oxm_match_set{
               oxm_in_port{1}
             , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
             , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
 
     BOOST_AUTO_TEST_CASE(move_constructor_test)
     {
-        auto sut = oxm_match{
+        auto sut = oxm_match_set{
               oxm_in_port{1}
             , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
             , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
@@ -75,13 +75,13 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
 
     BOOST_AUTO_TEST_CASE(copy_assign_test)
     {
-        auto sut = oxm_match{
+        auto sut = oxm_match_set{
               oxm_in_port{1}
             , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
             , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
             , oxm_eth_type{0x0800, 0x0800}
         }; // 8 + 10 + 10 + 8 = 36
-        auto copy = oxm_match{
+        auto copy = oxm_match_set{
               oxm_in_phy_port{1}, oxm_ipv4_src{0x7f000001}, oxm_ipv4_dst{0x7f000002}
         }; // 8 + 8 + 8 = 24
 
@@ -93,13 +93,13 @@ BOOST_AUTO_TEST_SUITE(assignment_test)
 
     BOOST_AUTO_TEST_CASE(move_assign_test)
     {
-        auto sut = oxm_match{
+        auto sut = oxm_match_set{
               oxm_in_port{1}
             , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
             , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
             , oxm_eth_type{0x0800, 0x0800}
         }; // 8 + 10 + 10 + 8 = 36
-        auto copy = oxm_match{
+        auto copy = oxm_match_set{
               oxm_in_phy_port{1}, oxm_ipv4_src{0x7f000001}, oxm_ipv4_dst{0x7f000002}
         }; // 8 + 8 + 8 = 24
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_SUITE_END() // assignment_test
 
 struct empty_oxm_match_fixture
 {
-    oxm_match sut{};
+    oxm_match_set sut{};
 };
 BOOST_FIXTURE_TEST_SUITE(when_init_state_is_empty, empty_oxm_match_fixture)
 
@@ -155,7 +155,7 @@ BOOST_FIXTURE_TEST_SUITE(when_init_state_is_empty, empty_oxm_match_fixture)
         BOOST_CHECK_EQUAL(buffer.size(), 8);
 
         auto it = buffer.begin();
-        auto const decoded_match = oxm_match::decode(it, buffer.end());
+        auto const decoded_match = oxm_match_set::decode(it, buffer.end());
 
         BOOST_CHECK_EQUAL(decoded_match.type(), sut.type());
         BOOST_CHECK_EQUAL(decoded_match.length(), sut.length());
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_SUITE_END() // when_init_state_is_empty
 
 struct in_port_eth_type_ip_proto_matching_oxm_match_fixture
 {
-    oxm_match sut{
+    oxm_match_set sut{
         oxm_in_port{4}, oxm_eth_type{0x0800}, oxm_ip_proto{3, 0x03}
     };
 };
@@ -208,7 +208,7 @@ BOOST_FIXTURE_TEST_SUITE(when_init_state_has_some_oxm_match_field, in_port_eth_t
         BOOST_CHECK_EQUAL(buffer.size(), v13_detail::exact_length(sut.length()));
 
         auto it = buffer.begin();
-        auto const decoded_match = oxm_match::decode(it, buffer.end());
+        auto const decoded_match = oxm_match_set::decode(it, buffer.end());
 
         BOOST_CHECK_EQUAL(decoded_match.type(), sut.type());
         BOOST_CHECK_EQUAL(decoded_match.length(), sut.length());

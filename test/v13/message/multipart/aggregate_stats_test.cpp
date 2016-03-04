@@ -23,7 +23,7 @@ auto operator ""_bin(char const* const str, std::size_t const size)
 struct aggregate_stats_request_fixture
 {
     multipart::aggregate_stats_request sut{
-          v13::oxm_match{
+          v13::oxm_match_set{
               v13::oxm_in_port{4}
             , v13::oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
           } // 4 + 8 + 10 = 22
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_SUITE(aggregate_stats_request_test)
 
     BOOST_AUTO_TEST_CASE(construct_from_match_test)
     {
-        auto const match = v13::oxm_match{
+        auto const match = v13::oxm_match_set{
               v13::oxm_in_port{4}
             , v13::oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
             , v13::oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_SUITE(aggregate_stats_request_test)
 
     BOOST_AUTO_TEST_CASE(construct_from_cookie_mask_test)
     {
-        auto const match = v13::oxm_match{
+        auto const match = v13::oxm_match_set{
               v13::oxm_in_port{4}
         }; // 4 + 8 = 12
         auto const table_id = std::uint8_t{proto::OFPTT_ALL};
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_SUITE(aggregate_stats_request_test)
 
     BOOST_AUTO_TEST_CASE(construct_from_out_port_test)
     {
-        auto const match = v13::oxm_match{
+        auto const match = v13::oxm_match_set{
         }; // 4
         auto const table_id = std::uint8_t{254};
         auto const out_port = std::uint32_t{proto::OFPP_CONTROLLER};

@@ -20,7 +20,7 @@ auto operator ""_bin(char const* const str, std::size_t const size)
 
 struct oxm_match_fixture
 {
-    v13::oxm_match const match{
+    v13::oxm_match_set const match{
           v13::match::oxm_in_port{1}
         , v13::match::oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
         , v13::match::oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_SUITE(flow_removed_test)
     BOOST_FIXTURE_TEST_CASE(copy_assignment_test, flow_removed_fixutre)
     {
         auto copy = v13::messages::flow_removed{
-              v13::oxm_match{}, 0, 0, proto::OFPRR_IDLE_TIMEOUT, 0
+              v13::oxm_match_set{}, 0, 0, proto::OFPRR_IDLE_TIMEOUT, 0
             , v13::elapsed_time{0, 0}, v13::timeouts{0, 0}, v13::counters{0, 0}
         };
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_SUITE(flow_removed_test)
     {
         auto src = sut;
         auto copy = v13::messages::flow_removed{
-              v13::oxm_match{}, 0, 0, proto::OFPRR_IDLE_TIMEOUT, 0
+              v13::oxm_match_set{}, 0, 0, proto::OFPRR_IDLE_TIMEOUT, 0
             , v13::elapsed_time{0, 0}, v13::timeouts{0, 0}, v13::counters{0, 0}
         };
 

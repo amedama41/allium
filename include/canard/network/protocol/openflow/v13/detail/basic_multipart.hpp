@@ -244,7 +244,7 @@ namespace multipart_detail {
 
     public:
         auto match() const noexcept
-            -> oxm_match const&
+            -> oxm_match_set const&
         {
             return match_;
         }
@@ -271,12 +271,12 @@ namespace multipart_detail {
             auto it = first;
             auto const ofp_match
                 = detail::decode<v13_detail::ofp_match>(it, last);
-            oxm_match::validate(ofp_match);
+            oxm_match_set::validate(ofp_match);
             if (std::distance(first, last)
                     != v13_detail::exact_length(ofp_match.length)) {
                 throw std::runtime_error{"invalid oxm_match length"};
             }
-            auto match = oxm_match::decode(first, last);
+            auto match = oxm_match_set::decode(first, last);
 
             return T{multipart, body, std::move(match)};
         }
@@ -297,7 +297,7 @@ namespace multipart_detail {
         single_element_with_match_multipart(
                   std::uint16_t const flags
                 , BodyType const& body
-                , oxm_match&& match
+                , oxm_match_set&& match
                 , std::uint32_t const xid) noexcept
             : multipart_{
                   v13_detail::ofp_header{
@@ -321,7 +321,7 @@ namespace multipart_detail {
         single_element_with_match_multipart(
                   MultipartType const& multipart
                 , BodyType const& body
-                , oxm_match&& match) noexcept
+                , oxm_match_set&& match) noexcept
             : multipart_(multipart)
             , body_(body)
             , match_(std::move(match))
@@ -371,7 +371,7 @@ namespace multipart_detail {
     private:
         MultipartType multipart_;
         BodyType body_;
-        oxm_match match_;
+        oxm_match_set match_;
     };
 
 

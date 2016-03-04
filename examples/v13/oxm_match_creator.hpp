@@ -164,13 +164,13 @@ struct oxm_match_creator
         return true;
     }
 
-    canard::network::openflow::v13::oxm_match& match;
+    canard::network::openflow::v13::oxm_match_set& match;
 };
 
 auto oxm_match_from_packet(boost::iterator_range<unsigned char const*> packet)
-    -> canard::network::openflow::v13::oxm_match
+    -> canard::network::openflow::v13::oxm_match_set
 {
-    auto match = canard::network::openflow::v13::oxm_match{};
+    auto match = canard::network::openflow::v13::oxm_match_set{};
     canard::for_each_header(packet, oxm_match_creator{match});
     return match;
 }

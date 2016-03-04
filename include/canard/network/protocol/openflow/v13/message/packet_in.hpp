@@ -44,7 +44,7 @@ namespace messages {
                 , protocol::ofp_packet_in_reason const reason
                 , std::uint8_t const table_id
                 , std::uint64_t const cookie
-                , oxm_match match
+                , oxm_match_set match
                 , binary_data data
                 , std::uint32_t const xid = get_xid())
             : packet_in_{
@@ -75,7 +75,7 @@ namespace messages {
                 , protocol::ofp_packet_in_reason const reason
                 , std::uint8_t const table_id
                 , std::uint64_t const cookie
-                , oxm_match match
+                , oxm_match_set match
                 , Range const& data
                 , std::uint32_t const xid = get_xid())
             : packet_in{
@@ -162,7 +162,7 @@ namespace messages {
         }
 
         auto match() const noexcept
-            -> oxm_match const&
+            -> oxm_match_set const&
         {
             return match_;
         }
@@ -225,7 +225,7 @@ namespace messages {
                 throw std::runtime_error{"invalid oxm_match length"};
             }
 
-            auto match = oxm_match::decode(first, last);
+            auto match = oxm_match_set::decode(first, last);
 
             std::advance(first, data_alignment_padding_size);
 
@@ -250,7 +250,7 @@ namespace messages {
 
     private:
         packet_in(v13_detail::ofp_packet_in const& pkt_in
-                , oxm_match&& match
+                , oxm_match_set&& match
                 , data_type&& data)
             : packet_in_(pkt_in)
             , match_(std::move(match))
@@ -260,7 +260,7 @@ namespace messages {
 
     private:
         v13_detail::ofp_packet_in packet_in_;
-        oxm_match match_;
+        oxm_match_set match_;
         data_type data_;
     };
 

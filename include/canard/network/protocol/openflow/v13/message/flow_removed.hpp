@@ -38,7 +38,7 @@ namespace messages {
             = protocol::OFPT_FLOW_REMOVED;
 
         flow_removed(
-                  oxm_match match
+                  oxm_match_set match
                 , std::uint16_t const priority
                 , std::uint64_t const cookie
                 , protocol::ofp_flow_removed_reason const reason
@@ -125,7 +125,7 @@ namespace messages {
         }
 
         auto match() const noexcept
-            -> oxm_match const&
+            -> oxm_match_set const&
         {
             return match_;
         }
@@ -152,11 +152,11 @@ namespace messages {
             auto copy_first = first;
             auto const ofp_match
                 = detail::decode<v13_detail::ofp_match>(copy_first, last);
-            oxm_match::validate(ofp_match);
+            oxm_match_set::validate(ofp_match);
             if (v13_detail::exact_length(ofp_match.length) != match_length) {
                 throw std::runtime_error{"invalid oxm_match length"};
             }
-            auto match = oxm_match::decode(first, last);
+            auto match = oxm_match_set::decode(first, last);
 
             return flow_removed{fremoved, std::move(match)};
         }
@@ -176,7 +176,7 @@ namespace messages {
 
     private:
         flow_removed(v13_detail::ofp_flow_removed const& fremoved
-                   , oxm_match&& match)
+                   , oxm_match_set&& match)
             : flow_removed_(fremoved)
             , match_(std::move(match))
         {
@@ -192,7 +192,7 @@ namespace messages {
 
     private:
         v13_detail::ofp_flow_removed flow_removed_;
-        oxm_match match_;
+        oxm_match_set match_;
     };
 
 } // namespace messages

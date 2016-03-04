@@ -24,7 +24,7 @@ struct flow_entry_fixture {
     std::array<std::uint8_t, 6> eth_dst = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}};
     std::array<std::uint8_t, 6> eth_src = {{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}};
     v13::flow_entry entry = {
-          v13::oxm_match{
+          v13::oxm_match_set{
               v13::oxm_in_port{4}
             , v13::oxm_eth_dst{eth_dst}
             , v13::oxm_eth_src{eth_src}
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_SUITE(flow_modify_strict_test)
 
     BOOST_AUTO_TEST_CASE(construct_from_match_test)
     {
-        auto const match = v13::oxm_match{
+        auto const match = v13::oxm_match_set{
             v13::oxm_eth_type{0x0800}, v13::oxm_ip_proto{17}, v13::oxm_udp_src{52}
         }; // 4 + 6 + 5 + 6 = 21
         auto const priority = std::uint16_t{32};
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_SUITE(flow_modify_strict_test)
 
     BOOST_AUTO_TEST_CASE(construct_from_cookie_mask_test)
     {
-        auto const match = v13::oxm_match{};
+        auto const match = v13::oxm_match_set{};
         auto const priority = std::uint16_t{0};
         auto const table_id = std::uint8_t{254};
         auto const instructions = v13::instruction_set{};
