@@ -10,7 +10,7 @@ SRCS = match_fields_test.cpp \
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libcommon_types.dylib
-TARGET = common_types_test
+TARGET = all_test
 
 ALL_TESTS = $(OBJS:.o=)
 

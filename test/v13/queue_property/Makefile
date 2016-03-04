@@ -10,7 +10,7 @@ SRCS = min_rate_test.cpp \
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libqueue_property_test.dylib
-TARGET = queue_property_test
+TARGET = all_test
 
 ALL_TESTS = $(OBJS:.o=)
 

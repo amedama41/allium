@@ -15,7 +15,7 @@ SRCS = description_test.cpp \
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libmultipart_test.dylib
-TARGET = multipart_test
+TARGET = all_test
 
 ALL_TESTS = $(OBJS:.o=)
 

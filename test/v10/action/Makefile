@@ -12,7 +12,7 @@ SRCS = output_test.cpp \
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libactions_test.dylib
-TARGET = actions_test
+TARGET = all_test
 
 ALL_TESTS = $(OBJS:.o=)
 

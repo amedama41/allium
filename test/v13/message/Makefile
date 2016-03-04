@@ -23,7 +23,7 @@ SRCS = error_test.cpp \
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libmessage_test.dylib
-TARGET = message_test
+TARGET = all_test
 
 ALL_TESTS = $(OBJS:.o=)
 
