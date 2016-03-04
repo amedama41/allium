@@ -1,5 +1,5 @@
 INCLUDES = -I../../../../include
-LDFLAGS = -lboost_unit_test_framework-mt
+LDFLAGS = -lboost_unit_test_framework-mt -lboost_system-mt
 CXX = clang++
 CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 # CXX = g++-4.9
