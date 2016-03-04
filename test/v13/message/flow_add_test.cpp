@@ -7,18 +7,14 @@
 #include <canard/network/protocol/openflow/v13/instructions.hpp>
 #include <canard/network/protocol/openflow/v13/oxm_match.hpp>
 
+#include "../../test_utility.hpp"
+
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
 namespace v13_detail = v13::v13_detail;
 using proto = v13::protocol;
 
 namespace {
-
-auto operator ""_bin(char const* const str, std::size_t const size)
-    -> std::vector<std::uint8_t>
-{
-    return std::vector<std::uint8_t>(str, str + size);
-}
 
 struct flow_entry_fixture {
     std::array<std::uint8_t, 6> eth_dst = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}};

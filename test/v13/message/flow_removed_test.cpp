@@ -5,18 +5,14 @@
 #include <cstdint>
 #include <vector>
 
+#include "../../test_utility.hpp"
+
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
 namespace v13_detail = v13::v13_detail;
 using proto = v13::protocol;
 
 namespace {
-
-auto operator ""_bin(char const* const str, std::size_t const size)
-    -> std::vector<std::uint8_t>
-{
-    return std::vector<std::uint8_t>(str, str + size);
-}
 
 struct oxm_match_fixture
 {
