@@ -17,7 +17,7 @@
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
-#include <canard/network/protocol/openflow/v13/oxm_match.hpp>
+#include <canard/network/protocol/openflow/v13/oxm_match_set.hpp>
 
 namespace canard {
 namespace network {

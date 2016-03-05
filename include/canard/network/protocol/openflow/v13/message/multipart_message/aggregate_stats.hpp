@@ -7,7 +7,7 @@
 #include <canard/network/protocol/openflow/v13/flow_entry.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_multipart.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
-#include <canard/network/protocol/openflow/v13/oxm_match.hpp>
+#include <canard/network/protocol/openflow/v13/oxm_match_set.hpp>
 
 namespace canard {
 namespace network {

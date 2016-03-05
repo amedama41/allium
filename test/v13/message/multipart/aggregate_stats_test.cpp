@@ -4,7 +4,7 @@
 
 #include <cstdint>
 #include <vector>
-#include <canard/network/protocol/openflow/v13/oxm_match.hpp>
+#include <canard/network/protocol/openflow/v13/oxm_match_set.hpp>
 
 #include "../../../test_utility.hpp"
 

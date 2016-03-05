@@ -28,6 +28,8 @@ namespace v13 {
         >::type;
 
     public:
+        using type_list = default_oxm_match_field_list;
+
         template <
               class OXMMatchField
             , typename std::enable_if<
