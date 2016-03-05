@@ -140,7 +140,7 @@ namespace messages {
         auto in_port() const
             -> std::uint32_t
         {
-            return match().get<oxm_in_port>()->oxm_value();
+            return match().get<oxm_match::in_port>().oxm_value();
         }
 
         auto reason() const noexcept
@@ -215,14 +215,12 @@ namespace messages {
             auto copy_first = first;
             auto const ofp_match
                 = detail::decode<v13_detail::ofp_match>(copy_first, last);
-            if (ofp_match.type != protocol::OFPMT_OXM) {
-                throw std::runtime_error{"match_type is not OFPMT_OXM"};
-            }
+            oxm_match_set::validate_ofp_match(ofp_match);
             auto const match_length
                 = v13_detail::exact_length(ofp_match.length);
             if (std::distance(first, last) - data_alignment_padding_size
                     < match_length) {
-                throw std::runtime_error{"invalid oxm_match length"};
+                throw std::runtime_error{"oxm_match length is too big"};
             }
 
             auto match = oxm_match_set::decode(first, last);
