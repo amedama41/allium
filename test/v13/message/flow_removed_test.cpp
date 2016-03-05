@@ -10,6 +10,7 @@
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
 namespace v13_detail = v13::v13_detail;
+namespace match = v13::oxm_match;
 using proto = v13::protocol;
 
 namespace {
@@ -17,10 +18,10 @@ namespace {
 struct oxm_match_fixture
 {
     v13::oxm_match_set const match{
-          v13::match::oxm_in_port{1}
-        , v13::match::oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
-        , v13::match::oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
-        , v13::match::oxm_eth_type{0x0800, 0x0800}
+          match::in_port{1}
+        , match::eth_dst{"\x01\x02\x03\x04\x05\x06"_mac}
+        , match::eth_src{"\x11\x12\x13\x14\x15\x16"_mac}
+        , match::eth_type{0x0800, 0x0800}
     };
 };
 

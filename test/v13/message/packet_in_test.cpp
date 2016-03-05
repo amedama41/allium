@@ -7,16 +7,12 @@
 #include <vector>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
+#include "../../test_utility.hpp"
+
 namespace of = canard::network::openflow;
 namespace v13 = canard::network::openflow::v13;
+namespace match = v13::oxm_match;
 using proto = v13::protocol;
-
-template <std::size_t N>
-static auto to_buffer(char const (&expected)[N])
-    -> std::vector<unsigned char>
-{
-    return std::vector<unsigned char>(expected, expected + N - 1);
-}
 
 BOOST_AUTO_TEST_SUITE(message_test)
 
@@ -32,10 +28,10 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         auto const table_id = std::uint8_t{0};
         auto const cookie = std::uint64_t{0xffffffffffffffff};
         auto const match = v13::oxm_match_set{
-              v13::match::oxm_in_port{1}
-            , v13::match::oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
-            , v13::match::oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
-            , v13::match::oxm_eth_type{0x0800, 0x0800}
+              match::in_port{1}
+            , match::eth_dst{"\x01\x02\x03\x04\x05\x06"_mac}
+            , match::eth_src{"\x11\x12\x13\x14\x15\x16"_mac}
+            , match::eth_type{0x0800, 0x0800}
         };
         char const bin[] = "\x00\x01\x02\x03\x04";
         auto data = of::binary_data{bin};
@@ -96,7 +92,7 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         auto const table_id = std::uint8_t{0xff};
         auto const cookie = std::uint64_t{0};
         auto const match = v13::oxm_match_set{
-            v13::match::oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
+            match::eth_src{"\x11\x12\x13\x14\x15\x16"_mac}
         };
         auto const bin = std::vector<unsigned char>{};
 
@@ -123,10 +119,10 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         v13::messages::packet_in pkt_in = v13::messages::packet_in{
               0x01234567, 512, proto::OFPR_NO_MATCH, 2, 0x0001020304050607
             , v13::oxm_match_set{
-                  v13::match::oxm_in_port{1}
-                , v13::match::oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
-                , v13::match::oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
-                , v13::match::oxm_eth_type{0x0800, 0x0800}
+                  match::in_port{1}
+                , match::eth_dst{"\x01\x02\x03\x04\x05\x06"_mac}
+                , match::eth_src{"\x11\x12\x13\x14\x15\x16"_mac}
+                , match::eth_type{0x0800, 0x0800}
               }
             , "\x00\xff\x01\xff\x02\xff\x03\xff\x04\xff\x05\xff\x06\xff\x07\xff"
             , 0x00010203
@@ -221,15 +217,15 @@ BOOST_AUTO_TEST_SUITE(packet_in_test)
         pkt_in.encode(buffer);
 
         BOOST_TEST(buffer.size() == pkt_in.length());
-        char const expected[]
+        auto const expected
             = "\x04\x0a\x00\x53\x00\x01\x02\x03" "\x01\x23\x45\x67\x02\x00\x00\x02"
               "\x00\x01\x02\x03\x04\x05\x06\x07" "\x00\x01\x00\x28\x80\x00\x00\x04"
               "\x00\x00\x00\x01\x80\x00\x06\x06" "\x01\x02\x03\x04\x05\x06\x80\x00"
               "\x08\x06\x11\x12\x13\x14\x15\x16" "\x80\x00\x0b\x04\x08\x00\x08\x00"
               "\x00\x00\x00\xff\x01\xff\x02\xff" "\x03\xff\x04\xff\x05\xff\x06\xff"
-              "\x07\xff\x00"
+              "\x07\xff\x00"_bin
             ;
-        BOOST_TEST(buffer == to_buffer(expected), boost::test_tools::per_element{});
+        BOOST_TEST(buffer == expected, boost::test_tools::per_element{});
     }
 
     BOOST_FIXTURE_TEST_CASE(decode_test, packet_in_fixture)

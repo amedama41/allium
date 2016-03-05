@@ -2,16 +2,12 @@
 #include <canard/network/protocol/openflow/v13/message/packet_out.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "../../test_utility.hpp"
+
 namespace of = canard::network::openflow;
 namespace v13 = canard::network::openflow::v13;
+namespace match = v13::oxm_match;
 using proto = v13::protocol;
-
-template <std::size_t N>
-static auto to_buffer(char const (&expected)[N])
-    -> std::vector<unsigned char>
-{
-    return std::vector<unsigned char>(expected, expected + N - 1);
-}
 
 BOOST_AUTO_TEST_SUITE(message_test)
 
@@ -49,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(packet_out_test)
         auto const in_port = proto::OFPP_CONTROLLER;
         auto const actions = v13::action_list{
               v13::actions::push_vlan{0x8100}
-            , v13::actions::set_field{v13::match::oxm_vlan_vid{3}}
+            , v13::actions::set_field{match::vlan_vid{3}}
             , v13::actions::output{3}
         };
         auto const xid = std::uint32_t{0x000001};
@@ -128,7 +124,7 @@ BOOST_AUTO_TEST_SUITE(packet_out_test)
             , proto::OFPP_CONTROLLER
             , v13::action_list{
                   v13::actions::push_vlan{0x8100}
-                , v13::actions::set_field{v13::match::oxm_vlan_vid{3}}
+                , v13::actions::set_field{match::vlan_vid{proto::OFPVID_PRESENT | 3}}
                 , v13::actions::output{3}
               }
             , 0x1234
@@ -212,14 +208,14 @@ BOOST_AUTO_TEST_SUITE(packet_out_test)
 
         BOOST_TEST(buffer.size() == sut.length());
 
-        char const expected[]
+        auto const expected
             = "\x04\x0d\x00\x47\x00\x00\x12\x34" "\xff\xff\xff\xff\xff\xff\xff\xfd"
               "\x00\x28\x00\x00\x00\x00\x00\x00" "\x00\x11\x00\x08\x81\x00\x00\x00"
               "\x00\x19\x00\x10\x80\x00\x0c\x02" "\x10\x03\x00\x00\x00\x00\x00\x00"
               "\x00\x00\x00\x10\x00\x00\x00\x03" "\xff\xff\x00\x00\x00\x00\x00\x00"
-              "\x10\x11\x12\x13\x14\x15\x00"
+              "\x10\x11\x12\x13\x14\x15\x00"_bin
             ;
-        BOOST_TEST(buffer == to_buffer(expected), boost::test_tools::per_element{});
+        BOOST_TEST(buffer == expected, boost::test_tools::per_element{});
     }
 
     BOOST_FIXTURE_TEST_CASE(decode_test, packet_out_fixture)

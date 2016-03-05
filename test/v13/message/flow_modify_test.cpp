@@ -11,32 +11,33 @@
 
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
+namespace match = v13::oxm_match;
 namespace v13_detail = v13::v13_detail;
 using proto = v13::protocol;
 
 namespace {
 
 struct flow_entry_fixture {
-    std::array<std::uint8_t, 6> eth_dst = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}};
-    std::array<std::uint8_t, 6> eth_src = {{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}};
+    canard::mac_address eth_dst = "\x01\x02\x03\x04\x05\x06"_mac;
+    canard::mac_address eth_src = "\x11\x12\x13\x14\x15\x16"_mac;
     v13::flow_entry entry = {
           v13::oxm_match_set{
-              v13::oxm_in_port{4}
-            , v13::oxm_eth_dst{eth_dst}
-            , v13::oxm_eth_src{eth_src}
+              match::in_port{4}
+            , match::eth_dst{eth_dst}
+            , match::eth_src{eth_src}
           } // 4 + 8 + 10 + 10 = 32
         , proto::OFP_DEFAULT_PRIORITY
         , 0xf1f2f3f4f5f6f7f8
         , v13::instruction_set{
               v13::instructions::apply_actions{
-                  v13::actions::set_field{v13::oxm_eth_dst{eth_src}}
-                , v13::actions::set_field{v13::oxm_eth_src{eth_dst}}
+                  v13::actions::set_field{match::eth_dst{eth_src}}
+                , v13::actions::set_field{match::eth_src{eth_dst}}
                 , v13::actions::output{4}
               } // 8 + 16 + 16 + 16 = 56
             , v13::instructions::clear_actions{} // 8
             , v13::instructions::write_actions{
-                  v13::actions::set_field{v13::oxm_eth_dst{eth_src}}
-                , v13::actions::set_field{v13::oxm_eth_src{eth_dst}}
+                  v13::actions::set_field{match::eth_dst{eth_src}}
+                , v13::actions::set_field{match::eth_src{eth_dst}}
               } // 8 + 16 + 16 = 40
           } // 56 + 8 + 40 = 104
     };
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_SUITE(flow_modify_strict_test)
     BOOST_AUTO_TEST_CASE(construct_from_match_test)
     {
         auto const match = v13::oxm_match_set{
-            v13::oxm_eth_type{0x0800}, v13::oxm_ip_proto{17}, v13::oxm_udp_src{52}
+            match::eth_type{0x0800}, match::ip_proto{17}, match::udp_src{52}
         }; // 4 + 6 + 5 + 6 = 21
         auto const priority = std::uint16_t{32};
         auto const table_id = std::uint8_t{1};

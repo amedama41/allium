@@ -11,19 +11,20 @@
 
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
+namespace match = v13::oxm_match;
 namespace v13_detail = v13::v13_detail;
 using proto = v13::protocol;
 
 namespace  {
 
 struct flow_entry_fixture {
-    std::array<std::uint8_t, 6> eth_dst = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}};
-    std::array<std::uint8_t, 6> eth_src = {{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}};
+    canard::mac_address eth_dst = "\x01\x02\x03\x04\x05\x06"_mac;
+    canard::mac_address eth_src = "\x11\x12\x13\x14\x15\x16"_mac;
     v13::flow_entry entry = {
           v13::oxm_match_set{
-              v13::oxm_in_port{4}
-            , v13::oxm_eth_dst{eth_dst}
-            , v13::oxm_eth_src{eth_src}
+              match::in_port{4}
+            , match::eth_dst{eth_dst}
+            , match::eth_src{eth_src}
           } // 4 + 8 + 10 + 10 = 32
         , proto::OFP_DEFAULT_PRIORITY
         , 0xf1f2f3f4f5f6f7f8
