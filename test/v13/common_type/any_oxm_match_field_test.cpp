@@ -31,15 +31,6 @@ BOOST_TEST_DONT_PRINT_LOG_VALUE(std::vector<std::uint8_t>)
 
 namespace {
 
-    auto operator"" _mac(char const* const str, std::size_t)
-        -> mac_address
-    {
-        auto const* byte = reinterpret_cast<std::uint8_t const*>(str);
-        return mac_address{
-            {byte[0], byte[1], byte[2], byte[3], byte[4], byte[5]}
-        };
-    }
-
     std::vector<v13::any_oxm_match_field> fields = {
           v13::any_oxm_match_field{match::in_port{0x01020304}}
         , v13::any_oxm_match_field{match::in_port{0x01020304, 0x0f0f0f0f}}

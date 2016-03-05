@@ -25,12 +25,6 @@ namespace bdata = boost::unit_test::data;
 
 namespace {
 
-auto operator""_ipv4(char const* const ipv4, std::size_t)
-    -> address_v4
-{
-    return address_v4::from_string(ipv4);
-}
-
 struct no_mask_ipv4_src_fixture
 {
     match::ipv4_src sut{"192.168.12.31"_ipv4};

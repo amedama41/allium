@@ -19,18 +19,6 @@ using canard::mac_address;
 
 namespace {
 
-auto operator""_mac(char const* const str, std::size_t const size)
-    -> canard::mac_address
-{
-    if (size != 6) {
-        throw std::runtime_error{"invalid size mac address"};
-    }
-    auto const bytes = reinterpret_cast<unsigned char const*>(str);
-    return canard::mac_address{
-        {{bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]}}
-    };
-}
-
 struct no_mask_eth_dst_fixture
 {
     match::eth_dst sut{"\x01\x02\x03\x04\x05\x06"_mac};

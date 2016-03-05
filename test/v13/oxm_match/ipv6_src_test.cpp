@@ -25,12 +25,6 @@ namespace bdata = boost::unit_test::data;
 
 namespace {
 
-auto operator""_ipv6(char const* const ipv6, std::size_t)
-    -> address_v6
-{
-    return address_v6::from_string(ipv6);
-}
-
 struct no_mask_ipv6_src_fixture
 {
     match::ipv6_src sut{"2001:db8::1234:0:0:9abc"_ipv6};
