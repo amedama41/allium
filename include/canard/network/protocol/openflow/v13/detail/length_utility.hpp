@@ -6,24 +6,31 @@
 namespace canard {
 namespace network {
 namespace openflow {
+namespace detail {
 namespace v13 {
 
-    namespace v13_detail {
+    inline auto exact_length(std::uint16_t const length)
+        -> std::uint16_t
+    {
+        return (length + 7) / 8 * 8;
+    }
 
-        inline auto exact_length(std::uint16_t const length)
-            -> std::uint16_t
-        {
-            return (length + 7) / 8 * 8;
-        }
+    inline auto padding_length(std::uint16_t const length)
+        -> std::uint16_t
+    {
+        return exact_length(length) - length;
+    }
 
-        inline auto padding_length(std::uint16_t const length)
-            -> std::uint16_t
-        {
-            return exact_length(length) - length;
-        }
+} // namespace v13
+} // namespace detail
 
-    } // namespace v13_detail
+namespace v13 {
+namespace v13_detail {
 
+    using detail::v13::exact_length;
+    using detail::v13::padding_length;
+
+} // namespace v13_detail
 } // namespace v13
 } // namespace openflow
 } // namespace network
