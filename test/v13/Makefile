@@ -10,7 +10,6 @@ UTILITY_TEST_SRCS = byteorder_test.cpp \
 					action_set_test.cpp \
 					any_action_test.cpp \
 					instruction_set_test.cpp \
-					oxm_match_test.cpp \
 					packet_queue_test.cpp \
 					port_test.cpp
 UTILITY_TEST_OBJS = $(UTILITY_TEST_SRCS:.cpp=.o)
