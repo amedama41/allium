@@ -149,7 +149,7 @@ namespace v13 {
         oxm_match_field_variant variant_;
     };
 
-    auto operator==(
+    inline auto operator==(
             any_oxm_match_field const& lhs, any_oxm_match_field const& rhs)
         -> bool
     {
