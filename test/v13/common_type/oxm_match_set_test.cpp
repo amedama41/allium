@@ -1,224 +1,378 @@
 #define BOOST_TEST_DYN_LINK
 #include <canard/network/protocol/openflow/v13/oxm_match.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include <cstdint>
 #include <utility>
 #include <vector>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 
-namespace canard {
-namespace network {
-namespace openflow {
-namespace v13 {
+#include "../../test_utility.hpp"
 
+namespace of = canard::network::openflow;
+namespace v13 = of::v13;
+namespace match = v13::oxm_match;
+namespace detail = v13::v13_detail;
+
+using proto = v13::protocol;
+
+namespace {
+
+struct oxm_match_set_fixture
+{
+    v13::oxm_match_set sut{
+          match::in_port{proto::OFPP_MAX} // 8
+        , match::eth_dst{"\x01\x02\x03\x04\x05\x06"_mac} // 10
+        , match::eth_type{0x0800} // 6
+        , match::vlan_vid{proto::OFPVID_PRESENT, proto::OFPVID_PRESENT} // 8
+        , match::ip_proto{6} // 5
+        , match::ipv4_src{"192.168.10.0"_ipv4, 24} // 12
+    }; // 4 + (8 + 10 + 6 + 8 + 5 + 12) = 53
+    std::vector<std::uint8_t> binary
+        = "\x00\x01\x00\x35\x80\x00\x00\x04""\xff\xff\xff\x00\x80\x00\x06\x06"
+          "\x01\x02\x03\x04\x05\x06\x80\x00""\x0a\x02\x08\x00\x80\x00\x0d\x04"
+          "\x10\x00\x10\x00\x80\x00\x14\x01""\x06\x80\x00\x17\x08\xc0\xa8\x0a"
+          "\x00\xff\xff\xff\x00\x00\x00\x00"_bin;
+};
+
+}
+
+BOOST_AUTO_TEST_SUITE(common_type_test)
 BOOST_AUTO_TEST_SUITE(oxm_match_test)
 
-BOOST_AUTO_TEST_SUITE(instantiation_test)
-
-    BOOST_AUTO_TEST_CASE(constructor_test)
+    BOOST_AUTO_TEST_CASE(default_construct_test)
     {
-        auto const sut = oxm_match_set{};
+        auto const sut = v13::oxm_match_set{};
 
-        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPMT_OXM);
-        BOOST_CHECK_EQUAL(sut.length(), 4);
+        BOOST_TEST(sut.type() == proto::OFPMT_OXM);
+        BOOST_TEST(sut.length() == 4);
+        BOOST_TEST(sut.empty());
+        BOOST_TEST(sut.size() == 0);
+        BOOST_TEST((sut.begin() == sut.end()));
     }
 
-    BOOST_AUTO_TEST_CASE(variadic_template_constructor_test)
+    BOOST_AUTO_TEST_CASE(construct_from_single_fields_test)
     {
-        auto lvalue = oxm_in_port{1};
-        auto const clvalue = oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}};
-        auto rvalue = oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}};
-        auto const sut = oxm_match_set{
-              oxm_in_port{2}, oxm_eth_type{0x0806}
-            , lvalue, clvalue, std::move(rvalue), oxm_eth_type{0x0800}
+        auto const in_phy_port = match::in_phy_port{1, 1}; // 12
+
+        auto const sut = v13::oxm_match_set{in_phy_port};
+
+        BOOST_TEST(sut.length() == 4 + 12);
+        BOOST_TEST(!sut.empty());
+        BOOST_TEST(sut.size() == 1);
+        BOOST_TEST((sut.begin() != sut.end()));
+
+        BOOST_TEST_REQUIRE(bool(sut.find<match::in_phy_port>()));
+        BOOST_TEST((sut.find(in_phy_port.oxm_type()) != sut.end()));
+        BOOST_TEST((sut.at(in_phy_port.oxm_type()) == in_phy_port));
+        BOOST_TEST((sut.get<match::in_phy_port>() == in_phy_port));
+    }
+
+    BOOST_AUTO_TEST_CASE(construct_from_multiple_fields_test)
+    {
+        auto const in_port = match::in_port{1}; // 8
+        auto const eth_dst = match::eth_dst{ // 10
+            "\x01\x02\x03\x04\x05\x06"_mac
+        };
+        auto const eth_src = match::eth_src{ // 16
+            "\x11\x12\x13\x14\x15\x16"_mac, "\xff\x12\xff\x14\xff\x16"_mac
+        };
+        auto const ipv4_src = match::ipv4_src{ // 12
+            "192.168.1.0"_ipv4, 24
         };
 
-        BOOST_CHECK_EQUAL(sut.type(), protocol::OFPMT_OXM);
-        BOOST_CHECK_EQUAL(sut.length(), 4 + 34);
-    }
-
-    BOOST_AUTO_TEST_CASE(copy_constructor_test)
-    {
-        auto sut = oxm_match_set{
-              oxm_in_port{1}
-            , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
-            , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
-            , oxm_eth_type{0x0800, 0x0800}
+        auto const sut = v13::oxm_match_set{
+            in_port, eth_dst, eth_src, ipv4_src
         };
 
-        auto const copy = sut;
+        BOOST_TEST(sut.length() == 4 + 8 + 10 + 16 + 12);
+        BOOST_TEST(!sut.empty());
+        BOOST_TEST(sut.size() == 4);
+        BOOST_TEST((sut.begin() != sut.end()));
 
-        BOOST_CHECK_EQUAL(copy.type(), sut.type());
-        BOOST_CHECK_EQUAL(copy.length(), sut.length());
+        BOOST_TEST_REQUIRE(bool(sut.find<match::in_port>()));
+        BOOST_TEST((sut.get<match::in_port>() == in_port));
+
+        BOOST_TEST_REQUIRE(bool(sut.find<match::eth_dst>()));
+        BOOST_TEST((sut.get<match::eth_dst>() == eth_dst));
+
+        BOOST_TEST_REQUIRE(bool(sut.find<match::eth_src>()));
+        BOOST_TEST((sut.get<match::eth_src>() == eth_src));
+
+        BOOST_TEST_REQUIRE(bool(sut.find<match::ipv4_src>()));
+        BOOST_TEST((sut.get<match::ipv4_src>() == ipv4_src));
     }
 
-    BOOST_AUTO_TEST_CASE(move_constructor_test)
+    BOOST_AUTO_TEST_CASE(construct_from_same_fields_test)
     {
-        auto sut = oxm_match_set{
-              oxm_in_port{1}
-            , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
-            , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
-            , oxm_eth_type{0x0800, 0x0800}
-        };
-        auto const expected_length = sut.length();
+        auto const in_port1 = match::in_port{1}; // 8
+        auto const eth_type = match::eth_type{0x0800}; // 6
+        auto const in_port2 = match::in_port{2, 2}; // 12
 
-        auto const copy = std::move(sut);
+        auto const sut = v13::oxm_match_set{in_port1, eth_type, in_port2};
 
-        BOOST_CHECK_EQUAL(copy.type(), sut.type());
-        BOOST_CHECK_EQUAL(copy.length(), expected_length);
-        BOOST_CHECK_EQUAL(sut.length(), 4);
+        BOOST_TEST(sut.length() == 4 + 8 + 6);
+        BOOST_TEST(!sut.empty());
+        BOOST_TEST(sut.size() == 2);
+
+        BOOST_TEST_REQUIRE(bool(sut.find<match::in_port>()));
+        BOOST_TEST((sut.get<match::in_port>() == in_port1));
+
+        BOOST_TEST_REQUIRE(bool(sut.find<match::eth_type>()));
+        BOOST_TEST((sut.get<match::eth_type>() == eth_type));
     }
 
-BOOST_AUTO_TEST_SUITE_END() // instantiation_test
+    BOOST_AUTO_TEST_SUITE(equality_test)
 
-BOOST_AUTO_TEST_SUITE(assignment_test)
+        BOOST_AUTO_TEST_CASE(no_mask_same_field_types_test)
+        {
+            auto const sut1
+                = v13::oxm_match_set{match::in_port{1}, match::vlan_pcp{1}};
+            auto const sut2
+                = v13::oxm_match_set{match::in_port{2}, match::vlan_pcp{1}};
+            auto const sut3
+                = v13::oxm_match_set{match::in_port{1}, match::vlan_pcp{2}};
+            auto const sut4
+                = v13::oxm_match_set{match::in_port{2}, match::vlan_pcp{2}};
 
-    BOOST_AUTO_TEST_CASE(copy_assign_test)
+            BOOST_TEST((sut1 == sut1));
+            BOOST_TEST((sut1 != sut2));
+            BOOST_TEST((sut1 != sut3));
+            BOOST_TEST((sut1 != sut4));
+        }
+
+        BOOST_AUTO_TEST_CASE(has_mask_same_field_types_test)
+        {
+            auto const sut1
+                = v13::oxm_match_set{match::in_port{1, 3}, match::vlan_pcp{1}};
+            auto const sut2
+                = v13::oxm_match_set{match::in_port{2, 3}, match::vlan_pcp{1}};
+            auto const sut3
+                = v13::oxm_match_set{match::in_port{1, 3}, match::vlan_pcp{2}};
+            auto const sut4
+                = v13::oxm_match_set{match::in_port{2, 3}, match::vlan_pcp{2}};
+
+            BOOST_TEST((sut1 == sut1));
+            BOOST_TEST((sut1 != sut2));
+            BOOST_TEST((sut1 != sut3));
+            BOOST_TEST((sut1 != sut4));
+        }
+
+        BOOST_AUTO_TEST_CASE(differenct_field_types_test)
+        {
+            auto const sut1
+                = v13::oxm_match_set{match::in_port{1}, match::vlan_pcp{1}};
+            auto const sut2
+                = v13::oxm_match_set{match::in_port{2}, match::vlan_vid{1}};
+            auto const sut3
+                = v13::oxm_match_set{match::in_phy_port{1}, match::vlan_pcp{2}};
+            auto const sut4
+                = v13::oxm_match_set{match::in_phy_port{2}, match::vlan_vid{2}};
+
+            BOOST_TEST((sut1 == sut1));
+            BOOST_TEST((sut1 != sut2));
+            BOOST_TEST((sut1 != sut3));
+            BOOST_TEST((sut1 != sut4));
+        }
+
+        BOOST_AUTO_TEST_CASE(has_wildcard_field_test)
+        {
+            auto const sut1
+                = v13::oxm_match_set{match::in_port{1}, match::vlan_pcp{0, 0}};
+            auto const sut2
+                = v13::oxm_match_set{match::in_port{1}, match::vlan_vid{0, 0}};
+
+            BOOST_TEST((sut1 == sut2));
+        }
+
+        BOOST_AUTO_TEST_CASE(empty_match_test)
+        {
+            auto const sut1 = v13::oxm_match_set{};
+            auto const sut2 = v13::oxm_match_set{match::in_port{1}};
+
+            BOOST_TEST((sut1 == sut1));
+            BOOST_TEST((sut1 != sut2));
+        }
+
+    BOOST_AUTO_TEST_SUITE_END() // equality_test
+
+    BOOST_FIXTURE_TEST_CASE(insert_new_field_test, oxm_match_set_fixture)
     {
-        auto sut = oxm_match_set{
-              oxm_in_port{1}
-            , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
-            , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
-            , oxm_eth_type{0x0800, 0x0800}
-        }; // 8 + 10 + 10 + 8 = 36
-        auto copy = oxm_match_set{
-              oxm_in_phy_port{1}, oxm_ipv4_src{0x7f000001}, oxm_ipv4_dst{0x7f000002}
-        }; // 8 + 8 + 8 = 24
+        auto const tcp_src = match::tcp_src{6653};
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
 
-        copy = sut;
+        auto const result = sut.insert(tcp_src);
 
-        BOOST_CHECK_EQUAL(copy.type(), sut.type());
-        BOOST_CHECK_EQUAL(copy.length(), sut.length());
+        BOOST_TEST(result.second);
+        BOOST_TEST((*result.first == tcp_src));
+        BOOST_TEST(sut.size() == before_size + 1);
+        BOOST_TEST(sut.length() == before_length + tcp_src.length());
+        BOOST_TEST_REQUIRE(bool(sut.find<match::tcp_src>()));
+        BOOST_TEST((sut.get<match::tcp_src>() == tcp_src));
     }
 
-    BOOST_AUTO_TEST_CASE(move_assign_test)
+    BOOST_FIXTURE_TEST_CASE(insert_existing_field_test, oxm_match_set_fixture)
     {
-        auto sut = oxm_match_set{
-              oxm_in_port{1}
-            , oxm_eth_dst{{{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}}}
-            , oxm_eth_src{{{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}}}
-            , oxm_eth_type{0x0800, 0x0800}
-        }; // 8 + 10 + 10 + 8 = 36
-        auto copy = oxm_match_set{
-              oxm_in_phy_port{1}, oxm_ipv4_src{0x7f000001}, oxm_ipv4_dst{0x7f000002}
-        }; // 8 + 8 + 8 = 24
+        auto const ipv4_src = match::ipv4_src{"127.0.0.1"_ipv4};
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
 
-        copy = std::move(sut);
+        auto const result = sut.insert(ipv4_src);
 
-        BOOST_CHECK_EQUAL(copy.type(), sut.type());
-        BOOST_CHECK_EQUAL(copy.length(), 4 + 36);
-        BOOST_CHECK_EQUAL(sut.length(), 4);
+        BOOST_TEST(!result.second);
+        BOOST_TEST((*result.first != ipv4_src));
+        BOOST_TEST(sut.size() == before_size);
+        BOOST_TEST(sut.length() == before_length);
+        BOOST_TEST_REQUIRE(bool(sut.find<match::ipv4_src>()));
+        BOOST_TEST((sut.get<match::ipv4_src>() != ipv4_src));
     }
 
-BOOST_AUTO_TEST_SUITE_END() // assignment_test
-
-struct empty_oxm_match_fixture
-{
-    oxm_match_set sut{};
-};
-BOOST_FIXTURE_TEST_SUITE(when_init_state_is_empty, empty_oxm_match_fixture)
-
-    BOOST_AUTO_TEST_CASE(add_oxm_match_field)
+    BOOST_FIXTURE_TEST_CASE(assign_new_field_test, oxm_match_set_fixture)
     {
-        sut.add(oxm_vlan_vid{1024, 0x111});
+        auto const tcp_src = match::tcp_src{6653};
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
 
-        BOOST_CHECK_EQUAL(sut.length(), 12);
+        auto const result = sut.assign(tcp_src);
 
-        auto const vlan_vid_field = sut.get<oxm_vlan_vid>();
-        BOOST_REQUIRE(vlan_vid_field);
-        BOOST_CHECK_EQUAL(vlan_vid_field->oxm_value(), 1024);
-        BOOST_REQUIRE(vlan_vid_field->oxm_mask());
-        // TODO mask has OFPVID_PRESENT?
-        BOOST_CHECK_EQUAL(*vlan_vid_field->oxm_mask(), 0x111 | protocol::OFPVID_PRESENT);
+        BOOST_TEST(!result.second);
+        BOOST_TEST((result.first == sut.end()));
+        BOOST_TEST(sut.size() == before_size);
+        BOOST_TEST(sut.length() == before_length);
+        BOOST_TEST(!sut.find<match::tcp_src>());
     }
 
-    BOOST_AUTO_TEST_CASE(get_null_oxm_match_field)
+    BOOST_FIXTURE_TEST_CASE(assign_existing_field_test, oxm_match_set_fixture)
     {
-        auto const vlan_vid_field = sut.get<oxm_vlan_vid>();
+        auto const ipv4_src = match::ipv4_src{"127.0.0.1"_ipv4};
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
+        auto const assigned_field_length
+            = sut.at(match::ipv4_src::oxm_type()).length();
 
-        BOOST_CHECK(!vlan_vid_field);
+        auto const result = sut.assign(ipv4_src);
+
+        BOOST_TEST(result.second);
+        BOOST_TEST((*result.first == ipv4_src));
+        BOOST_TEST(sut.size() == before_size);
+        BOOST_TEST(sut.length()
+                == before_length - assigned_field_length + ipv4_src.length());
+        BOOST_TEST_REQUIRE(bool(sut.find<match::ipv4_src>()));
+        BOOST_TEST((sut.get<match::ipv4_src>() == ipv4_src));
     }
 
-    BOOST_AUTO_TEST_CASE(subscripting_get_null_oxm_match_field)
+    BOOST_FIXTURE_TEST_CASE(
+            insert_or_assign_new_field_test, oxm_match_set_fixture)
     {
-        auto const in_port_field = sut[oxm_in_port::oxm_type()];
+        auto const tcp_src = match::tcp_src{6653};
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
 
-        BOOST_CHECK(!in_port_field);
+        auto const result = sut.insert_or_assign(tcp_src);
+
+        BOOST_TEST(result.second);
+        BOOST_TEST((*result.first == tcp_src));
+        BOOST_TEST(sut.size() == before_size + 1);
+        BOOST_TEST(sut.length() == before_length + tcp_src.length());
+        BOOST_TEST_REQUIRE(bool(sut.find<match::tcp_src>()));
+        BOOST_TEST((sut.get<match::tcp_src>() == tcp_src));
     }
 
-    BOOST_AUTO_TEST_CASE(encode_decode_test)
+    BOOST_FIXTURE_TEST_CASE(
+            insert_or_assign_existing_field_test, oxm_match_set_fixture)
+    {
+        auto const ipv4_src = match::ipv4_src{"127.0.0.1"_ipv4};
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
+        auto const assigned_field_length
+            = sut.at(match::ipv4_src::oxm_type()).length();
+
+        auto const result = sut.insert_or_assign(ipv4_src);
+
+        BOOST_TEST(!result.second);
+        BOOST_TEST((*result.first == ipv4_src));
+        BOOST_TEST(sut.size() == before_size);
+        BOOST_TEST(sut.length()
+                == before_length - assigned_field_length + ipv4_src.length());
+        BOOST_TEST_REQUIRE(bool(sut.find<match::ipv4_src>()));
+        BOOST_TEST((sut.get<match::ipv4_src>() == ipv4_src));
+    }
+
+    BOOST_FIXTURE_TEST_CASE(erase_new_field_test, oxm_match_set_fixture)
+    {
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
+
+        auto const result = sut.erase<match::ip_dscp>();
+
+        BOOST_TEST(result == 0);
+        BOOST_TEST(sut.size() == before_size);
+        BOOST_TEST(sut.length() == before_length);
+        BOOST_TEST(!sut.find<match::ip_dscp>());
+    }
+
+    BOOST_FIXTURE_TEST_CASE(erase_existing_field_test, oxm_match_set_fixture)
+    {
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
+        auto const erased_field_length
+            = sut.at(match::vlan_vid::oxm_type()).length();
+
+        auto const result = sut.erase<match::vlan_vid>();
+
+        BOOST_TEST(result == 1);
+        BOOST_TEST(sut.size() == before_size - 1);
+        BOOST_TEST(sut.length() == before_length - erased_field_length);
+        BOOST_TEST(!sut.find<match::vlan_vid>());
+    }
+
+    BOOST_FIXTURE_TEST_CASE(erase_by_iterator_test, oxm_match_set_fixture)
+    {
+        auto it = std::prev(sut.end());
+        auto const erased_oxm_type = it->oxm_type();
+        auto const before_size = sut.size();
+        auto const before_length = sut.length();
+        auto const erased_field_length = it->length();
+
+        auto const result = sut.erase(it);
+
+        BOOST_TEST((result == sut.end()));
+        BOOST_TEST(sut.size() == before_size - 1);
+        BOOST_TEST(sut.length() == before_length - erased_field_length);
+        BOOST_TEST((sut.find(erased_oxm_type) == sut.end()));
+    }
+
+    BOOST_FIXTURE_TEST_CASE(clear_test, oxm_match_set_fixture)
+    {
+        sut.clear();
+
+        BOOST_TEST(sut.length() == 4);
+        BOOST_TEST(sut.empty());
+        BOOST_TEST(sut.size() == 0);
+        BOOST_TEST((sut.begin() == sut.end()));
+    }
+
+    BOOST_FIXTURE_TEST_CASE(encode_test, oxm_match_set_fixture)
     {
         auto buffer = std::vector<std::uint8_t>{};
 
         sut.encode(buffer);
 
-        BOOST_CHECK_EQUAL(buffer.size(), 8);
-
-        auto it = buffer.begin();
-        auto const decoded_match = oxm_match_set::decode(it, buffer.end());
-
-        BOOST_CHECK_EQUAL(decoded_match.type(), sut.type());
-        BOOST_CHECK_EQUAL(decoded_match.length(), sut.length());
+        BOOST_TEST(buffer.size() == detail::exact_length(sut.length()));
+        BOOST_TEST(buffer == binary, boost::test_tools::per_element{});
     }
 
-BOOST_AUTO_TEST_SUITE_END() // when_init_state_is_empty
-
-struct in_port_eth_type_ip_proto_matching_oxm_match_fixture
-{
-    oxm_match_set sut{
-        oxm_in_port{4}, oxm_eth_type{0x0800}, oxm_ip_proto{3, 0x03}
-    };
-};
-BOOST_FIXTURE_TEST_SUITE(when_init_state_has_some_oxm_match_field, in_port_eth_type_ip_proto_matching_oxm_match_fixture)
-
-    BOOST_AUTO_TEST_CASE(add_new_oxm_match_field)
+    BOOST_FIXTURE_TEST_CASE(decode_test, oxm_match_set_fixture)
     {
-        auto ipv4_dst = oxm_ipv4_dst{0x7f000001};
+        auto it = binary.begin();
+        auto const it_end = binary.end();
 
-        sut.add(ipv4_dst);
+        auto const match_set = v13::oxm_match_set::decode(it, it_end);
 
-        BOOST_CHECK_EQUAL(sut.length(), 4 + 20 + 8);
-        auto const ipv4_dst_field = sut.get<oxm_ipv4_dst>();
-        BOOST_REQUIRE(ipv4_dst_field);
-        BOOST_CHECK_EQUAL(ipv4_dst_field->oxm_value(), 0x7f000001);
-        BOOST_CHECK(!ipv4_dst_field->oxm_has_mask());
+        BOOST_TEST((it == it_end));
+        BOOST_TEST((match_set == sut));
     }
-
-    BOOST_AUTO_TEST_CASE(add_existing_field_then_the_field_is_updated)
-    {
-        auto const in_port = oxm_in_port{protocol::OFPP_MAX, 0x1111};
-        auto const expected_length = sut.length();
-
-        sut.add(in_port);
-
-        BOOST_CHECK_EQUAL(sut.length(), expected_length + sizeof(std::uint32_t));
-        auto const in_port_field = sut.get<oxm_in_port>();
-        BOOST_REQUIRE(in_port_field);
-        BOOST_CHECK_EQUAL(in_port_field->oxm_value(), protocol::OFPP_MAX);
-        BOOST_REQUIRE(in_port_field->oxm_mask());
-        BOOST_CHECK_EQUAL(*in_port_field->oxm_mask(), 0x1111);
-    }
-
-    BOOST_AUTO_TEST_CASE(encode_decode_test)
-    {
-        auto buffer = std::vector<std::uint8_t>{};
-
-        sut.encode(buffer);
-
-        BOOST_CHECK_EQUAL(buffer.size(), v13_detail::exact_length(sut.length()));
-
-        auto it = buffer.begin();
-        auto const decoded_match = oxm_match_set::decode(it, buffer.end());
-
-        BOOST_CHECK_EQUAL(decoded_match.type(), sut.type());
-        BOOST_CHECK_EQUAL(decoded_match.length(), sut.length());
-    }
-
-BOOST_AUTO_TEST_SUITE_END() // when_init_state_has_some_oxm_match_field
 
 BOOST_AUTO_TEST_SUITE_END() // oxm_match_test
-
-} // namespace v13
-} // namespace openflow
-} // namespace network
-} // namespace canard
+BOOST_AUTO_TEST_SUITE_END() // common_type_test
