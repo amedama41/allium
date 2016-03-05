@@ -271,7 +271,7 @@ namespace multipart_detail {
             auto it = first;
             auto const ofp_match
                 = detail::decode<v13_detail::ofp_match>(it, last);
-            oxm_match_set::validate(ofp_match);
+            oxm_match_set::validate_ofp_match(ofp_match);
             if (std::distance(first, last)
                     != v13_detail::exact_length(ofp_match.length)) {
                 throw std::runtime_error{"invalid oxm_match length"};

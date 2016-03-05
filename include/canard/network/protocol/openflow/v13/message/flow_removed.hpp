@@ -152,7 +152,7 @@ namespace messages {
             auto copy_first = first;
             auto const ofp_match
                 = detail::decode<v13_detail::ofp_match>(copy_first, last);
-            oxm_match_set::validate(ofp_match);
+            oxm_match_set::validate_ofp_match(ofp_match);
             if (v13_detail::exact_length(ofp_match.length) != match_length) {
                 throw std::runtime_error{"invalid oxm_match length"};
             }
