@@ -8,6 +8,36 @@
 namespace canard {
 namespace network {
 namespace openflow {
+namespace detail {
+namespace v13 {
+
+#define DEFINE_OXM_VISITOR(FUNC_NAME, RETURN_TYPE) \
+        class FUNC_NAME ## _visitor \
+            : public boost::static_visitor<RETURN_TYPE> \
+        { \
+        public: \
+            template <class T> \
+            auto operator()(T const& t) const noexcept \
+                -> RETURN_TYPE \
+            { \
+                return t.FUNC_NAME(); \
+            } \
+        }; \
+
+        DEFINE_OXM_VISITOR(oxm_class, openflow::v13::protocol::ofp_oxm_class)
+        DEFINE_OXM_VISITOR(oxm_field, std::uint8_t)
+        DEFINE_OXM_VISITOR(oxm_type, std::uint32_t)
+        DEFINE_OXM_VISITOR(oxm_header, std::uint32_t)
+        DEFINE_OXM_VISITOR(oxm_has_mask, bool)
+        DEFINE_OXM_VISITOR(oxm_length, std::uint8_t)
+        DEFINE_OXM_VISITOR(is_wildcard, bool)
+        DEFINE_OXM_VISITOR(is_exact, bool)
+
+#undef DEFINE_OXM_VISITOR
+
+} // namespace v13
+} // namespace detail
+
 namespace v13 {
 
     namespace v13_detail {
@@ -36,65 +66,10 @@ namespace v13 {
             }
         };
 
-        class oxm_type_visitor
-            : public boost::static_visitor<std::uint32_t>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> std::uint32_t
-            {
-                return t.oxm_type();
-            }
-        };
-
-        class oxm_header_visitor
-            : public boost::static_visitor<std::uint32_t>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> std::uint32_t
-            {
-                return t.oxm_header();
-            }
-        };
-
-        class oxm_has_mask_visitor
-            : public boost::static_visitor<bool>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> bool
-            {
-                return t.oxm_has_mask();
-            }
-        };
-
-        class oxm_length_visitor
-            : public boost::static_visitor<std::uint8_t>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> std::uint8_t
-            {
-                return t.oxm_length();
-            }
-        };
-
-        class wildcard_visitor
-            : public boost::static_visitor<bool>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> bool
-            {
-                return t.wildcard();
-            }
-        };
+        using detail::v13::oxm_type_visitor;
+        using detail::v13::oxm_header_visitor;
+        using detail::v13::oxm_has_mask_visitor;
+        using detail::v13::oxm_length_visitor;
 
     } // namespace v13_detail
 

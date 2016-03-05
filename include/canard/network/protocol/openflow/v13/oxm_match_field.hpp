@@ -734,6 +734,49 @@ namespace oxm_match {
 
 } // namespace oxm_match
 
+using default_oxm_match_field_list = std::tuple<
+      oxm_match::in_port
+    , oxm_match::in_phy_port
+    , oxm_match::metadata
+    , oxm_match::eth_dst
+    , oxm_match::eth_src
+    , oxm_match::eth_type
+    , oxm_match::vlan_vid
+    , oxm_match::vlan_pcp
+    , oxm_match::ip_dscp
+    , oxm_match::ip_ecn
+    , oxm_match::ip_proto
+    , oxm_match::ipv4_src
+    , oxm_match::ipv4_dst
+    , oxm_match::tcp_src
+    , oxm_match::tcp_dst
+    , oxm_match::udp_src
+    , oxm_match::udp_dst
+    , oxm_match::sctp_src
+    , oxm_match::sctp_dst
+    , oxm_match::icmpv4_type
+    , oxm_match::icmpv4_code
+    , oxm_match::arp_op
+    , oxm_match::arp_spa
+    , oxm_match::arp_tpa
+    , oxm_match::arp_sha
+    , oxm_match::arp_tha
+    , oxm_match::ipv6_src
+    , oxm_match::ipv6_dst
+    , oxm_match::ipv6_flabel
+    , oxm_match::icmpv6_type
+    , oxm_match::icmpv6_code
+    , oxm_match::ipv6_nd_target
+    , oxm_match::ipv6_nd_sll
+    , oxm_match::ipv6_nd_tll
+    , oxm_match::mpls_label
+    , oxm_match::mpls_tc
+    , oxm_match::mpls_bos
+    , oxm_match::pbb_isid
+    , oxm_match::tunnel_id
+    , oxm_match::ipv6_exthdr
+>;
+
 namespace match {
 
     template <protocol::ofp_oxm_class OXMClass, std::uint8_t OXMField>
