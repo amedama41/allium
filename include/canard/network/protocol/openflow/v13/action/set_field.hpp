@@ -9,7 +9,6 @@
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/detail/padding.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_match_field.hpp>
-#include <canard/network/protocol/openflow/v13/decode_oxm_match_field.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -79,7 +78,7 @@ namespace v13 {
                 if (length <= sizeof(v13_detail::ofp_action_set_field)) {
                     throw 2;
                 }
-                auto field = decode_oxm_match_field(first, last);
+                auto field = any_oxm_match_field::decode(first, last);
                 if (field.oxm_has_mask()) {
                     throw std::runtime_error{(boost::format{"%1%: field(%2%).oxm_has_mask is true"} % __func__ % field.oxm_type()).str()};
                 }
