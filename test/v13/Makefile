@@ -40,16 +40,10 @@ INSTRUCTION_TEST_SRCS = goto_table_test.cpp \
 						meter_test.cpp
 INSTRUCTION_TEST_OBJS = $(INSTRUCTION_TEST_SRCS:.cpp=.o)
 
-OXM_MATCH_FIELD_TEST_SRCS = oxm_in_port_test.cpp \
-							oxm_eth_dst_test.cpp \
-							oxm_vlan_vid_test.cpp
-OXM_MATCH_FIELD_TEST_OBJS = $(OXM_MATCH_FIELD_TEST_SRCS:.cpp=.o)
-
 SRCS = $(UTILITY_TEST_SRCS) \
 	   $(ACTION_TEST_SRCS) \
 	   $(MESSAGE_TEST_SRCS) \
-	   $(INSTRUCTION_TEST_SRCS) \
-	   $(OXM_MATCH_FIELD_TEST_SRCS)
+	   $(INSTRUCTION_TEST_SRCS)
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET = all_test
@@ -82,9 +76,6 @@ utility_test: $(UTILITY_TEST_OBJS)
 message_test: $(MESSAGE_TEST_OBJS)
 	$(build_test)
 
-oxm_match_field_test: $(OXM_MATCH_FIELD_TEST_OBJS)
-	$(build_test)
-
 action_test: $(ACTION_TEST_OBJS)
 	$(build_test)
 
@@ -99,7 +90,7 @@ run_each: $(ALL_TESTS)
 	done
 
 clean:
-	-rm *.o $(DEPENDS) $(ALL_TESTS) $(TARGET) utility_test message_test oxm_match_field_test action_test 2> /dev/null
+	-rm *.o $(DEPENDS) $(ALL_TESTS) $(TARGET) utility_test message_test action_test 2> /dev/null
 
 -include $(DEPENDS)
 
