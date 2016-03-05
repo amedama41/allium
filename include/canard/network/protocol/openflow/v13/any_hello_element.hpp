@@ -7,9 +7,9 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
+#include <canard/network/protocol/openflow/detail/construct.hpp>
 #include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/decode_hello_element.hpp>
-#include <canard/network/protocol/openflow/v13/detail/construct.hpp>
 #include <canard/network/protocol/openflow/v13/message/hello_elements.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
@@ -60,7 +60,7 @@ namespace v13 {
             -> any_hello_element
         {
             return v13_detail::decode_hello_element<any_hello_element>(
-                    first, last, v13_detail::construct<any_hello_element>{});
+                    first, last, detail::construct<any_hello_element>{});
         }
 
         template <class T>
