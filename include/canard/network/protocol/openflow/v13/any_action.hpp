@@ -12,7 +12,7 @@ namespace openflow {
 namespace v13 {
 
     using any_action = detail::any_action<
-        default_action_list, action_decoder, protocol
+        default_all_action_list, action_decoder, protocol
     >;
 
 } // namespace v13

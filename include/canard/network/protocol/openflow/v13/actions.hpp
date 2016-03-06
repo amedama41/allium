@@ -24,6 +24,19 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
+    namespace actions_detail {
+
+        template <class Tuple1, class Tuple2>
+        struct tuple_cat;
+
+        template <class... Ts1, class... Ts2>
+        struct tuple_cat<std::tuple<Ts1...>, std::tuple<Ts2...>>
+        {
+            using type = std::tuple<Ts1..., Ts2...>;
+        };
+
+    } // namespace actions_detail
+
     using default_action_list = std::tuple<
           actions::output
         , actions::copy_ttl_out
@@ -38,10 +51,14 @@ namespace v13 {
         , actions::group
         , actions::set_nw_ttl
         , actions::decrement_nw_ttl
-        , actions::set_field
         , actions::push_pbb
         , actions::pop_pbb
     >;
+
+    using default_all_action_list = actions_detail::tuple_cat<
+          default_action_list
+        , default_set_field_list
+    >::type;
 
     // TODO: each set_field change independent type
     namespace actions {
@@ -117,10 +134,11 @@ namespace v13 {
             return 0x0008000000000000 | set_nw_ttl::action_type;
         }
 
-        inline auto action_order(set_field const& set_field_action)
+        template <class OXMMatchField>
+        inline auto action_order(set_field<OXMMatchField> const& set_field_action)
             -> std::uint64_t
         {
-            return 0x0008000000800000 | set_field_action.oxm_match_field().oxm_type();
+            return 0x0008000000800000 | OXMMatchField::oxm_type();
         }
 
         inline auto action_order(set_queue const&)
