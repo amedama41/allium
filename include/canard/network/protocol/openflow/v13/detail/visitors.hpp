@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <boost/variant/static_visitor.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
+#include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {

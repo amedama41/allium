@@ -8,6 +8,7 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
+#include <canard/mpl/adapted/std_tuple.hpp>
 #include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/type_traits.hpp>
 
