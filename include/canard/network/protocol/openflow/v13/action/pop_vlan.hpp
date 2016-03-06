@@ -1,7 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_ACTION_POP_VLAN_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_ACTION_POP_VLAN_HPP
 
-#include <canard/network/protocol/openflow/v13/action/generic_action.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_generic_action.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {

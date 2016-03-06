@@ -2,7 +2,7 @@
 #define CANARD_NETWORK_OPENFLOW_V13_ACTION_PUSH_VLAN_HPP
 
 #include <cstdint>
-#include <canard/network/protocol/openflow/v13/action/action_push.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_action_push.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
