@@ -24,27 +24,57 @@ namespace openflow {
 namespace v13 {
 namespace actions {
 
-    template <class OXMMatchField>
-    class set_field
-        : private boost::equality_comparable<set_field<OXMMatchField>>
+    class basic_set_field
     {
+    protected:
+        using raw_ofp_type = v13_detail::ofp_action_set_field;
+
+        basic_set_field() = default;
+
     public:
         static constexpr protocol::ofp_action_type action_type
             = protocol::OFPAT_SET_FIELD;
-        static constexpr std::size_t base_size
-            = offsetof(v13_detail::ofp_action_set_field, field);
+
+        static constexpr auto type() noexcept
+            -> protocol::ofp_action_type
+        {
+            return action_type;
+        }
+
+        static auto extract_oxm_header(raw_ofp_type const& set_field) noexcept
+            -> std::uint32_t
+        {
+            auto it = set_field.field;
+            return detail::decode<std::uint32_t>(
+                    it, it + sizeof(set_field.field));
+        }
+
+        static void validate_action_header(
+                v13_detail::ofp_action_header const& header)
+        {
+            if (header.type != action_type) {
+                throw std::runtime_error{"invalid action type"};
+            }
+            if (header.len != sizeof(raw_ofp_type)) {
+                throw std::runtime_error{"invalid action length"};
+            }
+        }
+    };
+
+
+    template <class OXMMatchField>
+    class set_field
+        : public basic_set_field
+        , private boost::equality_comparable<set_field<OXMMatchField>>
+    {
+    public:
+        static constexpr std::size_t base_size = offsetof(raw_ofp_type, field);
 
         using value_type = typename OXMMatchField::value_type;
 
         explicit set_field(value_type const& value)
             : field_{value}
         {
-        }
-
-        static constexpr auto type() noexcept
-            -> protocol::ofp_action_type
-        {
-            return action_type;
         }
 
         static constexpr auto oxm_type() noexcept
@@ -82,7 +112,7 @@ namespace actions {
         static auto decode(Iterator& first, Iterator last)
             -> set_field
         {
-            std::advance(first, sizeof(v13_detail::ofp_action_set_field::type));
+            std::advance(first, sizeof(raw_ofp_type::type));
             auto const length = detail::decode<std::uint16_t>(first, last);
             auto field = OXMMatchField::decode(first, last);
             std::advance(first, length - (base_size + field.length()));
@@ -96,12 +126,9 @@ namespace actions {
             return validate(set_field(std::forward<Args>(args)...));
         }
 
-        static void validate_set_field(
-                v13_detail::ofp_action_set_field const& set_field)
+        static void validate_set_field(raw_ofp_type const& set_field)
         {
-            auto it = set_field.field;
-            auto const oxm_header = detail::decode<std::uint32_t>(
-                    it, it + sizeof(set_field.field));
+            auto const oxm_header = extract_oxm_header(set_field);
 
             OXMMatchField::validate_oxm_header(oxm_header);
             if (oxm_header & 0x00000100) {
