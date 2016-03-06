@@ -1,78 +1,91 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_ACTION_POP_MPLS_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_ACTION_POP_MPLS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_ACTIONS_POP_MPLS_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_ACTIONS_POP_MPLS_HPP
 
 #include <cstdint>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace actions {
 
-    namespace actions {
+    class pop_mpls
+        : public detail::v13::basic_action<
+            pop_mpls, v13_detail::ofp_action_pop_mpls
+          >
+    {
+    public:
+        static constexpr protocol::ofp_action_type action_type
+            = protocol::OFPAT_POP_MPLS;
 
-        class pop_mpls
+        explicit pop_mpls(std::uint16_t const ethertype) noexcept
+            : action_pop_mpls_{
+                  action_type
+                , length()
+                , ethertype
+                , { 0, 0 }
+              }
         {
-        public:
-            static protocol::ofp_action_type const action_type
-                = protocol::OFPAT_POP_MPLS;
+        }
 
-            explicit pop_mpls(std::uint16_t const ethertype)
-                : pop_mpls_{action_type, sizeof(v13_detail::ofp_action_pop_mpls), ethertype, {0}}
-            {
-            }
+        auto ethertype() const noexcept
+            -> std::uint16_t
+        {
+            return action_pop_mpls_.ethertype;
+        }
 
-            auto type() const
-                -> protocol::ofp_action_type
-            {
-                return action_type;
-            }
+        static auto ipv4() noexcept
+            -> pop_mpls
+        {
+            return pop_mpls{0x0800};
+        }
 
-            auto length() const
-                -> std::uint16_t
-            {
-                return sizeof(v13_detail::ofp_action_pop_mpls);
-            }
+        static auto unicast() noexcept
+            -> pop_mpls
+        {
+            return pop_mpls{0x8847};
+        }
 
-            auto ethertype() const
-                -> std::uint16_t
-            {
-                return pop_mpls_.ethertype;
-            }
+        static auto multicast() noexcept
+            -> pop_mpls
+        {
+            return pop_mpls{0x8848};
+        }
 
-            template <class Container>
-            auto encode(Container& container) const
-                -> Container&
-            {
-                return detail::encode(container, pop_mpls_);
-            }
+    private:
+        friend basic_action;
 
-            template <class Iterator>
-            static auto decode(Iterator& first, Iterator last)
-                -> pop_mpls
-            {
-                auto const action_pop_mpls = detail::decode<v13_detail::ofp_action_pop_mpls>(first, last);
-                if (action_pop_mpls.type != action_type) {
-                    throw 1;
-                }
-                if (action_pop_mpls.len != sizeof(v13_detail::ofp_action_pop_mpls)) {
-                    throw 2;
-                }
-                return pop_mpls{action_pop_mpls.ethertype};
-            }
+        explicit pop_mpls(raw_ofp_type const& action_pop_mpls) noexcept
+            : action_pop_mpls_(action_pop_mpls)
+        {
+        }
 
-        private:
-            v13_detail::ofp_action_pop_mpls pop_mpls_;
-        };
+        auto ofp_action() const noexcept
+            -> raw_ofp_type const&
+        {
+            return action_pop_mpls_;
+        }
 
-    } // namespace actions
+        static void validate_impl(pop_mpls const&)
+        {
+        }
 
+    private:
+        raw_ofp_type action_pop_mpls_;
+    };
+
+    inline auto operator==(pop_mpls const& lhs, pop_mpls const& rhs) noexcept
+        -> bool
+    {
+        return lhs.ethertype() == rhs.ethertype();
+    }
+
+} // namespace actions
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_ACTION_POP_MPLS_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_ACTIONS_POP_MPLS_HPP
