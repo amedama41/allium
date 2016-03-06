@@ -1,5 +1,5 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_ACTION_DECREMENT_NW_TTL_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_ACTION_DECREMENT_NW_TTL_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_ACTIONS_DECREMENT_NW_TTL_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_ACTIONS_DECREMENT_NW_TTL_HPP
 
 #include <canard/network/protocol/openflow/v13/detail/basic_generic_action.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
@@ -8,22 +8,30 @@ namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace actions {
 
-    namespace actions {
+    class decrement_nw_ttl
+        : public detail::v13::basic_generic_action<decrement_nw_ttl>
+    {
+    public:
+        static constexpr protocol::ofp_action_type action_type
+            = protocol::OFPAT_DEC_NW_TTL;
 
-        class decrement_nw_ttl
-            : public action_detail::generic_action<decrement_nw_ttl>
+        decrement_nw_ttl() = default;
+
+    private:
+        friend basic_action;
+
+        explicit decrement_nw_ttl(raw_ofp_type const& ofp_action) noexcept
+            : basic_generic_action{ofp_action}
         {
-        public:
-            static protocol::ofp_action_type const action_type
-                = protocol::OFPAT_DEC_NW_TTL;
-        };
+        }
+    };
 
-    } // namespace actions
-
+} // namespace actions
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_ACTION_DECREMENT_NW_TTL_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_ACTIONS_DECREMENT_NW_TTL_HPP

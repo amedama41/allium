@@ -1,75 +1,68 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_ACTION_GENERIC_ACTION_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_ACTION_GENERIC_ACTION_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_DETAIL_V13_BASIC_GENERIC_ACTION_HPP
+#define CANARD_NETWORK_OPENFLOW_DETAIL_V13_BASIC_GENERIC_ACTION_HPP
 
-#include <cstdint>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
+namespace detail {
 namespace v13 {
 
-    namespace actions {
+    template <class T>
+    class basic_generic_action
+        : public basic_action<T, openflow::v13::v13_detail::ofp_action_header>
+    {
+        using base_type
+            = basic_action<T, openflow::v13::v13_detail::ofp_action_header>;
 
-        namespace action_detail {
+    public:
+        using raw_ofp_type = typename base_type::raw_ofp_type;
 
-            template <class T>
-            class generic_action
-            {
-            protected:
-                generic_action()
-                    : header_{T::action_type, sizeof(v13_detail::ofp_action_header), {0}}
-                {
-                }
+        friend auto operator==(T const&, T const&) noexcept
+            -> bool
+        {
+            return true;
+        }
 
-            public:
-                auto type() const
-                    -> protocol::ofp_action_type
-                {
-                    return T::action_type;
-                }
+    protected:
+        basic_generic_action() noexcept
+            : action_header_{
+                  T::action_type
+                , base_type::length()
+                , { 0, 0, 0, 0 }
+              }
+        {
+        }
 
-                auto length() const
-                    -> std::uint16_t
-                {
-                    return sizeof(v13_detail::ofp_action_header);
-                }
+        explicit basic_generic_action(
+                raw_ofp_type const& action_header) noexcept
+            : action_header_(action_header)
+        {
+        }
 
-                template <class Container>
-                auto encode(Container& container) const
-                    -> Container&
-                {
-                    return detail::encode(container, header_);
-                }
+    private:
+        friend base_type;
 
-                template <class Iterator>
-                static auto decode(Iterator& first, Iterator last)
-                    -> T
-                {
-                    auto const header = detail::decode<v13_detail::ofp_action_header>(first, last);
-                    if (header.type != T::action_type) {
-                        throw 1;
-                    }
-                    if (header.len != sizeof(v13_detail::ofp_action_header)) {
-                        throw 2;
-                    }
-                    return T{};
-                }
+        auto ofp_action() const noexcept
+            -> raw_ofp_type const&
+        {
+            return action_header_;
+        }
 
-            private:
-                v13_detail::ofp_action_header header_;
-            };
+        static void validate_impl(T const&)
+        {
+        }
 
-        } // namespace action_detail
-
-    } // namespace actions
+    private:
+        raw_ofp_type action_header_;
+    };
 
 } // namespace v13
+} // namespace detail
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_ACTION_GENERIC_ACTION_HPP
+#endif // CANARD_NETWORK_OPENFLOW_DETAIL_V13_BASIC_GENERIC_ACTION_HPP
