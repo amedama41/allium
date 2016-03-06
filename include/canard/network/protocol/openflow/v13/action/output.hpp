@@ -1,121 +1,101 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_ACTION_OUTPUT_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_ACTION_OUTPUT_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_ACTIONS_OUTPUT_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_ACTIONS_OUTPUT_HPP
 
 #include <cstdint>
-#include <boost/format.hpp>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <stdexcept>
+#include <canard/network/protocol/openflow/v13/detail/basic_action.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace actions {
 
-    namespace actions {
+    class output
+        : public detail::v13::basic_action<
+            output, v13_detail::ofp_action_output
+          >
+    {
+    public:
+        static constexpr protocol::ofp_action_type action_type
+            = protocol::OFPAT_OUTPUT;
 
-        class output
+        explicit output(
+                  std::uint32_t const port_no
+                , std::uint16_t const max_length
+                    = protocol::OFPCML_NO_BUFFER) noexcept
+            : action_output_{
+                  action_type
+                , length()
+                , port_no
+                , max_length
+                , { 0, 0, 0, 0, 0, 0 }
+              }
         {
-        public:
-            static protocol::ofp_action_type const action_type
-                = protocol::OFPAT_OUTPUT;
+        }
 
-            explicit output(std::uint32_t const port)
-                : output_{
-                    action_type, length(), port, protocol::OFPCML_NO_BUFFER, {0}
-                  }
-            {
-                if (!validate_output_port(port)) {
-                    throw 1;
-                }
+        auto port_no() const noexcept
+            -> std::uint32_t
+        {
+            return action_output_.port;
+        }
+
+        auto max_length() const noexcept
+            -> std::uint16_t
+        {
+            return action_output_.max_len;
+        }
+
+        static auto to_controller(
+                std::uint16_t const max_length
+                    = protocol::OFPCML_NO_BUFFER) noexcept
+            -> output
+        {
+            return output{protocol::OFPP_CONTROLLER, max_length};
+        }
+
+    private:
+        friend basic_action;
+
+        explicit output(raw_ofp_type const& action_output) noexcept
+            : action_output_(action_output)
+        {
+        }
+
+        auto ofp_action() const noexcept
+            -> raw_ofp_type const&
+        {
+            return action_output_;
+        }
+
+        static void validate_impl(output const& action)
+        {
+            if (action.port_no() == 0
+                    || action.port_no() == protocol::OFPP_ANY) {
+                throw std::runtime_error{"invalid port_no"};
             }
-
-            output(std::uint32_t const port, std::uint16_t const max_length)
-                : output_{action_type, length(), port, max_length, {0}}
-            {
-                if (!validate_output_port(port)) {
-                    throw 1;
-                }
+            if (action.max_length() > protocol::OFPCML_MAX
+                    && action.max_length() != protocol::OFPCML_NO_BUFFER) {
+                throw std::runtime_error{"invalid max_length"};
             }
+        }
 
-            auto type() const
-                -> protocol::ofp_action_type
-            {
-                return action_type;
-            }
+    private:
+        raw_ofp_type action_output_;
+    };
 
-            auto length() const
-                -> std::uint16_t
-            {
-                return sizeof(v13_detail::ofp_action_output);
-            }
+    inline auto operator==(output const& lhs, output const& rhs) noexcept
+        -> bool
+    {
+        return lhs.port_no() == rhs.port_no()
+            && lhs.max_length() == rhs.max_length();
+    }
 
-            auto port() const
-                -> protocol::ofp_port_no
-            {
-                return protocol::ofp_port_no(output_.port);
-            }
-
-            auto max_length() const
-                -> protocol::ofp_controller_max_len
-            {
-                return protocol::ofp_controller_max_len(output_.max_len);
-            }
-
-            template <class Container>
-            auto encode(Container& container) const
-                -> Container&
-            {
-                return detail::encode(container, output_);
-            }
-
-        private:
-            explicit output(v13_detail::ofp_action_output const& action_output)
-                : output_(action_output)
-            {
-                if (output_.type != action_type) {
-                    throw 1;
-                }
-                if (output_.len != sizeof(v13_detail::ofp_action_output)) {
-                    throw 2;
-                }
-                if (!validate_output_port(output_.port)) {
-                    throw std::runtime_error{(boost::format{"%1%: port(%2%) is invalid"} % __func__ % output_.port).str()};
-                }
-            }
-
-        public:
-            template <class Iterator>
-            static auto decode(Iterator& first, Iterator last)
-                -> output
-            {
-                auto const action_output = detail::decode<v13_detail::ofp_action_output>(first, last);
-                return output{action_output};
-            }
-
-            static auto to_controller(
-                    std::uint16_t const max_length = protocol::OFPCML_NO_BUFFER)
-                -> output
-            {
-                return output{protocol::OFPP_CONTROLLER, max_length};
-            }
-
-        private:
-            static auto validate_output_port(std::uint32_t const port)
-                -> bool
-            {
-                return port != 0 && port != protocol::OFPP_ANY;
-            }
-
-            v13_detail::ofp_action_output output_;
-        };
-
-    } // namespace actions
-
+} // namespace actions
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_ACTION_OUTPUT_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_ACTIONS_OUTPUT_HPP
