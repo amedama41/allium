@@ -1,62 +1,94 @@
 #define BOOST_TEST_DYN_LINK
 #include <canard/network/protocol/openflow/v13/action/set_mpls_ttl.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/monomorphic.hpp>
+#include <boost/test/data/test_case.hpp>
+
 #include <cstdint>
 #include <vector>
 
-namespace canard {
-namespace network {
-namespace openflow {
-namespace v13 {
+#include "../../test_utility.hpp"
 
+namespace of = canard::network::openflow;
+namespace v13 = of::v13;
+namespace actions = v13::actions;
+namespace v13_detail = v13::v13_detail;
+
+using protocol = v13::protocol;
+
+namespace bdata = boost::unit_test::data;
+
+namespace {
+
+struct set_mpls_ttl_fixture
+{
+    actions::set_mpls_ttl sut{0x12};
+    std::vector<std::uint8_t> binary = "\x00\x0f\x00\x08\x12\x00\x00\x00"_bin;
+};
+
+}
+
+BOOST_AUTO_TEST_SUITE(action_test)
 BOOST_AUTO_TEST_SUITE(set_mpls_ttl_test)
 
-BOOST_AUTO_TEST_SUITE(instantiation_test)
+    BOOST_AUTO_TEST_CASE(type_definition_test)
+    {
+        using sut = actions::set_mpls_ttl;
 
-BOOST_AUTO_TEST_CASE(constructor_test)
-{
-    auto const sut = actions::set_mpls_ttl{5};
+        BOOST_TEST(sut::type() == protocol::OFPAT_SET_MPLS_TTL);
+        BOOST_TEST(sut::length() == sizeof(v13_detail::ofp_action_mpls_ttl));
+    }
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_SET_MPLS_TTL);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_mpls_ttl));
-    BOOST_CHECK_EQUAL(sut.ttl(), 5);
-    BOOST_CHECK_EQUAL(sut.length() % 8, 0);
-}
+    BOOST_AUTO_TEST_CASE(construct_test)
+    {
+        auto const ttl = std::uint8_t{1};
 
-BOOST_AUTO_TEST_CASE(copy_constructor_test)
-{
-    auto sut = actions::set_mpls_ttl{0};
+        auto const sut = actions::set_mpls_ttl{ttl};
 
-    auto const copy = sut;
+        BOOST_TEST(sut.ttl() == ttl);
+    }
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
-    BOOST_CHECK_EQUAL(copy.ttl(), sut.ttl());
-}
+    BOOST_DATA_TEST_CASE(
+              create_test
+            , bdata::make(std::vector<std::uint8_t>{0x00, 0xff})
+            , ttl)
+    {
+        auto const sut = actions::set_mpls_ttl::create(ttl);
 
-BOOST_AUTO_TEST_SUITE_END() // instantiation_test
+        BOOST_TEST(sut.ttl() == ttl);
+    }
 
-BOOST_AUTO_TEST_CASE(encode_decode_test)
-{
-    auto buffer = std::vector<std::uint8_t>{};
-    auto const sut = actions::set_mpls_ttl{255};
+    BOOST_AUTO_TEST_CASE(equality_test)
+    {
+        auto const sut = actions::set_mpls_ttl{0};
+        auto const same_id = actions::set_mpls_ttl{0};
+        auto const diff_id = actions::set_mpls_ttl{1};
 
-    sut.encode(buffer);
+        BOOST_TEST((sut == sut));
+        BOOST_TEST((sut == same_id));
+        BOOST_TEST((sut != diff_id));
+    }
 
-    BOOST_CHECK_EQUAL(buffer.size(), sut.length());
+    BOOST_FIXTURE_TEST_CASE(encode_test, set_mpls_ttl_fixture)
+    {
+        auto buffer = std::vector<std::uint8_t>{};
 
-    auto it = buffer.begin();
-    auto const decoded_action = actions::set_mpls_ttl::decode(it, buffer.end());
+        sut.encode(buffer);
 
-    BOOST_CHECK(it == buffer.end());
-    BOOST_CHECK_EQUAL(decoded_action.type(), sut.type());
-    BOOST_CHECK_EQUAL(decoded_action.length(), sut.length());
-    BOOST_CHECK_EQUAL(decoded_action.ttl(), sut.ttl());
-}
+        BOOST_TEST(buffer.size() == sut.length());
+        BOOST_TEST(buffer == binary, boost::test_tools::per_element{});
+    }
+
+    BOOST_FIXTURE_TEST_CASE(decode_test, set_mpls_ttl_fixture)
+    {
+        auto it = binary.begin();
+        auto const it_end = binary.end();
+
+        auto const action = actions::set_mpls_ttl::decode(it, it_end);
+
+        BOOST_TEST((it == it_end));
+        BOOST_TEST((action == sut));
+    }
 
 BOOST_AUTO_TEST_SUITE_END() // set_mpls_ttl_test
-
-} // namespace v13
-} // namespace openflow
-} // namespace network
-} // namespace canard
+BOOST_AUTO_TEST_SUITE_END() // action_test

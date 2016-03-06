@@ -1,70 +1,117 @@
 #define BOOST_TEST_DYN_LINK
 #include <canard/network/protocol/openflow/v13/action/push_mpls.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/monomorphic.hpp>
+#include <boost/test/data/test_case.hpp>
+
 #include <cstdint>
 #include <vector>
 
-namespace canard {
-namespace network {
-namespace openflow {
-namespace v13 {
+#include "../../test_utility.hpp"
 
+namespace of = canard::network::openflow;
+namespace v13 = of::v13;
+namespace actions = v13::actions;
+namespace v13_detail = v13::v13_detail;
+
+using protocol = v13::protocol;
+
+namespace bdata = boost::unit_test::data;
+
+namespace {
+
+struct push_mpls_fixture
+{
+    actions::push_mpls sut{0x8847};
+    std::vector<std::uint8_t> binary = "\x00\x13\x00\x08\x88\x47\x00\x00"_bin;
+};
+
+}
+
+BOOST_AUTO_TEST_SUITE(action_test)
 BOOST_AUTO_TEST_SUITE(push_mpls_test)
 
-BOOST_AUTO_TEST_SUITE(instantiation_test)
+    BOOST_AUTO_TEST_CASE(type_definition_test)
+    {
+        using sut = actions::push_mpls;
 
-BOOST_AUTO_TEST_CASE(constructor_test)
-{
-    auto const ethertype = 0x8847;
+        BOOST_TEST(sut::type() == protocol::OFPAT_PUSH_MPLS);
+        BOOST_TEST(sut::length() == sizeof(v13_detail::ofp_action_push));
+    }
 
-    auto sut = actions::push_mpls{ethertype};
+    BOOST_DATA_TEST_CASE(
+              construct_test
+            , bdata::make(std::vector<std::uint16_t>{0x8847, 0x8848})
+            , ethertype)
+    {
+        auto const sut = actions::push_mpls{ethertype};
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPAT_PUSH_MPLS);
-    BOOST_CHECK_EQUAL(sut.length(), sizeof(v13_detail::ofp_action_push));
-    BOOST_CHECK_EQUAL(sut.ethertype(), ethertype);
-    BOOST_CHECK_EQUAL(sut.length() % 8, 0);
-}
+        BOOST_TEST(sut.ethertype() == ethertype);
+    }
 
-BOOST_AUTO_TEST_CASE(copy_constructor_test)
-{
-    auto sut = actions::push_mpls{0x8848};
+    BOOST_AUTO_TEST_CASE(unicast_test)
+    {
+        auto const sut = actions::push_mpls::unicast();
 
-    auto const copy = sut;
+        BOOST_TEST(sut.ethertype() == 0x8847);
+    }
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
-    BOOST_CHECK_EQUAL(copy.ethertype(), sut.ethertype());
-}
+    BOOST_AUTO_TEST_CASE(multicast)
+    {
+        auto const sut = actions::push_mpls::multicast();
 
-BOOST_AUTO_TEST_CASE(bad_ethertype_test)
-{
-    BOOST_CHECK_THROW(actions::push_mpls{0x8846}, int);
-    BOOST_CHECK_THROW(actions::push_mpls{0x8849}, int);
-}
+        BOOST_TEST(sut.ethertype() == 0x8848);
+    }
 
-BOOST_AUTO_TEST_SUITE_END() // instantiation_test
+    BOOST_DATA_TEST_CASE(
+              create_success_test
+            , bdata::make(std::vector<std::uint16_t>{0x8847, 0x8848})
+            , ethertype)
+    {
+        auto const sut = actions::push_mpls::create(ethertype);
 
-BOOST_AUTO_TEST_CASE(encode_decode_test)
-{
-    auto sut = actions::push_mpls{0x8847};
-    auto buffer = std::vector<std::uint8_t>();
+        BOOST_TEST(sut.ethertype() == ethertype);
+    }
 
-    sut.encode(buffer);
+    BOOST_DATA_TEST_CASE(
+              create_failure_test
+            , bdata::make(std::vector<std::uint16_t>{0x8846, 0x8849})
+            , ethertype)
+    {
+        BOOST_CHECK_THROW(
+                actions::push_mpls::create(ethertype), std::runtime_error);
+    }
 
-    BOOST_CHECK_EQUAL(buffer.size(), sut.length());
+    BOOST_AUTO_TEST_CASE(equality_test)
+    {
+        auto const unicast = actions::push_mpls::unicast();
+        auto const multicast = actions::push_mpls::multicast();
 
-    auto it = buffer.begin();
-    auto decoded_action = actions::push_mpls::decode(it, buffer.end());
+        BOOST_TEST((unicast == unicast));
+        BOOST_TEST((multicast == multicast));
+        BOOST_TEST((unicast != multicast));
+    }
 
-    BOOST_CHECK(it == buffer.end());
-    BOOST_CHECK_EQUAL(decoded_action.type(), sut.type());
-    BOOST_CHECK_EQUAL(decoded_action.length(), sut.length());
-    BOOST_CHECK_EQUAL(decoded_action.ethertype(), sut.ethertype());
-}
+    BOOST_FIXTURE_TEST_CASE(encode_test, push_mpls_fixture)
+    {
+        auto buffer = std::vector<std::uint8_t>{};
+
+        sut.encode(buffer);
+
+        BOOST_TEST(buffer.size() == sut.length());
+        BOOST_TEST(buffer == binary, boost::test_tools::per_element{});
+    }
+
+    BOOST_FIXTURE_TEST_CASE(decode_test, push_mpls_fixture)
+    {
+        auto it = binary.begin();
+        auto const it_end = binary.end();
+
+        auto const action = actions::push_mpls::decode(it, it_end);
+
+        BOOST_TEST((it == it_end));
+        BOOST_TEST((action == sut));
+    }
 
 BOOST_AUTO_TEST_SUITE_END() // push_mpls_test
-
-} // namespace v13
-} // namespace openflow
-} // namespace network
-} // namespace canard
+BOOST_AUTO_TEST_SUITE_END() // action_test
