@@ -1,5 +1,5 @@
-#ifndef CANARD_NETWORK_OPENFLOW_PADDING_HPP
-#define CANARD_NETWORK_OPENFLOW_PADDING_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_DETAIL_PADDING_HPP
+#define CANARD_NETWORK_OPENFLOW_DETAIL_PADDING_HPP
 
 namespace canard {
 namespace network {
@@ -15,4 +15,4 @@ namespace detail {
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_PADDING_HPP
+#endif // CANARD_NETWORK_OPENFLOW_DETAIL_PADDING_HPP

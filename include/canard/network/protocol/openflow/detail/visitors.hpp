@@ -1,5 +1,5 @@
-#ifndef CANARD_NETWORK_OPENFLOW_VISITORS_HPP
-#define CANARD_NETWORK_OPENFLOW_VISITORS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_DETAIL_VISITORS_HPP
+#define CANARD_NETWORK_OPENFLOW_DETAIL_VISITORS_HPP
 
 #include <cstdint>
 #include <boost/variant/static_visitor.hpp>
@@ -74,4 +74,4 @@ namespace openflow {
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_VISITORS_HPP
+#endif // CANARD_NETWORK_OPENFLOW_DETAIL_VISITORS_HPP

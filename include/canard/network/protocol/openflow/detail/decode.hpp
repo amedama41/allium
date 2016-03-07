@@ -1,5 +1,5 @@
-#ifndef CANARD_NETWORK_OPENFLOW_DECODE_HPP
-#define CANARD_NETWORK_OPENFLOW_DECODE_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_DETAIL_DECODE_HPP
+#define CANARD_NETWORK_OPENFLOW_DETAIL_DECODE_HPP
 
 #include <cstddef>
 #include <iterator>
@@ -48,4 +48,4 @@ namespace openflow {
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_DECODE_HPP
+#endif // CANARD_NETWORK_OPENFLOW_DETAIL_DECODE_HPP
