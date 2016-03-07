@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_SUITE(oxm_match_test)
             BOOST_TEST((sut1 != sut4));
         }
 
-        BOOST_AUTO_TEST_CASE(differenct_field_types_test)
+        BOOST_AUTO_TEST_CASE(different_field_types_test)
         {
             auto const sut1
                 = v13::oxm_match_set{match::in_port{1}, match::vlan_pcp{1}};
