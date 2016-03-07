@@ -1,10 +1,11 @@
-#ifndef CANARD_NETWORK_OPENFLOW_ANY_ACTION_HPP
-#define CANARD_NETWORK_OPENFLOW_ANY_ACTION_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_DETAIL_ANY_ACTION_HPP
+#define CANARD_NETWORK_OPENFLOW_DETAIL_ANY_ACTION_HPP
 
 #include <cstdint>
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <boost/operators.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
@@ -19,6 +20,9 @@ namespace detail {
 
     template <class ActionList, class ActionDecoder, class Protocol>
     class any_action
+        : private boost::equality_comparable<
+            any_action<ActionList, ActionDecoder, Protocol>
+          >
     {
         using action_variant
             = typename boost::make_variant_over<ActionList>::type;
@@ -79,6 +83,12 @@ namespace detail {
                     first, last, to_any_action{});
         }
 
+        friend auto operator==(any_action const& lhs, any_action const& rhs)
+            -> bool
+        {
+            return lhs.variant_ == rhs.variant_;
+        }
+
         template <class T>
         friend auto any_cast(any_action const&)
             -> T const&;
@@ -123,4 +133,4 @@ namespace detail {
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_ANY_ACTION_HPP
+#endif // CANARD_NETWORK_OPENFLOW_DETAIL_ANY_ACTION_HPP
