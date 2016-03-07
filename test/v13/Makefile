@@ -6,7 +6,6 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 # CXXFLAGS = -std=c++11 -Wall -pedantic $(INCLUDES)
 
 UTILITY_TEST_SRCS = byteorder_test.cpp \
-					action_list_test.cpp \
 					action_set_test.cpp \
 					any_action_test.cpp \
 					instruction_set_test.cpp \
