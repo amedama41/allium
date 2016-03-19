@@ -61,11 +61,7 @@ namespace v13 {
               >::type* = nullptr
         >
         oxm_match_set(OXMMatchFields&&... oxm_fields)
-            : oxm_tlvs_{
-                std::make_pair(
-                      oxm_fields.oxm_type()
-                    , value_type{std::forward<OXMMatchFields>(oxm_fields)})...
-              }
+            : oxm_tlvs_{to_pair(std::forward<OXMMatchFields>(oxm_fields))...}
         {
         }
 
@@ -271,6 +267,16 @@ namespace v13 {
         oxm_match_set(container_type&& oxm_tlvs)
             : oxm_tlvs_(std::move(oxm_tlvs))
         {
+        }
+
+        template <class OXMMatchField>
+        static auto to_pair(OXMMatchField&& oxm_field)
+            -> container_type::value_type
+        {
+            auto const oxm_type = oxm_field.oxm_type();
+            return container_type::value_type{
+                oxm_type, std::forward<OXMMatchField>(oxm_field)
+            };
         }
 
         static auto make_result(container_type::iterator it, bool const result)
