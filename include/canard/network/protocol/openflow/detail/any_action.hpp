@@ -83,6 +83,22 @@ namespace detail {
                     first, last, to_any_action{});
         }
 
+        template <class Visitor>
+        auto visit(Visitor&& visitor)
+            -> typename canard::remove_cvref_t<Visitor>::result_type
+        {
+            return boost::apply_visitor(
+                    std::forward<Visitor>(visitor), variant_);
+        }
+
+        template <class Visitor>
+        auto visit(Visitor&& visitor) const
+            -> typename canard::remove_cvref_t<Visitor>::result_type
+        {
+            return boost::apply_visitor(
+                    std::forward<Visitor>(visitor), variant_);
+        }
+
         friend auto operator==(any_action const& lhs, any_action const& rhs)
             -> bool
         {
