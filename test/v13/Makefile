@@ -29,18 +29,9 @@ ACTION_TEST_SRCS = output_test.cpp \
 				   push_pbb_test.cpp pop_pbb_test.cpp
 ACTION_TEST_OBJS = $(ACTION_TEST_SRCS:.cpp=.o)
 
-INSTRUCTION_TEST_SRCS = goto_table_test.cpp \
-						write_metadata_test.cpp \
-						write_actions_test.cpp \
-						apply_actions_test.cpp \
-						clear_actions_test.cpp \
-						meter_test.cpp
-INSTRUCTION_TEST_OBJS = $(INSTRUCTION_TEST_SRCS:.cpp=.o)
-
 SRCS = $(UTILITY_TEST_SRCS) \
 	   $(ACTION_TEST_SRCS) \
-	   $(MESSAGE_TEST_SRCS) \
-	   $(INSTRUCTION_TEST_SRCS)
+	   $(MESSAGE_TEST_SRCS)
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET = all_test
