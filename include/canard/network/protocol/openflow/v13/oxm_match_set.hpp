@@ -129,7 +129,7 @@ namespace v13 {
             -> OXMMatchField const&
         {
             auto const it = oxm_tlvs_.find(OXMMatchField::oxm_type());
-            return any_cast<OXMMatchField>(it->second);
+            return v13::any_cast<OXMMatchField>(it->second);
         }
 
         auto at(key_type const oxm_type) const
@@ -212,7 +212,7 @@ namespace v13 {
             if (it == oxm_tlvs_.end()) {
                 return boost::none;
             }
-            return v13::any_cast<OXMMatchField const&>(it->second);
+            return v13::any_cast<OXMMatchField>(it->second);
         }
 
         template <class Container>
