@@ -15,6 +15,20 @@ namespace v10 {
         default_action_list, action_decoder, protocol
     >;
 
+    template <class T>
+    auto any_cast(any_action const& action)
+        -> T const&
+    {
+        return detail::any_cast<T>(action);
+    }
+
+    template <class T>
+    auto any_cast(any_action const* const action)
+        -> T const*
+    {
+        return detail::any_cast<T>(action);
+    }
+
 } // namespace v10
 } // namespace openflow
 } // namespace network

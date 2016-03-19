@@ -89,12 +89,12 @@ namespace detail {
             return lhs.variant_ == rhs.variant_;
         }
 
-        template <class T>
-        friend auto any_cast(any_action const&)
+        template <class T, class L, class D, class P>
+        friend auto any_cast(any_action<L, D, P> const&)
             -> T const&;
 
-        template <class T>
-        friend auto any_cast(any_action const*)
+        template <class T, class L, class D, class P>
+        friend auto any_cast(any_action<L, D, P> const*)
             -> T const*;
 
     private:
@@ -122,7 +122,7 @@ namespace detail {
 
     template <class T, class ActionList, class ActionDecoder, class Protocol>
     auto any_cast(
-            any_action<ActionList, ActionDecoder, Protocol> const* action)
+            any_action<ActionList, ActionDecoder, Protocol> const* const action)
         -> T const*
     {
         return boost::get<T>(std::addressof(action->variant_));
