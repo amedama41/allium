@@ -1,164 +1,254 @@
 #define BOOST_TEST_DYN_LINK
 #include <canard/network/protocol/openflow/v13/instruction/write_actions.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include <cstdint>
 #include <utility>
 #include <vector>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
 
-namespace canard {
-namespace network {
-namespace openflow {
-namespace v13 {
+#include "../../test_utility.hpp"
 
-BOOST_AUTO_TEST_SUITE(instantiation_test)
+namespace of = canard::network::openflow;
+namespace v13 = of::v13;
+namespace actions = v13::actions;
+namespace instructions = v13::instructions;
+namespace detail = v13::v13_detail;
 
-BOOST_AUTO_TEST_CASE(default_constructor_test)
+namespace {
+
+struct write_actions_fixture
 {
+    instructions::write_actions sut{
+          actions::set_ipv4_src{"192.168.10.1"_ipv4} // 16
+        , actions::set_ipv4_dst{"127.0.0.1"_ipv4} // 16
+        , actions::set_ip_proto{6} // 16
+        , actions::copy_ttl_in{} // 8
+        , actions::copy_ttl_out{} // 8
+        , actions::output{0x12345678} // 16
+    }; // 8 + 16 + 16 + 16 + 8 + 8 + 16 = 88
+    std::vector<unsigned char> binary
+        = "\x00\x03\x00\x58\x00\x00\x00\x00""\x00\x0c\x00\x08\x00\x00\x00\x00"
+          "\x00\x0b\x00\x08\x00\x00\x00\x00""\x00\x19\x00\x10\x80\x00\x14\x01"
+          "\x06\x00\x00\x00\x00\x00\x00\x00""\x00\x19\x00\x10\x80\x00\x16\x04"
+          "\xc0\xa8\x0a\x01\x00\x00\x00\x00""\x00\x19\x00\x10\x80\x00\x18\x04"
+          "\x7f\x00\x00\x01\x00\x00\x00\x00""\x00\x00\x00\x10\x12\x34\x56\x78"
+          "\xff\xff\x00\x00\x00\x00\x00\x00"
+          ""_bin;
+};
+
+struct has_same_action_write_actions_fixture
+{
+    instructions::write_actions sut{v13::action_list{
+          actions::output{0x12345678}
+        , actions::output{0x10305070}
+    }};
+    std::vector<unsigned char> binary
+        = "\x00\x03\x00\x28\x00\x00\x00\x00""\x00\x00\x00\x10\x12\x34\x56\x78"
+          "\xff\xff\x00\x00\x00\x00\x00\x00""\x00\x00\x00\x10\x10\x30\x50\x70"
+          "\xff\xff\x00\x00\x00\x00\x00\x00"
+          ""_bin;
+};
+
 }
 
-BOOST_AUTO_TEST_CASE(variadic_templete_constructor_test)
-{
-    auto lvalue_action = actions::copy_ttl_in{};
-    auto const const_lvalue_action = actions::set_field{oxm_ipv4_src{0x7f000001}};
-    auto rvalue_action = actions::set_field{oxm_ipv4_dst{0x7f000002}};
-    auto sut = instructions::write_actions{
-          lvalue_action, const_lvalue_action, std::move(rvalue_action)
-        , actions::copy_ttl_in{}, actions::copy_ttl_out{}
-        , actions::set_field{oxm_ipv4_src{0x0100007f}}
-    };
+BOOST_AUTO_TEST_SUITE(instruction_test)
+BOOST_AUTO_TEST_SUITE(write_actions_test)
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
-    BOOST_CHECK_EQUAL(sut.length(), 8 + 48);
-}
+    BOOST_AUTO_TEST_CASE(type_definition_test)
+    {
+        using sut = instructions::write_actions;
 
-BOOST_AUTO_TEST_SUITE(initialize_by_action_set)
+        BOOST_TEST(sut::type() == v13::protocol::OFPIT_WRITE_ACTIONS);
+    }
 
-BOOST_AUTO_TEST_CASE(constructed_by_lvalue)
-{
-    auto set = action_set{actions::copy_ttl_in{}, actions::set_field{oxm_udp_dst{3344}}};
+    BOOST_AUTO_TEST_CASE(default_construct_test)
+    {
+        auto const sut = instructions::write_actions{};
 
-    auto const sut = instructions::write_actions{set};
+        BOOST_TEST(sut.length() == sizeof(detail::ofp_instruction_actions));
+        BOOST_TEST(sut.actions().empty());
+    }
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
-    BOOST_CHECK_EQUAL(sut.length(), 8 + set.length());
-}
+    BOOST_AUTO_TEST_CASE(construct_from_action_list_test)
+    {
+        auto const action_list = v13::action_list{
+            actions::output{1}, actions::set_eth_type{0x0800}
+        };
 
-BOOST_AUTO_TEST_CASE(constructed_by_const_lvalue)
-{
-    auto const set = action_set{actions::copy_ttl_in{}, actions::set_field{oxm_arp_op{1}}};
+        auto const sut = instructions::write_actions{action_list};
 
-    auto const sut = instructions::write_actions{set};
+        BOOST_TEST(sut.length()
+                == sizeof(detail::ofp_instruction_actions) + 32);
+        BOOST_TEST(sut.actions() == action_list);
+    }
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
-    BOOST_CHECK_EQUAL(sut.length(), 8 + set.length());
-}
+    BOOST_AUTO_TEST_CASE(construct_from_action_set_test)
+    {
+        auto const action_set = v13::action_set{
+            actions::output{1}, actions::set_eth_type{0x0800}
+        };
 
-BOOST_AUTO_TEST_CASE(constructed_by_xvalue)
-{
-    auto set = action_set{actions::copy_ttl_in{}, actions::set_field{oxm_udp_dst{3344}}};
-    auto const set_length = set.length();
+        auto const sut = instructions::write_actions{action_set};
 
-    auto const sut = instructions::write_actions{std::move(set)};
+        BOOST_TEST(sut.length()
+                == sizeof(detail::ofp_instruction_actions) + 32);
+        BOOST_TEST(sut.actions() == action_set.to_list());
+    }
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
-    BOOST_CHECK_EQUAL(sut.length(), 8 + set_length);
-    BOOST_CHECK_EQUAL(set.length(), 0);
-}
+    BOOST_AUTO_TEST_CASE(construct_from_single_action_test)
+    {
+        auto const group = actions::group{1};
+        auto const action_list = v13::action_list{group};
 
-BOOST_AUTO_TEST_CASE(constructed_by_prvalue)
-{
-    auto const sut = instructions::write_actions{
-        action_set{actions::copy_ttl_in{}, actions::set_field{oxm_udp_dst{3344}}}
-    };
+        auto const sut = instructions::write_actions{group};
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_WRITE_ACTIONS);
-    BOOST_CHECK_EQUAL(sut.length(), 8 + 24);
-}
+        BOOST_TEST(sut.length()
+                == sizeof(detail::ofp_instruction_actions) + 8);
+        BOOST_TEST(sut.actions() == action_list);
+    }
 
-BOOST_AUTO_TEST_SUITE_END() // initialize_by_action_set
+    BOOST_AUTO_TEST_CASE(construct_from_multiple_actions_test)
+    {
+        auto const copy_ttl_in = actions::copy_ttl_in{};
+        auto const set_ipv4_src1 = actions::set_ipv4_src{"127.0.0.1"_ipv4};
+        auto const set_ipv4_dst = actions::set_ipv4_dst{"127.0.0.2"_ipv4};
+        auto const copy_ttl_out = actions::copy_ttl_out{};
+        auto const set_ipv4_src2 = actions::set_ipv4_src{"172.16.1.1"_ipv4};
+        auto const action_set = v13::action_set{
+              copy_ttl_in, set_ipv4_src1, set_ipv4_dst
+            , copy_ttl_in, copy_ttl_out, set_ipv4_src2
+        };
 
-BOOST_AUTO_TEST_CASE(copy_constructor_test)
-{
-    auto const set = action_set{actions::copy_ttl_in{}, actions::set_field{oxm_ip_proto{1}}, actions::output{4}};
-    auto sut = instructions::write_actions{set};
+        auto const sut = instructions::write_actions{
+              copy_ttl_in, set_ipv4_src1, set_ipv4_dst
+            , copy_ttl_in, copy_ttl_out, set_ipv4_src2
+        };
 
-    auto const copy = sut;
+        BOOST_TEST(sut.length()
+                == sizeof(detail::ofp_instruction_actions) + 48);
+        BOOST_TEST(sut.actions() == action_set.to_list());
+    }
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
-}
+    BOOST_AUTO_TEST_CASE(create_success_test)
+    {
+        auto const sut = instructions::write_actions::create(
+                actions::output{1}, actions::group{2});
 
-BOOST_AUTO_TEST_CASE(move_constructor_test)
-{
-    auto sut = instructions::write_actions{
-        action_set{actions::copy_ttl_in{}, actions::set_field{oxm_ip_proto{1}}, actions::output{4}}
-    };
+        BOOST_TEST(sut.length()
+                == sizeof(detail::ofp_instruction_actions) + 16 + 8);
+    }
 
-    auto const copy = std::move(sut);
+    BOOST_AUTO_TEST_CASE(create_failure_test)
+    {
+        auto const action_list = v13::action_list{
+            actions::output{1}, actions::output{2}
+        };
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
+        BOOST_CHECK_THROW(
+                  instructions::write_actions::create(action_list)
+                , std::runtime_error);
+    }
 
-    // TODO
-    auto buffer = std::vector<std::uint8_t>{};
-    BOOST_CHECK_EQUAL(sut.encode(buffer).size(), sizeof(v13_detail::ofp_instruction_actions));
-}
+    BOOST_FIXTURE_TEST_CASE(copy_construct_test, write_actions_fixture)
+    {
+        auto const copy = sut;
 
-BOOST_AUTO_TEST_SUITE_END() // instantiation_test
+        BOOST_TEST(copy.length() == sut.length());
+        BOOST_TEST((copy.actions() == sut.actions()));
+    }
 
+    BOOST_FIXTURE_TEST_CASE(move_construct_test, write_actions_fixture)
+    {
+        auto src = sut;
 
-BOOST_AUTO_TEST_SUITE(assignment_test)
+        auto const copy = std::move(src);
 
-BOOST_AUTO_TEST_CASE(copy_assign_test)
-{
-    auto const set = action_set{actions::set_field{oxm_ipv6_dst{{{}}}}, actions::copy_ttl_in{}, actions::set_field{oxm_ip_proto{1}}, actions::output{4}};
-    auto sut = instructions::write_actions{set};
-    auto copy = instructions::write_actions{actions::set_queue{4}, actions::copy_ttl_in{}, actions::set_field{oxm_arp_op{1}}};
+        BOOST_TEST(copy.length() == sut.length());
+        BOOST_TEST((copy.actions() == sut.actions()));
+        BOOST_TEST(src.length() == sizeof(detail::ofp_instruction_actions));
+        BOOST_TEST(src.actions().empty());
+    }
 
-    copy = sut;
+    BOOST_FIXTURE_TEST_CASE(copy_assign_test, write_actions_fixture)
+    {
+        auto copy = instructions::write_actions{};
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
-}
+        copy = sut;
 
-BOOST_AUTO_TEST_CASE(move_assign_test)
-{
-    auto const set = action_set{actions::set_field{oxm_ipv6_dst{{{}}}}, actions::copy_ttl_in{}, actions::set_field{oxm_ip_proto{1}}, actions::output{4}};
-    auto sut = instructions::write_actions{set};
-    auto copy = instructions::write_actions{actions::copy_ttl_in{}, actions::set_field{oxm_arp_op{1}}};
+        BOOST_TEST(copy.length() == sut.length());
+        BOOST_TEST((copy.actions() == sut.actions()));
+    }
 
-    copy = std::move(sut);
+    BOOST_FIXTURE_TEST_CASE(move_assign_test, write_actions_fixture)
+    {
+        auto copy = instructions::write_actions{};
+        auto src = sut;
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
+        copy = std::move(src);
 
-    // TODO
-    auto buffer = std::vector<std::uint8_t>{};
-    BOOST_CHECK_EQUAL(sut.encode(buffer).size(), sizeof(v13_detail::ofp_instruction_actions));
-}
+        BOOST_TEST(copy.length() == sut.length());
+        BOOST_TEST((copy.actions() == sut.actions()));
+        BOOST_TEST(src.length() == sizeof(detail::ofp_instruction_actions));
+        BOOST_TEST(src.actions().empty());
+    }
 
-BOOST_AUTO_TEST_SUITE_END() // assignment_test
+    BOOST_AUTO_TEST_CASE(equality_test)
+    {
+        auto const sut = instructions::write_actions{
+            actions::output{1}, actions::set_queue{2}
+        };
+        auto const diff_value = instructions::write_actions{
+            actions::output{2}, actions::set_queue{1}
+        };
+        auto const diff_type = instructions::write_actions{
+            actions::group{1}, actions::set_queue{2}
+        };
+        auto const empty = instructions::write_actions{};
 
-BOOST_AUTO_TEST_CASE(encode_decode_test)
-{
-    auto buffer = std::vector<std::uint8_t>{};
-    auto const sut = instructions::write_actions{
-        action_set{actions::copy_ttl_in{}, actions::set_field{oxm_ip_proto{1}}, actions::output{4}}
-    };
+        BOOST_TEST((sut == sut));
+        BOOST_TEST((sut != diff_value));
+        BOOST_TEST((sut != diff_type));
+        BOOST_TEST((sut != empty));
+    }
 
-    sut.encode(buffer);
+    BOOST_FIXTURE_TEST_CASE(encode_test, write_actions_fixture)
+    {
+        auto buffer = std::vector<unsigned char>{};
 
-    BOOST_CHECK_EQUAL(buffer.size(), sut.length());
+        sut.encode(buffer);
 
-    auto it = buffer.begin();
-    auto const decoded_instruction = instructions::write_actions::decode(it, buffer.end());
+        BOOST_TEST(buffer.size() == sut.length());
+        BOOST_TEST(buffer == binary, boost::test_tools::per_element{});
+    }
 
-    BOOST_CHECK_EQUAL(decoded_instruction.type(), sut.type());
-    BOOST_CHECK_EQUAL(decoded_instruction.length(), sut.length());
-}
+    BOOST_FIXTURE_TEST_CASE(decode_test, write_actions_fixture)
+    {
+        auto it = binary.begin();
+        auto it_end = binary.end();
 
-} // namespace v13
-} // namespace openflow
-} // namespace network
-} // namespace canard
+        auto const write_actions
+            = instructions::write_actions::decode(it, it_end);
+
+        BOOST_TEST((it == it_end));
+        BOOST_TEST((write_actions == sut));
+    }
+
+    BOOST_FIXTURE_TEST_CASE(
+            decode_has_same_action_test, has_same_action_write_actions_fixture)
+    {
+        auto it = binary.begin();
+        auto it_end = binary.end();
+
+        auto const write_actions
+            = instructions::write_actions::decode(it, it_end);
+
+        BOOST_TEST((it == it_end));
+        BOOST_TEST((write_actions == sut));
+        BOOST_CHECK_THROW(
+                  instructions::write_actions::validate(write_actions)
+                , std::runtime_error);
+    }
+
+BOOST_AUTO_TEST_SUITE_END() // write_actions_test
+BOOST_AUTO_TEST_SUITE_END() // instruction_test
