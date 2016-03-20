@@ -1,95 +1,78 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_WRITE_ACTIONS_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_WRITE_ACTIONS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_WRITE_ACTIONS_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_WRITE_ACTIONS_HPP
 
 #include <cstdint>
-#include <iterator>
+#include <stdexcept>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
-#include <canard/type_traits.hpp>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v13/openflow.hpp>
+#include <canard/network/protocol/openflow/v13/action_order.hpp>
+#include <canard/network/protocol/openflow/v13/action_list.hpp>
 #include <canard/network/protocol/openflow/v13/action_set.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_instruction_actions.hpp>
+#include <canard/network/protocol/openflow/v13/openflow.hpp>
+#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace instructions {
 
-    namespace instructions {
+    class write_actions
+        : public detail::v13::basic_instruction_actions<write_actions>
+    {
+    public:
+        static constexpr protocol::ofp_instruction_type instruction_type
+            = protocol::OFPIT_WRITE_ACTIONS;
 
-        class write_actions
+        explicit write_actions(action_list actions)
+            : basic_instruction_actions{std::move(actions)}
         {
-        public:
-            static protocol::ofp_instruction_type const instruction_type
-                = protocol::OFPIT_WRITE_ACTIONS;
+        }
 
-            explicit write_actions(action_set act_set)
-                : actions_{instruction_type, std::uint16_t(sizeof(v13_detail::ofp_instruction_actions) + act_set.length()), {0, 0, 0, 0}}
-                , action_set_(std::move(act_set))
-            {
-            }
+        explicit write_actions(action_set actions)
+            : write_actions{std::move(actions).to_list()}
+        {
+        }
 
-            template <class... Actions, typename std::enable_if<!is_related<write_actions, Actions...>::value>::type* = nullptr>
-            write_actions(Actions&&... actions)
-                : write_actions{action_set{std::forward<Actions>(actions)...}}
-            {
-            }
+        template <
+              class... Actions
+            , typename std::enable_if<
+                !canard::is_related<write_actions, Actions...>::value
+              >::type* = nullptr
+        >
+        write_actions(Actions&&... actions)
+            : write_actions{action_set{std::forward<Actions>(actions)...}}
+        {
+        }
 
-            auto type() const
-                -> protocol::ofp_instruction_type
-            {
-                return instruction_type;
-            }
+    private:
+        friend basic_instruction_actions;
 
-            auto length() const
-                -> std::uint16_t
-            {
-                return actions_.len;
-            }
+        write_actions(
+                raw_ofp_type const& instruction_actions, action_list&& actions)
+            : basic_instruction_actions{instruction_actions, std::move(actions)}
+        {
+        }
 
-            template <class Container>
-            auto encode(Container& container) const
-                -> Container&
-            {
-                detail::encode(container, actions_);
-                return action_set_.encode(container);
-            }
-
-        private:
-            write_actions(action_set actions, std::uint16_t const length)
-                : actions_{instruction_type, length, {0, 0, 0, 0}}
-                , action_set_(std::move(actions))
-            {
-            }
-
-        public:
-            template <class Iterator>
-            static auto decode(Iterator& first, Iterator last)
-                -> write_actions
-            {
-                auto const instruction_actions = detail::decode<v13_detail::ofp_instruction_actions>(first, last);
-                if (instruction_actions.len < sizeof(v13_detail::ofp_instruction_actions)) {
-                    throw 2;
+        static void validate_impl(write_actions const& write_actions)
+        {
+            auto const& actions = write_actions.actions();
+            auto action_order_set = std::unordered_set<std::uint64_t>{};
+            action_order_set.reserve(actions.size());
+            for (auto const& action : actions) {
+                if (!action_order_set.insert(get_order(action)).second) {
+                    throw std::runtime_error{"duplicate action"};
                 }
-                if (std::distance(first, last) < instruction_actions.len - sizeof(v13_detail::ofp_instruction_actions)) {
-                    throw 2;
-                }
-                auto act_set = action_set::decode(first, std::next(first, instruction_actions.len - sizeof(v13_detail::ofp_instruction_actions)));
-                return write_actions{std::move(act_set), instruction_actions.len};
             }
+        }
+    };
 
-        private:
-            v13_detail::ofp_instruction_actions actions_;
-            action_set action_set_;
-        };
-
-    } // namespace instructions
-
+} // namespace instructions
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_WRITE_ACTIONS_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_WRITE_ACTIONS_HPP
