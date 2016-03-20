@@ -32,7 +32,7 @@ namespace instructions {
                 !canard::is_related<apply_actions, Actions...>::value
               >::type* = nullptr
         >
-        apply_actions(Actions&&... actions)
+        explicit apply_actions(Actions&&... actions)
             : apply_actions{action_list{std::forward<Actions>(actions)...}}
         {
         }

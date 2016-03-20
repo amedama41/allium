@@ -42,7 +42,7 @@ namespace instructions {
                 !canard::is_related<write_actions, Actions...>::value
               >::type* = nullptr
         >
-        write_actions(Actions&&... actions)
+        explicit write_actions(Actions&&... actions)
             : write_actions{action_set{std::forward<Actions>(actions)...}}
         {
         }
