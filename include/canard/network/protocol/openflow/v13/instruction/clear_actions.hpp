@@ -1,72 +1,65 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_CLEAR_ACTIONS_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_CLEAR_ACTIONS_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_CLEAR_ACTIONS_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_CLEAR_ACTIONS_HPP
 
-#include <cstdint>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace instructions {
 
-    namespace instructions {
+    class clear_actions
+        : public detail::v13::basic_instruction<
+            clear_actions, v13_detail::ofp_instruction_actions
+          >
+    {
+    public:
+        static constexpr protocol::ofp_instruction_type instruction_type
+            = protocol::OFPIT_CLEAR_ACTIONS;
 
-        class clear_actions
+        clear_actions() noexcept
+            : instruction_actions_{
+                  instruction_type
+                , sizeof(raw_ofp_type)
+                , { 0, 0, 0, 0 }
+              }
         {
-        public:
-            static protocol::ofp_instruction_type const instruction_type
-                = protocol::OFPIT_CLEAR_ACTIONS;
+        }
 
-            clear_actions()
-                : actions_{instruction_type, sizeof(v13_detail::ofp_instruction_actions), {0}}
-            {
-            }
+    private:
+        friend basic_instruction;
 
-            auto type() const
-                -> protocol::ofp_instruction_type
-            {
-                return instruction_type;
-            }
+        explicit clear_actions(raw_ofp_type const& instruction_actions) noexcept
+            : instruction_actions_(instruction_actions)
+        {
+        }
 
-            auto length() const
-                -> std::uint16_t
-            {
-                return sizeof(v13_detail::ofp_instruction_actions);
-            }
+        auto ofp_instruction() const noexcept
+            -> raw_ofp_type const&
+        {
+            return instruction_actions_;
+        }
 
-            template <class Container>
-            auto encode(Container& container) const
-                -> Container&
-            {
-                return detail::encode(container, actions_);
-            }
+        static void validate_impl(clear_actions const&)
+        {
+        }
 
-            template <class Iterator>
-            static auto decode(Iterator& first, Iterator last)
-                -> clear_actions
-            {
-                auto const instruction_actions = detail::decode<v13_detail::ofp_instruction_actions>(first, last);
-                if (instruction_actions.type != instruction_type) {
-                    throw 1;
-                }
-                if (instruction_actions.len != sizeof(v13_detail::ofp_instruction_actions)) {
-                    throw 2;
-                }
-                return clear_actions{};
-            }
+    private:
+        raw_ofp_type instruction_actions_;
+    };
 
-        private:
-            v13_detail::ofp_instruction_actions actions_;
-        };
+    auto operator==(clear_actions const&, clear_actions const&) noexcept
+        -> bool
+    {
+        return true;
+    }
 
-    } // namespace instructions
-
+} // namespace instructions
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_CLEAR_ACTIONS_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_CLEAR_ACTIONS_HPP
