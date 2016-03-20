@@ -19,7 +19,7 @@ namespace v10 {
         , actions::strip_vlan
         , actions::set_eth_src
         , actions::set_eth_dst
-        , actions::set_ipv4_tos
+        , actions::set_ip_dscp
         , actions::set_ipv4_src
         , actions::set_ipv4_dst
         , actions::set_tcp_dst
