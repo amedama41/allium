@@ -1,6 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_ACTION_DECODER_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_ACTION_DECODER_HPP
 
+#include <iterator>
 #include <stdexcept>
 #include <tuple>
 #include <boost/preprocessor/repeat.hpp>
@@ -31,6 +32,10 @@ struct action_decoder
         auto it = first;
         auto const action_header
             = detail::decode<v13_detail::ofp_action_header>(it, last);
+
+        if (std::distance(first, last) < action_header.len) {
+            throw std::runtime_error{"action length is too big"};
+        }
 
         switch (action_header.type) {
 #       define CANARD_NETWORK_OPENFLOW_V13_ACTION_CASE(z, N, _) \
