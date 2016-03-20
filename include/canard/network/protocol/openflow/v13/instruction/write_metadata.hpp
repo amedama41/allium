@@ -70,7 +70,7 @@ namespace instructions {
         raw_ofp_type instruction_write_metadata_;
     };
 
-    auto operator==(
+    inline auto operator==(
             write_metadata const& lhs, write_metadata const& rhs) noexcept
         -> bool
     {

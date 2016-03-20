@@ -113,7 +113,7 @@ namespace v10 {
         raw_ofp_type match_;
     };
 
-    auto operator==(match_set const& lhs, match_set const& rhs) noexcept
+    inline auto operator==(match_set const& lhs, match_set const& rhs) noexcept
         -> bool
     {
         return lhs.get<match::in_port>() == rhs.get<match::in_port>()

@@ -62,7 +62,8 @@ namespace instructions {
         raw_ofp_type instruction_goto_table_;
     };
 
-    auto operator==(goto_table const& lhs, goto_table const& rhs) noexcept
+    inline auto operator==(
+            goto_table const& lhs, goto_table const& rhs) noexcept
         -> bool
     {
         return lhs.table_id() == rhs.table_id();

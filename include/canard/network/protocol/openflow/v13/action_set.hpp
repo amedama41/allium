@@ -268,7 +268,7 @@ namespace v13 {
         action_list actions_;
     };
 
-    auto operator==(action_set const& lhs, action_set const& rhs)
+    inline auto operator==(action_set const& lhs, action_set const& rhs)
         -> bool
     {
         return lhs.to_list() == rhs.to_list();

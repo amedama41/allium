@@ -62,7 +62,7 @@ namespace instructions {
         raw_ofp_type instruction_meter_;
     };
 
-    auto operator==(meter const& lhs, meter const& rhs) noexcept
+    inline auto operator==(meter const& lhs, meter const& rhs) noexcept
         -> bool
     {
         return lhs.meter_id() == rhs.meter_id();
