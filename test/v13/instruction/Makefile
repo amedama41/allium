@@ -5,8 +5,9 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 # CXX = g++-4.9
 # CXXFLAGS = -std=c++11 -Wall -pedantic $(INCLUDES)
 
-SRCS = write_actions_test.cpp \
-	   apply_actions_test.cpp
+SRCS = goto_table_test.cpp \
+	   write_actions_test.cpp
+	   apply_actions_test.cpp \
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libinstruction_test.dylib
