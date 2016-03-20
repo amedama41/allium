@@ -1,81 +1,77 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_METER_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_METER_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_METER_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_METER_HPP
 
 #include <cstdint>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <stdexcept>
+#include <canard/network/protocol/openflow/v13/detail/basic_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace instructions {
 
-    namespace instructions {
+    class meter
+        : public detail::v13::basic_instruction<
+            meter, v13_detail::ofp_instruction_meter
+          >
+    {
+    public:
+        static constexpr protocol::ofp_instruction_type instruction_type
+            = protocol::OFPIT_METER;
 
-        class meter
+        explicit meter(std::uint32_t const meter_id) noexcept
+            : instruction_meter_{
+                  instruction_type
+                , sizeof(raw_ofp_type)
+                , meter_id
+              }
         {
-        public:
-            static protocol::ofp_instruction_type const instruction_type
-                = protocol::OFPIT_METER;
+        }
 
-            explicit meter(std::uint32_t const meter_id)
-                : meter_{instruction_type, sizeof(v13_detail::ofp_instruction_meter), meter_id}
-            {
-                if (meter_id == 0 || meter_id > protocol::OFPM_MAX) {
-                    throw 3;
-                }
+        auto meter_id() const noexcept
+            -> std::uint32_t
+        {
+            return instruction_meter_.meter_id;
+        }
+
+    private:
+        friend basic_instruction;
+
+        explicit meter(raw_ofp_type const& instruction_meter) noexcept
+            : instruction_meter_(instruction_meter)
+        {
+        }
+
+        auto ofp_instruction() const noexcept
+            -> raw_ofp_type const&
+        {
+            return instruction_meter_;
+        }
+
+        static void validate_impl(meter const& meter)
+        {
+            auto const meter_id = meter.meter_id();
+            if (meter_id == 0 || meter_id > protocol::OFPM_MAX) {
+                throw std::runtime_error{"invalid meter id"};
             }
+        }
 
-            auto type() const
-                -> protocol::ofp_instruction_type
-            {
-                return instruction_type;
-            }
+    private:
+        raw_ofp_type instruction_meter_;
+    };
 
-            auto length() const
-                -> std::uint16_t
-            {
-                return sizeof(v13_detail::ofp_instruction_meter);
-            }
+    auto operator==(meter const& lhs, meter const& rhs) noexcept
+        -> bool
+    {
+        return lhs.meter_id() == rhs.meter_id();
+    }
 
-            auto meter_id() const
-                -> std::uint32_t
-            {
-                return meter_.meter_id;
-            }
-
-            template <class Container>
-            auto encode(Container& container) const
-                -> Container&
-            {
-                return detail::encode(container, meter_);
-            }
-
-            template <class Iterator>
-            static auto decode(Iterator& first, Iterator last)
-                -> meter
-            {
-                auto const instruction_meter = detail::decode<v13_detail::ofp_instruction_meter>(first, last);
-                if (instruction_meter.type != instruction_type) {
-                    throw 1;
-                }
-                if (instruction_meter.len != sizeof(v13_detail::ofp_instruction_meter)) {
-                    throw 2;
-                }
-                return meter{instruction_meter.meter_id};
-            }
-
-        private:
-            v13_detail::ofp_instruction_meter meter_;
-        };
-
-    } // namespace instructions
-
+} // namespace instructions
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_METER_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_METER_HPP
