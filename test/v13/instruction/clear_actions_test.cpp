@@ -1,68 +1,79 @@
 #define BOOST_TEST_DYN_LINK
 #include <canard/network/protocol/openflow/v13/instruction/clear_actions.hpp>
 #include <boost/test/unit_test.hpp>
-#include <cstdint>
-#include <utility>
+
 #include <vector>
 
-namespace canard {
-namespace network {
-namespace openflow {
-namespace v13 {
+#include "../../test_utility.hpp"
 
+namespace of = canard::network::openflow;
+namespace v13 = of::v13;
+namespace instructions = v13::instructions;
+namespace detail = v13::v13_detail;
+
+namespace {
+
+struct clear_actions_fixture
+{
+    instructions::clear_actions sut{};
+    std::vector<unsigned char> binary = "\x00\x05\x00\x08\x00\x00\x00\x00"_bin;
+};
+
+}
+
+BOOST_AUTO_TEST_SUITE(instruction_test)
 BOOST_AUTO_TEST_SUITE(clear_actions_test)
 
-BOOST_AUTO_TEST_SUITE(instantiation_test)
+    BOOST_AUTO_TEST_CASE(type_definition_test)
+    {
+        using sut = instructions::clear_actions;
 
-BOOST_AUTO_TEST_CASE(constructor_test)
-{
-    auto const sut = instructions::clear_actions{};
+        BOOST_TEST(sut::type() == v13::protocol::OFPIT_CLEAR_ACTIONS);
+        BOOST_TEST(sut::length() == sizeof(detail::ofp_instruction_actions));
+    }
 
-    BOOST_CHECK_EQUAL(sut.type(), protocol::OFPIT_CLEAR_ACTIONS);
-    BOOST_CHECK_EQUAL(sut.length(), 8);
-}
+    BOOST_AUTO_TEST_CASE(construct_test)
+    {
+        auto const sut = instructions::clear_actions{};
 
-BOOST_AUTO_TEST_CASE(copy_constructor_test)
-{
-    auto sut = instructions::clear_actions{};
+        BOOST_TEST(sut.length() == 8);
+    }
 
-    auto const copy = sut;
+    BOOST_AUTO_TEST_CASE(create_test)
+    {
+        BOOST_CHECK_NO_THROW(instructions::clear_actions::create());
+    }
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
-}
+    BOOST_AUTO_TEST_CASE(equality_test)
+    {
+        auto const sut1 = instructions::clear_actions{};
+        auto const sut2 = instructions::clear_actions{};
 
-BOOST_AUTO_TEST_CASE(move_constructor_test)
-{
-    auto sut = instructions::clear_actions{};
+        BOOST_TEST((sut1 == sut1));
+        BOOST_TEST((sut1 == sut2));
+    }
 
-    auto const copy = std::move(sut);
+    BOOST_FIXTURE_TEST_CASE(encode_test, clear_actions_fixture)
+    {
+        auto buffer = std::vector<unsigned char>{};
 
-    BOOST_CHECK_EQUAL(copy.type(), sut.type());
-    BOOST_CHECK_EQUAL(copy.length(), sut.length());
-}
+        sut.encode(buffer);
 
-BOOST_AUTO_TEST_SUITE_END() // instantiation_test
+        BOOST_TEST(buffer.size() == sut.length());
+        BOOST_TEST(buffer == binary, boost::test_tools::per_element{});
+    }
 
-BOOST_AUTO_TEST_CASE(encode_decode_test)
-{
-    auto buffer = std::vector<std::uint8_t>{};
-    auto const sut = instructions::clear_actions{};
+    BOOST_FIXTURE_TEST_CASE(decode_test, clear_actions_fixture)
+    {
+        auto it = binary.begin();
+        auto it_end = binary.end();
 
-    sut.encode(buffer);
+        auto const clear_actions
+            = instructions::clear_actions::decode(it, it_end);
 
-    BOOST_CHECK_EQUAL(buffer.size(), sut.length());
-
-    auto it = buffer.begin();
-    auto const decoded_instruction = instructions::clear_actions::decode(it, buffer.end());
-
-    BOOST_CHECK_EQUAL(decoded_instruction.type(), sut.type());
-    BOOST_CHECK_EQUAL(decoded_instruction.length(), sut.length());
-}
+        BOOST_TEST((it == it_end));
+        BOOST_TEST((clear_actions == sut));
+    }
 
 BOOST_AUTO_TEST_SUITE_END() // clear_actions_test
-
-} // namespace v13
-} // namespace openflow
-} // namespace network
-} // namespace canard
+BOOST_AUTO_TEST_SUITE_END() // instruction_test

@@ -8,7 +8,8 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 SRCS = goto_table_test.cpp \
 	   write_metadata_test.cpp \
 	   write_actions_test.cpp \
-	   apply_actions_test.cpp
+	   apply_actions_test.cpp \
+	   clear_actions_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libinstruction_test.dylib
