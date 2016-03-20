@@ -8,7 +8,8 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 SRCS = any_oxm_match_field_test.cpp \
 	   oxm_match_set_test.cpp \
 	   action_list_test.cpp \
-	   action_set_test.cpp
+	   action_set_test.cpp \
+	   any_instruction_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libcommon_type_test.dylib
