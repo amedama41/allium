@@ -22,10 +22,14 @@ struct oxm_match_field_decoder
         auto it = first;
         auto const oxm_header = detail::decode<std::uint32_t>(it, last);
 
+        if (std::distance(it, last) < (oxm_header & 0xff)) {
+            throw std::runtime_error{"oxm length is too big"};
+        }
+
         switch (oxm_header >> 9) {
 #       define CANARD_NETWORK_OPENFLOW_V13_MATCH_FIELD_CASE(z, N, _) \
-        using oxm_match_field ## N = \
-            std::tuple_element<N, default_oxm_match_field_list>::type; \
+        using oxm_match_field ## N \
+            = std::tuple_element<N, default_oxm_match_field_list>::type; \
         case oxm_match_field ## N::oxm_type(): \
             return function(oxm_match_field ## N::decode(first, last));
         static_assert(
