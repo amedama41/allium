@@ -1,6 +1,7 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_QUEUE_PROPERTY_DECODER_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_QUEUE_PROPERTY_DECODER_HPP
 
+#include <iterator>
 #include <stdexcept>
 #include <tuple>
 #include <boost/preprocessor/repeat.hpp>
@@ -24,6 +25,10 @@ struct queue_property_decoder
         auto it = first;
         auto const prop_header
             = detail::decode<v13_detail::ofp_queue_prop_header>(it, last);
+
+        if (std::distance(first, last) < prop_header.len) {
+            throw std::runtime_error{"queue property length is too big"};
+        }
 
         switch (prop_header.property) {
 #       define CANARD_NETWORK_OPENFLOW_V13_QUEUE_PROPERTY_CASE(z, N, _) \
