@@ -16,6 +16,12 @@ namespace v10 {
 
 struct action_decoder
 {
+    using ofp_action_type = protocol::ofp_action_type;
+    using action_type_list = default_action_list;
+    static_assert(
+              std::tuple_size<default_action_list>::value == 12
+            , "not match to the number of action types");
+
     template <class ReturnType, class Iterator, class Function>
     static auto decode(Iterator& first, Iterator last, Function function)
         -> ReturnType
@@ -26,13 +32,10 @@ struct action_decoder
 
         switch (action_header.type) {
 #       define CANARD_NETWORK_OPENFLOW_V10_ACTION_CASE(z, N, _) \
-        using action ## N = \
-            std::tuple_element<N, default_action_list>::type; \
+        using action ## N \
+            = std::tuple_element<N, default_action_list>::type; \
         case action ## N::action_type: \
             return function(action ## N::decode(first, last));
-        static_assert(
-                  std::tuple_size<default_action_list>::value == 12
-                , "not match to the number of action types");
         BOOST_PP_REPEAT(12, CANARD_NETWORK_OPENFLOW_V10_ACTION_CASE, _)
 #       undef CANARD_NETWORK_OPENFLOW_V10_ACTION_CASE
         default:

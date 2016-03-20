@@ -14,9 +14,7 @@ namespace network {
 namespace openflow {
 namespace v13 {
 
-    using any_action = detail::any_action<
-        default_all_action_list, action_decoder, protocol
-    >;
+    using any_action = detail::any_action<action_decoder>;
 
     template <class T>
     auto any_cast(any_action const& action)

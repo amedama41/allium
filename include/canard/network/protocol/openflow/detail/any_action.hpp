@@ -18,14 +18,14 @@ namespace network {
 namespace openflow {
 namespace detail {
 
-    template <class ActionList, class ActionDecoder, class Protocol>
+    template <class ActionDecoder>
     class any_action
-        : private boost::equality_comparable<
-            any_action<ActionList, ActionDecoder, Protocol>
-          >
+        : private boost::equality_comparable<any_action<ActionDecoder>>
     {
+        using ofp_action_type = typename ActionDecoder::ofp_action_type;
+        using action_type_list = typename ActionDecoder::action_type_list;
         using action_variant
-            = typename boost::make_variant_over<ActionList>::type;
+            = typename boost::make_variant_over<action_type_list>::type;
 
     public:
         template <
@@ -53,10 +53,9 @@ namespace detail {
         }
 
         auto type() const noexcept
-            -> typename Protocol::ofp_action_type
+            -> ofp_action_type
         {
-            auto visitor
-                = detail::type_visitor<typename Protocol::ofp_action_type>{};
+            auto visitor = detail::type_visitor<ofp_action_type>{};
             return boost::apply_visitor(visitor, variant_);
         }
 
@@ -105,12 +104,12 @@ namespace detail {
             return lhs.variant_ == rhs.variant_;
         }
 
-        template <class T, class L, class D, class P>
-        friend auto any_cast(any_action<L, D, P> const&)
+        template <class T, class Decoder>
+        friend auto any_cast(any_action<Decoder> const&)
             -> T const&;
 
-        template <class T, class L, class D, class P>
-        friend auto any_cast(any_action<L, D, P> const*)
+        template <class T, class Decoder>
+        friend auto any_cast(any_action<Decoder> const*)
             -> T const*;
 
     private:
@@ -128,17 +127,15 @@ namespace detail {
         action_variant variant_;
     };
 
-    template <class T, class ActionList, class ActionDecoder, class Protocol>
-    auto any_cast(
-            any_action<ActionList, ActionDecoder, Protocol> const& action)
+    template <class T, class ActionDecoder>
+    auto any_cast(any_action<ActionDecoder> const& action)
         -> T const&
     {
         return boost::get<T>(action.variant_);
     }
 
-    template <class T, class ActionList, class ActionDecoder, class Protocol>
-    auto any_cast(
-            any_action<ActionList, ActionDecoder, Protocol> const* const action)
+    template <class T, class ActionDecoder>
+    auto any_cast(any_action<ActionDecoder> const* const action)
         -> T const*
     {
         return boost::get<T>(std::addressof(action->variant_));
