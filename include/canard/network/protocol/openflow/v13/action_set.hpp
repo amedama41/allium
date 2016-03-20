@@ -253,6 +253,12 @@ namespace v13 {
             return actions_;
         }
 
+        friend auto operator==(action_set const& lhs, action_set const& rhs)
+            -> bool
+        {
+            return lhs.to_list() == rhs.to_list();
+        }
+
     private:
         auto non_const_lower_bound(key_type const act_order)
             -> action_list::iterator
@@ -267,12 +273,6 @@ namespace v13 {
     private:
         action_list actions_;
     };
-
-    inline auto operator==(action_set const& lhs, action_set const& rhs)
-        -> bool
-    {
-        return lhs.to_list() == rhs.to_list();
-    }
 
 } // namespace v13
 } // namespace openflow
