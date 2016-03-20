@@ -1,93 +1,87 @@
-#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_WRITE_METADATA_HPP
-#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_WRITE_METADATA_HPP
+#ifndef CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_WRITE_METADATA_HPP
+#define CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_WRITE_METADATA_HPP
 
 #include <cstdint>
 #include <limits>
-#include <canard/network/protocol/openflow/detail/decode.hpp>
-#include <canard/network/protocol/openflow/detail/encode.hpp>
-#include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
+#include <canard/network/protocol/openflow/v13/detail/basic_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 
 namespace canard {
 namespace network {
 namespace openflow {
 namespace v13 {
+namespace instructions {
 
-    namespace instructions {
+    class write_metadata
+        : public detail::v13::basic_instruction<
+            write_metadata, v13_detail::ofp_instruction_write_metadata
+          >
+    {
+    public:
+        static constexpr protocol::ofp_instruction_type instruction_type
+            = protocol::OFPIT_WRITE_METADATA;
 
-        class write_metadata
+        explicit write_metadata(
+                  std::uint64_t const metadata
+                , std::uint64_t const metadata_mask
+                    = std::numeric_limits<std::uint64_t>::max()) noexcept
+            : instruction_write_metadata_{
+                  instruction_type
+                , sizeof(raw_ofp_type)
+                , { 0, 0, 0, 0 }
+                , metadata
+                , metadata_mask
+            }
         {
-        public:
-            static protocol::ofp_instruction_type const instruction_type
-                = protocol::OFPIT_WRITE_METADATA;
+        }
 
-            explicit write_metadata(std::uint64_t const metadata)
-                : write_metadata{metadata, std::numeric_limits<std::uint64_t>::max()}
-            {
-            }
+        auto metadata() const noexcept
+            -> std::uint64_t
+        {
+            return instruction_write_metadata_.metadata;
+        }
 
-            write_metadata(std::uint64_t const metadata, std::uint64_t const metadata_mask)
-                : write_metadata_{
-                      instruction_type, sizeof(v13_detail::ofp_instruction_write_metadata), {0}
-                    , metadata, metadata_mask
-                }
-            {
-            }
+        auto metadata_mask() const noexcept
+            -> std::uint64_t
+        {
+            return instruction_write_metadata_.metadata_mask;
+        }
 
-            auto type() const
-                -> protocol::ofp_instruction_type
-            {
-                return instruction_type;
-            }
+    private:
+        friend basic_instruction;
 
-            auto length() const
-                -> std::uint16_t
-            {
-                return sizeof(v13_detail::ofp_instruction_write_metadata);
-            }
+        explicit write_metadata(
+                raw_ofp_type const& instruction_write_metadata) noexcept
+            : instruction_write_metadata_(instruction_write_metadata)
+        {
+        }
 
-            auto metadata() const
-                -> std::uint64_t
-            {
-                return write_metadata_.metadata;
-            }
+        auto ofp_instruction() const noexcept
+            -> raw_ofp_type const&
+        {
+            return instruction_write_metadata_;
+        }
 
-            auto metadata_mask() const
-                -> std::uint64_t
-            {
-                return write_metadata_.metadata_mask;
-            }
+        static void validate_impl(write_metadata const&)
+        {
+        }
 
-            template <class Container>
-            auto encode(Container& container) const
-                -> Container&
-            {
-                return detail::encode(container, write_metadata_);
-            }
+    private:
+        raw_ofp_type instruction_write_metadata_;
+    };
 
-            template <class Iterator>
-            static auto decode(Iterator& first, Iterator last)
-                -> write_metadata
-            {
-                auto const instruction_write_metadata = detail::decode<v13_detail::ofp_instruction_write_metadata>(first, last);
-                if (instruction_write_metadata.type != instruction_type) {
-                    throw 1;
-                }
-                if (instruction_write_metadata.len != sizeof(v13_detail::ofp_instruction_write_metadata)) {
-                    throw 2;
-                }
-                return {instruction_write_metadata.metadata, instruction_write_metadata.metadata_mask};
-            }
+    auto operator==(
+            write_metadata const& lhs, write_metadata const& rhs) noexcept
+        -> bool
+    {
+        return lhs.metadata() == rhs.metadata()
+            && lhs.metadata_mask() == rhs.metadata_mask();
+    }
 
-        private:
-            v13_detail::ofp_instruction_write_metadata write_metadata_;
-        };
-
-    } // namespace instructions
-
+} // namespace instructions
 } // namespace v13
 } // namespace openflow
 } // namespace network
 } // namespace canard
 
-#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTION_WRITE_METADATA_HPP
+#endif // CANARD_NETWORK_OPENFLOW_V13_INSTRUCTIONS_WRITE_METADATA_HPP
