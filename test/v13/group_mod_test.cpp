@@ -5,6 +5,8 @@
 #include <vector>
 #include <utility>
 
+using boost::asio::ip::address_v4;
+
 namespace canard {
 namespace network {
 namespace openflow {
@@ -34,7 +36,7 @@ BOOST_AUTO_TEST_SUITE(instantiation_test)
     {
         auto sut = group_mod_add{protocol::OFPG_MAX, protocol::OFPGT_SELECT, {
               bucket{2, {actions::pop_vlan{}, actions::output{1}}} // 16 + 8 + 16 = 40
-            , bucket{1, {actions::set_field{oxm_vlan_vid{4}}, actions::output{2}}} // 16 + 16 + 16 = 48
+            , bucket{1, {actions::set_vlan_vid{4}, actions::output{2}}} // 16 + 16 + 16 = 48
         }};
 
         auto const copy = std::move(sut);
@@ -54,8 +56,8 @@ BOOST_AUTO_TEST_SUITE_END() // instantiation_test
 
 struct encode_decode_fixture {
     group_mod_add const sut{1, protocol::OFPGT_ALL, {
-          bucket{{actions::push_vlan{0x8100}, actions::set_field{oxm_vlan_vid{4095}}, actions::output{1}}}
-        , bucket{{actions::set_field{oxm_ipv4_src{0x7f000001}}, actions::set_field{oxm_ipv4_dst{0x7f000002}}, actions::output{2}}}
+          bucket{{actions::push_vlan{0x8100}, actions::set_vlan_vid{4095}, actions::output{1}}}
+        , bucket{{actions::set_ipv4_src{address_v4{0x7f000001}}, actions::set_ipv4_dst{address_v4{0x7f000002}}, actions::output{2}}}
     }};
     std::vector<std::uint8_t> buffer{};
 };

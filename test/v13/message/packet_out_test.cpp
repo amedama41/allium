@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(packet_out_test)
         auto const in_port = proto::OFPP_CONTROLLER;
         auto const actions = v13::action_list{
               v13::actions::push_vlan{0x8100}
-            , v13::actions::set_field{match::vlan_vid{3}}
+            , v13::actions::set_vlan_vid{3}
             , v13::actions::output{3}
         };
         auto const xid = std::uint32_t{0x000001};
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_SUITE(packet_out_test)
             , proto::OFPP_CONTROLLER
             , v13::action_list{
                   v13::actions::push_vlan{0x8100}
-                , v13::actions::set_field{match::vlan_vid{proto::OFPVID_PRESENT | 3}}
+                , v13::actions::set_vlan_vid{proto::OFPVID_PRESENT | 3}
                 , v13::actions::output{3}
               }
             , 0x1234

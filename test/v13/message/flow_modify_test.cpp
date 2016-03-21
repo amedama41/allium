@@ -30,14 +30,14 @@ struct flow_entry_fixture {
         , 0xf1f2f3f4f5f6f7f8
         , v13::instruction_set{
               v13::instructions::apply_actions{
-                  v13::actions::set_field{match::eth_dst{eth_src}}
-                , v13::actions::set_field{match::eth_src{eth_dst}}
+                  v13::actions::set_eth_dst{eth_src}
+                , v13::actions::set_eth_src{eth_dst}
                 , v13::actions::output{4}
               } // 8 + 16 + 16 + 16 = 56
             , v13::instructions::clear_actions{} // 8
             , v13::instructions::write_actions{
-                  v13::actions::set_field{match::eth_dst{eth_src}}
-                , v13::actions::set_field{match::eth_src{eth_dst}}
+                  v13::actions::set_eth_dst{eth_src}
+                , v13::actions::set_eth_src{eth_dst}
               } // 8 + 16 + 16 = 40
           } // 56 + 8 + 40 = 104
     };
