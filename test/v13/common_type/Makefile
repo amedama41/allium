@@ -10,7 +10,8 @@ SRCS = any_oxm_match_field_test.cpp \
 	   action_list_test.cpp \
 	   action_set_test.cpp \
 	   any_instruction_test.cpp \
-	   instruction_set_test.cpp
+	   instruction_set_test.cpp \
+	   bucket_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET_LIB = libcommon_type_test.dylib
