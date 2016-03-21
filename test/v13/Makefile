@@ -18,19 +18,7 @@ MESSAGE_TEST_SRCS = hello_test.cpp hello_elements_test.cpp \
 					table_features_test.cpp
 MESSAGE_TEST_OBJS = $(MESSAGE_TEST_SRCS:.cpp=.o)
 
-ACTION_TEST_SRCS = output_test.cpp \
-				   copy_ttl_in_test.cpp copy_ttl_out_test.cpp \
-				   set_mpls_ttl_test.cpp decrement_mpls_ttl_test.cpp \
-				   push_vlan_test.cpp pop_vlan_test.cpp \
-				   push_mpls_test.cpp pop_mpls_test.cpp \
-				   set_queue_test.cpp group_test.cpp \
-				   set_nw_ttl_test.cpp decrement_nw_ttl_test.cpp \
-				   set_field_test.cpp \
-				   push_pbb_test.cpp pop_pbb_test.cpp
-ACTION_TEST_OBJS = $(ACTION_TEST_SRCS:.cpp=.o)
-
 SRCS = $(UTILITY_TEST_SRCS) \
-	   $(ACTION_TEST_SRCS) \
 	   $(MESSAGE_TEST_SRCS)
 OBJS = $(SRCS:.cpp=.o)
 
@@ -62,9 +50,6 @@ utility_test: $(UTILITY_TEST_OBJS)
 	$(build_test)
 
 message_test: $(MESSAGE_TEST_OBJS)
-	$(build_test)
-
-action_test: $(ACTION_TEST_OBJS)
 	$(build_test)
 
 run: all
