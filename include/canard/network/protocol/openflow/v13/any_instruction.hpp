@@ -5,6 +5,7 @@
 #include <boost/variant/static_visitor.hpp>
 #include <canard/network/protocol/openflow/detail/any_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/decoder/instruction_decoder.hpp>
+#include <canard/network/protocol/openflow/v13/instruction_order.hpp>
 
 namespace canard {
 namespace network {
@@ -32,22 +33,26 @@ namespace v13 {
         struct instruction_order_visitor
             : boost::static_visitor<std::uint64_t>
         {
-            template <class T>
-            auto operator()(T const& t) const
+            template <class Instruction>
+            auto operator()(Instruction const& instruction) const
                 -> std::uint64_t
             {
-                return instruction_order(t);
+                return instruction_order<Instruction>::get_value(instruction);
             }
         };
 
     } // namespace any_instruction_detail
 
-    inline auto instruction_order(any_instruction const& instruction)
-        -> std::uint64_t
+    template <>
+    struct instruction_order<any_instruction>
     {
-        auto visitor = any_instruction_detail::instruction_order_visitor{};
-        return instruction.visit(visitor);
-    }
+        static auto get_value(any_instruction const& instruction)
+            -> std::uint64_t
+        {
+            auto visitor = any_instruction_detail::instruction_order_visitor{};
+            return instruction.visit(visitor);
+        }
+    };
 
 } // namespace v13
 } // namespace openflow

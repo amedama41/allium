@@ -14,6 +14,7 @@
 #include <canard/network/protocol/openflow/v13/detail/decode_instruction.hpp>
 #include <canard/network/protocol/openflow/v13/instructions.hpp>
 #include <canard/network/protocol/openflow/v13/any_instruction.hpp>
+#include <canard/network/protocol/openflow/v13/instruction_order.hpp>
 
 namespace canard {
 namespace network {
@@ -56,7 +57,7 @@ namespace v13 {
         template <class Instruction>
         void add(Instruction&& instruction)
         {
-            auto const order = instruction_order(instruction);
+            auto const order = get_order(instruction);
             auto const it = instruction_map_.lower_bound(order);
             if (it != instruction_map_.end() && !instruction_map_.key_comp()(order, it->first)) {
                 it->second = std::forward<Instruction>(instruction);
