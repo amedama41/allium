@@ -55,18 +55,6 @@ namespace v13 {
             }
         };
 
-        class instruction_order_visitor
-            : public boost::static_visitor<std::uint64_t>
-        {
-        public:
-            template <class T>
-            auto operator()(T const& t) const
-                -> std::uint64_t
-            {
-                return instruction_order(t);
-            }
-        };
-
         using detail::v13::oxm_type_visitor;
         using detail::v13::oxm_header_visitor;
         using detail::v13::oxm_has_mask_visitor;
