@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 #include <boost/fusion/container/map.hpp>
+#include <boost/fusion/sequence/intrinsic/has_key.hpp>
 #include <boost/fusion/sequence/intrinsic/value_at_key.hpp>
 #include <boost/fusion/support/pair.hpp>
 #include <canard/network/protocol/openflow/v13/actions.hpp>
@@ -38,31 +39,50 @@ namespace v13 {
             , pair<actions::output, priority<0x0b00>>
         >;
 
+        template <class Action>
+        using has_priority_t = typename boost::fusion::result_of::has_key<
+            action_order_detail::action_set_priority_map, Action
+        >::type;
+
+        template <class Action>
+        using priority_t = typename boost::fusion::result_of::value_at_key<
+            action_order_detail::action_set_priority_map, Action
+        >::type;
+
     } // namespace action_order_detail
 
+
+    template <class Action, class = void>
+    struct action_set_priority;
+
     template <class Action>
-    struct action_set_priority
+    struct action_set_priority<
+        Action, typename std::enable_if<
+            action_order_detail::has_priority_t<Action>::value
+        >::type
+    >
     {
         static constexpr std::uint16_t value
-            = boost::fusion::result_of::value_at_key<
-                  action_order_detail::action_set_priority_map, Action
-              >::type::value;
+            = action_order_detail::priority_t<Action>::value;
     };
 
-    template <class OXMMatchField>
-    struct action_set_priority<actions::set_field<OXMMatchField>>
-    {
-        static constexpr std::uint16_t value = 0x0800;
-    };
 
+    template <class Action, class = void>
+    struct action_order;
 
     template <class Action>
-    struct action_order
+    struct action_order<
+          Action
+        , typename std::enable_if<(action_set_priority<Action>{}, true)>::type
+    >
     {
         using action = Action;
 
+        static constexpr std::uint16_t priority
+            = action_set_priority<action>::value;
+
         static constexpr std::uint64_t value
-            = (std::uint64_t(action_set_priority<action>::value) << 48)
+            = (std::uint64_t(priority) << 48)
             | (std::uint64_t(action::type()) << 32);
 
         static constexpr auto get_value(action const&) noexcept
@@ -77,8 +97,10 @@ namespace v13 {
     {
         using action = actions::set_field<OXMMatchField>;
 
+        static constexpr std::uint16_t priority = 0x0800;
+
         static constexpr std::uint64_t value
-            = (std::uint64_t(action_set_priority<action>::value) << 48)
+            = (std::uint64_t(priority) << 48)
             | (std::uint64_t(action::type()) << 32)
             | std::uint64_t(action::oxm_type());
 
@@ -89,9 +111,10 @@ namespace v13 {
         }
     };
 
+
     template <class Action>
     auto get_order(Action const& action)
-        -> std::uint64_t
+        -> decltype(action_order<Action>::get_value(action))
     {
         return action_order<Action>::get_value(action);
     }
