@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <boost/operators.hpp>
 #include <boost/optional/optional.hpp>
@@ -257,6 +258,19 @@ namespace v13 {
             -> bool
         {
             return lhs.to_list() == rhs.to_list();
+        }
+
+        static auto is_action_set(action_list const& actions)
+            -> bool
+        {
+            auto action_order_set = std::unordered_set<key_type>{};
+            action_order_set.reserve(actions.size());
+            for (auto const& action : actions) {
+                if (!action_order_set.insert(get_order(action)).second) {
+                    return false;
+                }
+            }
+            return true;
         }
 
     private:

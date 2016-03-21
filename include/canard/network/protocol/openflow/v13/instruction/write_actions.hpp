@@ -4,9 +4,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_set>
 #include <utility>
-#include <canard/network/protocol/openflow/v13/action_order.hpp>
 #include <canard/network/protocol/openflow/v13/action_list.hpp>
 #include <canard/network/protocol/openflow/v13/action_set.hpp>
 #include <canard/network/protocol/openflow/v13/detail/basic_instruction_actions.hpp>
@@ -58,13 +56,8 @@ namespace instructions {
 
         static void validate_impl(write_actions const& write_actions)
         {
-            auto const& actions = write_actions.actions();
-            auto action_order_set = std::unordered_set<std::uint64_t>{};
-            action_order_set.reserve(actions.size());
-            for (auto const& action : actions) {
-                if (!action_order_set.insert(get_order(action)).second) {
-                    throw std::runtime_error{"duplicate action"};
-                }
+            if (!action_set::is_action_set(write_actions.actions())) {
+                throw std::runtime_error{"duplicated action type"};
             }
         }
     };
