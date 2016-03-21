@@ -7,7 +7,6 @@ CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 
 UTILITY_TEST_SRCS = byteorder_test.cpp \
 					any_action_test.cpp \
-					instruction_set_test.cpp \
 					packet_queue_test.cpp \
 					port_test.cpp
 UTILITY_TEST_OBJS = $(UTILITY_TEST_SRCS:.cpp=.o)
