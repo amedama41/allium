@@ -15,7 +15,7 @@
 #include <canard/network/protocol/openflow/detail/add_helper.hpp>
 #include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
-#include <canard/network/protocol/openflow/v13/message/multipart_message/table_feature_property.hpp>
+#include <canard/network/protocol/openflow/v13/table_feature_property/table_feature_property.hpp>
 
 namespace canard {
 namespace network {
