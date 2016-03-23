@@ -10,7 +10,7 @@
 #include <boost/variant/static_visitor.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/visitors.hpp>
-#include <canard/network/protocol/openflow/v13/instruction_id.hpp>
+#include <canard/network/protocol/openflow/v13/table_feature_property/id/instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
 #include <canard/type_traits.hpp>
 

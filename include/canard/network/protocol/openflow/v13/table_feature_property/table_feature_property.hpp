@@ -16,15 +16,15 @@
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/detail/padding.hpp>
-#include <canard/network/protocol/openflow/v13/action_id.hpp>
+#include <canard/network/protocol/openflow/v13/table_feature_property/id/action_id.hpp>
 #include <canard/network/protocol/openflow/v13/any_action_id.hpp>
 #include <canard/network/protocol/openflow/v13/any_instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_id.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
 #include <canard/network/protocol/openflow/v13/detail/length_utility.hpp>
-#include <canard/network/protocol/openflow/v13/instruction_id.hpp>
+#include <canard/network/protocol/openflow/v13/table_feature_property/id/instruction_id.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
-#include <canard/network/protocol/openflow/v13/oxm_id.hpp>
+#include <canard/network/protocol/openflow/v13/table_feature_property/id/oxm_id.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
 
 namespace canard {

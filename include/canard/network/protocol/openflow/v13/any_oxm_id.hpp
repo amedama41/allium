@@ -12,7 +12,7 @@
 #include <canard/network/protocol/openflow/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/detail/visitors.hpp>
 #include <canard/network/protocol/openflow/v13/openflow.hpp>
-#include <canard/network/protocol/openflow/v13/oxm_id.hpp>
+#include <canard/network/protocol/openflow/v13/table_feature_property/id/oxm_id.hpp>
 #include <canard/type_traits.hpp>
 
 namespace canard {
