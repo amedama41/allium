@@ -2,6 +2,7 @@
 #define CANARD_NETWORK_OPENFLOW_V13_OXM_ID_HPP
 
 #include <cstdint>
+#include <boost/operators.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/any_oxm_id.hpp>
@@ -14,56 +15,64 @@ namespace openflow {
 namespace v13 {
 
     class oxm_id
+        : private boost::equality_comparable<oxm_id>
     {
     public:
-        explicit oxm_id(std::uint32_t const oxm_header)
+        explicit oxm_id(std::uint32_t const oxm_header) noexcept
             : oxm_header_{oxm_header}
         {
         }
 
-        oxm_id(protocol::ofp_oxm_class const oxm_class, std::uint8_t const field
-                , bool const hasmask, std::uint8_t const length)
-            : oxm_header_{(std::uint32_t(oxm_class) << 16) | (std::uint32_t{field} << 9) | (std::uint32_t{hasmask} << 8) | length}
+        oxm_id(protocol::ofp_oxm_class const oxm_class
+             , std::uint8_t const field
+             , bool const hasmask
+             , std::uint8_t const length) noexcept
+            : oxm_header_{
+                  (std::uint32_t(oxm_class) << 16)
+                | (std::uint32_t{field} << 9)
+                | (std::uint32_t{hasmask} << 8)
+                | length
+              }
         {
         }
 
-        auto oxm_class() const
+        auto oxm_class() const noexcept
             -> protocol::ofp_oxm_class
         {
             return protocol::ofp_oxm_class(oxm_header_ >> 16);
         }
 
-        auto oxm_field() const
+        auto oxm_field() const noexcept
             -> std::uint8_t
         {
             return (oxm_header_ >> 9) & 0x7f;
         }
 
-        auto oxm_type() const
+        auto oxm_type() const noexcept
             -> std::uint32_t
         {
             return (oxm_header_ >> 9);
         }
 
-        auto oxm_has_mask() const
+        auto oxm_has_mask() const noexcept
             -> bool
         {
             return oxm_header_ & 0x100;
         }
 
-        auto oxm_length() const
+        auto oxm_length() const noexcept
             -> std::uint8_t
         {
             return oxm_header_ & 0xff;
         }
 
-        auto oxm_header() const
+        auto oxm_header() const noexcept
             -> std::uint32_t
         {
             return oxm_header_;
         }
 
-        auto length() const
+        static constexpr auto length() noexcept
             -> std::uint16_t
         {
             return sizeof(std::uint32_t);
@@ -80,88 +89,124 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> oxm_id
         {
-            auto const oxm_header = detail::decode<std::uint32_t>(first, last);
-            return oxm_id{oxm_header};
+            return oxm_id{detail::decode<std::uint32_t>(first, last)};
         }
 
     private:
         std::uint32_t oxm_header_;
     };
 
-    class oxm_experimenter_id
+    inline auto operator==(oxm_id const& lhs, oxm_id const& rhs) noexcept
+        -> bool
     {
+        return lhs.oxm_header() == rhs.oxm_header();
+    }
+
+
+    class oxm_experimenter_id
+        : private boost::equality_comparable<oxm_experimenter_id>
+    {
+        using raw_ofp_type = v13_detail::ofp_oxm_experimenter_header;
+
     public:
-        oxm_experimenter_id(std::uint32_t const oxm_header, std::uint32_t const experimenter)
-            : header_{oxm_header, experimenter}
+        oxm_experimenter_id(
+                  std::uint8_t const oxm_field
+                , bool const oxm_has_mask
+                , std::uint8_t const oxm_length
+                , std::uint32_t const experimenter) noexcept
+            : oxm_experimenter_header_{
+                  (std::uint32_t(protocol::OFPXMC_EXPERIMENTER) << 16)
+                | (std::uint32_t(oxm_field) << 9)
+                | (std::uint32_t(oxm_has_mask) << 8)
+                | (std::uint32_t(oxm_length))
+                , experimenter
+              }
         {
         }
 
-        auto oxm_class() const
+        static constexpr auto oxm_class() noexcept
             -> protocol::ofp_oxm_class
         {
-            return protocol::ofp_oxm_class(header_.oxm_header >> 16);
+            return protocol::OFPXMC_EXPERIMENTER;
         }
 
-        auto oxm_field() const
+        auto oxm_field() const noexcept
             -> std::uint8_t
         {
-            return (header_.oxm_header >> 9) & 0x7f;
+            return (oxm_experimenter_header_.oxm_header >> 9) & 0x7f;
         }
 
-        auto oxm_type() const
+        auto oxm_type() const noexcept
             -> std::uint32_t
         {
-            return (header_.oxm_header >> 9);
+            return (oxm_experimenter_header_.oxm_header >> 9);
         }
 
-        auto oxm_has_mask() const
+        auto oxm_has_mask() const noexcept
             -> bool
         {
-            return header_.oxm_header & 0x100;
+            return oxm_experimenter_header_.oxm_header & 0x100;
         }
 
-        auto oxm_length() const
+        auto oxm_length() const noexcept
             -> std::uint8_t
         {
-            return header_.oxm_header & 0xff;
+            return oxm_experimenter_header_.oxm_header & 0xff;
         }
 
-        auto oxm_header() const
+        auto oxm_header() const noexcept
             -> std::uint32_t
         {
-            return header_.oxm_header;
+            return oxm_experimenter_header_.oxm_header;
         }
 
-        auto experimenter() const
+        auto experimenter() const noexcept
             -> std::uint32_t
         {
-            return header_.experimenter;
+            return oxm_experimenter_header_.experimenter;
         }
 
-        auto length() const
+        static constexpr auto length() noexcept
             -> std::uint16_t
         {
-            return sizeof(v13_detail::ofp_oxm_experimenter_header);
+            return sizeof(raw_ofp_type);
         }
 
         template <class Container>
         auto encode(Container& container) const
             -> Container&
         {
-            return detail::encode(container, header_);
+            return detail::encode(container, oxm_experimenter_header_);
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> oxm_experimenter_id
         {
-            auto const header = detail::decode<v13_detail::ofp_oxm_experimenter_header>(first, last);
-            return oxm_experimenter_id{header.oxm_header, header.experimenter};
+            return oxm_experimenter_id{
+                detail::decode<raw_ofp_type>(first, last)
+            };
         }
 
     private:
-        v13_detail::ofp_oxm_experimenter_header header_;
+        explicit oxm_experimenter_id(
+                raw_ofp_type const& oxm_experimenter_header) noexcept
+            : oxm_experimenter_header_(oxm_experimenter_header)
+        {
+        }
+
+    private:
+        raw_ofp_type oxm_experimenter_header_;
     };
+
+    inline auto operator==(
+              oxm_experimenter_id const& lhs
+            , oxm_experimenter_id const& rhs) noexcept
+        -> bool
+    {
+        return lhs.oxm_header() == rhs.oxm_header()
+            && lhs.experimenter() == rhs.experimenter();
+    }
 
 } // namespace v13
 } // namespace openflow

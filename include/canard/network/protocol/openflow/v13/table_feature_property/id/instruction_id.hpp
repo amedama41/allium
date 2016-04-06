@@ -3,8 +3,10 @@
 
 #include <cstdint>
 #include <iterator>
+#include <stdexcept>
 #include <utility>
 #include <vector>
+#include <boost/operators.hpp>
 #include <canard/network/protocol/openflow/detail/decode.hpp>
 #include <canard/network/protocol/openflow/detail/encode.hpp>
 #include <canard/network/protocol/openflow/v13/detail/byteorder.hpp>
@@ -16,20 +18,23 @@ namespace openflow {
 namespace v13 {
 
     class instruction_id
+        : private boost::equality_comparable<instruction_id>
     {
+        using raw_ofp_type = v13_detail::ofp_instruction;
+
     public:
-        explicit instruction_id(std::uint16_t const type)
+        explicit instruction_id(std::uint16_t const type) noexcept
             : type_{type}
         {
         }
 
-        auto type() const
+        auto type() const noexcept
             -> protocol::ofp_instruction_type
         {
             return protocol::ofp_instruction_type(type_);
         }
 
-        auto length() const
+        static constexpr auto length() noexcept
             -> std::uint16_t
         {
             return sizeof(v13_detail::ofp_instruction);
@@ -39,67 +44,99 @@ namespace v13 {
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, type_);
-            return detail::encode(container, length());
+            return detail::encode(
+                    container, raw_ofp_type{std::uint16_t(type()), length()});
         }
 
         template <class Iterator>
         static auto decode(Iterator& first, Iterator last)
             -> instruction_id
         {
-            auto const type = detail::decode<std::uint16_t>(first, last);
-            auto const length = detail::decode<std::uint16_t>(first, last);
-            if (length != sizeof(v13_detail::ofp_instruction)) {
-                throw std::runtime_error{__func__};
+            auto const id = detail::decode<raw_ofp_type>(first, last);
+            return instruction_id{id.type};
+        }
+
+        static void validate_instruction_header(
+                v13_detail::ofp_instruction const& instruction)
+        {
+            if (instruction.type == protocol::OFPIT_EXPERIMENTER) {
+                throw std::runtime_error{"invalid instruction type"};
             }
-            return instruction_id{type};
+            if (instruction.len != length()) {
+                throw std::runtime_error{"instruction id length must be 4"};
+            }
         }
 
     private:
         std::uint16_t type_;
     };
 
+    inline auto operator==(
+            instruction_id const& lhs, instruction_id const& rhs) noexcept
+        -> bool
+    {
+        return lhs.type() == rhs.type();
+    }
+
 
     class instruction_experimenter_id
     {
+        using raw_ofp_type = v13_detail::ofp_instruction_experimenter;
+
     public:
-        explicit instruction_experimenter_id(std::uint32_t const experimenter)
-            : experimenter_{experimenter}
+        explicit instruction_experimenter_id(
+                std::uint32_t const experimenter)
+            : experimenter_(experimenter)
             , data_{}
         {
         }
 
-        instruction_experimenter_id(std::uint32_t const experimenter, std::vector<unsigned char> data)
-            : experimenter_{experimenter}
+        instruction_experimenter_id(
+                  std::uint32_t const experimenter
+                , std::vector<unsigned char> data)
+            : experimenter_(experimenter)
             , data_(std::move(data))
         {
         }
 
-        auto type() const
+        static constexpr auto type() noexcept
             -> protocol::ofp_instruction_type
         {
             return protocol::OFPIT_EXPERIMENTER;
         }
 
-        auto length() const
+        auto length() const noexcept
             -> std::uint16_t
         {
-            return sizeof(v13_detail::ofp_instruction_experimenter) + data_.size();
+            return sizeof(raw_ofp_type) + data_.size();
         }
 
-        auto experimenter() const
+        auto experimenter() const noexcept
             -> std::uint32_t
         {
             return experimenter_;
+        }
+
+        auto data() const noexcept
+            -> std::vector<unsigned char> const&
+        {
+            return data_;
+        }
+
+        auto extract_data()
+            -> std::vector<unsigned char>
+        {
+            return std::move(data_);
         }
 
         template <class Container>
         auto encode(Container& container) const
             -> Container&
         {
-            detail::encode(container, std::uint16_t(type()));
-            detail::encode(container, length());
-            detail::encode(container, experimenter());
+            auto const exp_header = raw_ofp_type{
+                std::uint16_t(type()), length(), experimenter()
+            };
+            detail::encode(container, exp_header);
             return detail::encode_byte_array(
                     container, data_.data(), data_.size());
         }
@@ -108,23 +145,43 @@ namespace v13 {
         static auto decode(Iterator& first, Iterator last)
             -> instruction_experimenter_id
         {
-            auto const experimenter_header
-                = detail::decode<v13_detail::ofp_instruction_experimenter>(first, last);
-            if (experimenter_header.len > sizeof(experimenter_header) + std::distance(first, last)) {
-                throw std::runtime_error{__func__};
-            }
-            auto const data_last = std::next(first, experimenter_header.len - sizeof(experimenter_header));
-            auto data = std::vector<unsigned char>(first, data_last);
-            first = data_last;
+            auto const exp_header = detail::decode<raw_ofp_type>(first, last);
+
+            last = std::next(first, exp_header.len - sizeof(raw_ofp_type));
+            auto data = std::vector<unsigned char>(first, last);
+            first = last;
             return instruction_experimenter_id{
-                experimenter_header.experimenter, std::move(data)
+                exp_header.experimenter, std::move(data)
             };
+        }
+
+        static void validate_instruction_header(
+                v13_detail::ofp_instruction const& instruction)
+        {
+            if (instruction.type != protocol::OFPIT_EXPERIMENTER) {
+                throw std::runtime_error{"invalid instruction type"};
+            }
+            if (instruction.len
+                    < sizeof(v13_detail::ofp_instruction_experimenter)) {
+                throw std::runtime_error{
+                    "instruction experimenter id length is too small"
+                };
+            }
         }
 
     private:
         std::uint32_t experimenter_;
         std::vector<unsigned char> data_;
     };
+
+    inline auto operator==(
+              instruction_experimenter_id const& lhs
+            , instruction_experimenter_id const& rhs) noexcept
+        -> bool
+    {
+        return lhs.experimenter() == rhs.experimenter()
+            && lhs.data() == rhs.data();
+    }
 
 } // namespace v13
 } // namespace openflow

@@ -1,10 +1,11 @@
 #ifndef CANARD_NETWORK_OPENFLOW_V13_ANY_ACTION_ID_HPP
 #define CANARD_NETWORK_OPENFLOW_V13_ANY_ACTION_ID_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
-#include <boost/format.hpp>
+#include <boost/operators.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
@@ -21,18 +22,29 @@ namespace openflow {
 namespace v13 {
 
     class any_action_id
+        : private boost::equality_comparable<any_action_id>
     {
         using action_id_variant
             = boost::variant<action_id, action_experimenter_id>;
 
     public:
-        template <class ActionID, typename std::enable_if<!is_related<any_action_id, ActionID>::value>::type* = nullptr>
+        template <
+              class ActionID
+            , class = typename std::enable_if<
+                    !canard::is_related<any_action_id, ActionID>::value
+              >::type
+        >
         any_action_id(ActionID&& action_id)
             : variant_(std::forward<ActionID>(action_id))
         {
         }
 
-        template <class ActionID, typename std::enable_if<!is_related<any_action_id, ActionID>::value>::type* = nullptr>
+        template <
+              class ActionID
+            , class = typename std::enable_if<
+                    !canard::is_related<any_action_id, ActionID>::value
+              >::type
+        >
         auto operator=(ActionID&& action_id)
             -> any_action_id&
         {
@@ -40,14 +52,14 @@ namespace v13 {
             return *this;
         }
 
-        auto type()
+        auto type() const noexcept
             -> protocol::ofp_action_type
         {
             auto visitor = detail::type_visitor<protocol::ofp_action_type>{};
             return boost::apply_visitor(visitor, variant_);
         }
 
-        auto length() const
+        auto length() const noexcept
             -> std::uint16_t
         {
             auto visitor = detail::length_visitor{};
@@ -67,9 +79,14 @@ namespace v13 {
             -> any_action_id
         {
             auto copy_first = first;
-            auto const type = detail::decode<std::uint16_t>(copy_first, last);
-            switch (type) {
+            auto const header = detail::decode<v13_detail::ofp_action_header>(
+                      copy_first, last
+                    , offsetof(v13_detail::ofp_action_header, pad));
+            switch (header.type) {
             case protocol::OFPAT_EXPERIMENTER:
+                if (std::distance(first, last) < header.len) {
+                    throw std::runtime_error{"invalid action_ids length"};
+                }
                 return action_experimenter_id::decode(first, last);
             default:
                 return action_id::decode(first, last);
@@ -83,6 +100,13 @@ namespace v13 {
         template <class T>
         friend auto any_cast(any_action_id const*)
             -> T const*;
+
+        friend auto operator==(
+                any_action_id const& lhs, any_action_id const& rhs) noexcept
+            -> bool
+        {
+            return lhs.variant_ == rhs.variant_;
+        }
 
     private:
         action_id_variant variant_;
