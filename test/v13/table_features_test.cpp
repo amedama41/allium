@@ -16,16 +16,16 @@ struct table_features_fixture {
         auto const table_name = "table" + std::to_string(table_id);
         return messages::multipart::table_features{table_id, table_name.c_str(), 0xffffffffffffffff, 0xffffffffffffffff, 0, 0xffffffff
             , {
-                  table_feature_properties::prop_instructions{
+                  table_feature_properties::instructions{
                       instruction_id{protocol::OFPIT_GOTO_TABLE}, instruction_id{protocol::OFPIT_WRITE_METADATA}
                     , instruction_id{protocol::OFPIT_WRITE_ACTIONS}, instruction_id{protocol::OFPIT_APPLY_ACTIONS}
                     , instruction_id{protocol::OFPIT_CLEAR_ACTIONS}, instruction_id{protocol::OFPIT_METER}
                     , instruction_experimenter_id{32, {'A', 'B'}}
                   } // 4 + 4 * 6 + (8 + 2) = 38 => 40
-                , table_feature_properties::prop_next_tables{
+                , table_feature_properties::next_tables{
                     1, 2, 3, 4, 5, 6, 7
                   } // 4 + 7 = 11 => 16
-                , table_feature_properties::prop_write_actions{
+                , table_feature_properties::write_actions{
                       action_id{protocol::OFPAT_OUTPUT}, action_id{protocol::OFPAT_COPY_TTL_OUT}, action_id{protocol::OFPAT_COPY_TTL_IN}
                     , action_id{protocol::OFPAT_SET_MPLS_TTL}, action_id{protocol::OFPAT_DEC_MPLS_TTL}
                     , action_id{protocol::OFPAT_PUSH_VLAN}, action_id{protocol::OFPAT_POP_VLAN}
@@ -35,7 +35,7 @@ struct table_features_fixture {
                     , action_id{protocol::OFPAT_SET_FIELD}
                     , action_id{protocol::OFPAT_PUSH_PBB}, action_id{protocol::OFPAT_POP_PBB}
                   } // 4 + 4 * 16 = 68 => 72
-                , table_feature_properties::prop_apply_actions{
+                , table_feature_properties::apply_actions{
                       action_id{protocol::OFPAT_OUTPUT}, action_id{protocol::OFPAT_COPY_TTL_OUT}, action_id{protocol::OFPAT_COPY_TTL_IN}
                     , action_id{protocol::OFPAT_SET_MPLS_TTL}, action_id{protocol::OFPAT_DEC_MPLS_TTL}
                     , action_id{protocol::OFPAT_PUSH_VLAN}, action_id{protocol::OFPAT_POP_VLAN}
@@ -45,7 +45,7 @@ struct table_features_fixture {
                     , action_id{protocol::OFPAT_SET_FIELD}
                     , action_id{protocol::OFPAT_PUSH_PBB}, action_id{protocol::OFPAT_POP_PBB}
                   } // 4 + 4 * 16 = 68 => 72
-                , table_feature_properties::prop_match{
+                , table_feature_properties::match{
                       oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_IN_PORT, false, 4}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_METADATA, false, 8}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_DST, true, 12}
@@ -64,9 +64,9 @@ struct table_features_fixture {
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_UDP_DST, false, 2}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_SRC, false, 2}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_DST, false, 2}
-                    , oxm_experimenter_id{(std::uint32_t{protocol::OFPXMC_EXPERIMENTER} << 16) | 16, 32}
+                    , oxm_experimenter_id{0, false, 16, 32}
                   } // 4 + 4 * 18 + 8 = 84 => 88
-                , table_feature_properties::prop_write_setfield{
+                , table_feature_properties::write_setfield{
                       oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_DST, true, 12}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_SRC, true, 12}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_TYPE, false, 2}
@@ -84,7 +84,7 @@ struct table_features_fixture {
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_SRC, false, 2}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_SCTP_DST, false, 2}
                   } // 4 + 4 * 16 = 68 => 72
-                , table_feature_properties::prop_apply_setfield{
+                , table_feature_properties::apply_setfield{
                       oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_DST, true, 12}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_SRC, true, 12}
                     , oxm_id{protocol::OFPXMC_OPENFLOW_BASIC, protocol::OFPXMT_OFB_ETH_TYPE, false, 2}
