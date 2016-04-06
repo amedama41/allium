@@ -9,7 +9,7 @@
 #include <boost/optional/optional_io.hpp>
 
 #include "../../test_utility.hpp"
-#include "./oxm_match_test_utility.hpp"
+#include "../oxm_headers.hpp"
 
 namespace of = canard::network::openflow;
 namespace v13 = of::v13;
