@@ -51,7 +51,7 @@ namespace messages {
                   }
                 , buffer_id
                 , in_port
-                , actions.length()
+                , std::uint16_t(actions.length())
                 , { 0, 0, 0, 0, 0, 0 }
               }
             , actions_(std::move(actions))
