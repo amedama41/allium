@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <tuple>
 #include <boost/preprocessor/repeat.hpp>
+#include <canard/network/openflow/v10/detail/byteorder.hpp>
+#include <canard/network/openflow/v10/messages.hpp>
+#include <canard/network/openflow/v10/openflow.hpp>
 #include <canard/network/protocol/openflow/secure_channel_reader.hpp>
-#include <canard/network/protocol/openflow/v10/detail/byteorder.hpp>
-#include <canard/network/protocol/openflow/v10/messages.hpp>
-#include <canard/network/protocol/openflow/v10/openflow.hpp>
 
 namespace canard {
 namespace network {
@@ -16,7 +16,7 @@ namespace v10 {
 
     struct handle_message
     {
-        using header_type = v10_detail::ofp_header;
+        using header_type = net::ofp::v10::v10_detail::ofp_header;
 
         template <class Reader, class BaseChannel>
         void operator()(
@@ -28,17 +28,17 @@ namespace v10 {
             switch (header.type) {
 #           define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
             using msg ## N \
-                = std::tuple_element<N, default_switch_message_list>::type; \
+                = std::tuple_element<N, net::ofp::v10::default_switch_message_list>::type; \
             case msg ## N::message_type: \
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
-                    std::tuple_size<default_switch_message_list>::value == 10
+                    std::tuple_size<net::ofp::v10::default_switch_message_list>::value == 10
                   , "not match to the number of message types");
             BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
-            case protocol::OFPT_STATS_REPLY:
-                if (header.length < sizeof(v10_detail::ofp_stats_reply)) {
+            case net::ofp::v10::protocol::OFPT_STATS_REPLY:
+                if (header.length < sizeof(net::ofp::v10::v10_detail::ofp_stats_reply)) {
                     // TODO needs error handling
                     break;
                 }
@@ -56,17 +56,17 @@ namespace v10 {
               , unsigned char const* const last) const
         {
             auto const stats_reply = secure_channel_detail::read<
-                v10_detail::ofp_stats_reply
+                net::ofp::v10::v10_detail::ofp_stats_reply
             >(first);
             switch (stats_reply.type) {
 #           define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
             using msg ## N \
-                = std::tuple_element<N, default_stats_reply_list>::type; \
+                = std::tuple_element<N, net::ofp::v10::default_stats_reply_list>::type; \
             case msg ## N::stats_type_value: \
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
-                    std::tuple_size<default_stats_reply_list>::value == 6
+                    std::tuple_size<net::ofp::v10::default_stats_reply_list>::value == 6
                   , "not match to the number of stats reply types");
             BOOST_PP_REPEAT(
                     6, CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE, _)
@@ -83,7 +83,7 @@ namespace v10 {
 
     struct version
     {
-        static constexpr std::uint8_t value = v10::protocol::OFP_VERSION;
+        static constexpr std::uint8_t value = net::ofp::v10::protocol::OFP_VERSION;
 
         template <class ControllerHandler, class Socket>
         using channel_t = secure_channel<ControllerHandler, Socket>;

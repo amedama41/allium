@@ -1,10 +1,7 @@
 import sys
 from parser import DeclarationCollector
-import generator.ofheader as ofheader
 import generator.error_code as error_code
 import generator.enum_to_string as enum_to_string
-import generator.byteorder as byteorder
-import generator.fusion_adaptor as fusion_adaptor
 
 MACRO_TYPE_MAP = {
         10: {
@@ -62,14 +59,8 @@ filename = sys.argv[1]
 collector.collect(filename)
 
 dirname = 'of{}'.format(collector.version)
-with open(dirname + '/openflow.hpp', 'w') as f:
-    f.write(ofheader.generate(collector, MACRO_TYPE_MAP[collector.version]))
 with open(dirname + '/error.hpp', 'w') as f:
     f.write(error_code.generate(collector, IGNORE_ERROR_TYPE[collector.version]))
 with open(dirname + '/enum_to_string.hpp', 'w') as f:
     f.write(enum_to_string.generate(collector, IGNORE_TO_STRING_ENUMS[collector.version]))
-with open(dirname + '/byteorder.hpp', 'w') as f:
-    f.write(byteorder.generate(collector))
-with open(dirname + '/fusion_adaptor.hpp', 'w') as f:
-    f.write(fusion_adaptor.generate(collector))
 

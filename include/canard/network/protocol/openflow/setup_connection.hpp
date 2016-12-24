@@ -26,8 +26,9 @@
 #include <boost/utility/string_ref.hpp>
 #include <canard/asio/asio_handler_hook_propagation.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
-#include <canard/network/protocol/openflow/error.hpp>
-#include <canard/network/protocol/openflow/hello.hpp>
+#include <canard/network/openflow/binary_data.hpp>
+#include <canard/network/openflow/error.hpp>
+#include <canard/network/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
 
 namespace canard {
@@ -51,15 +52,15 @@ namespace detail {
             SupportedVersions, greater_version
         >::type;
 
-        auto is_valid_hello(openflow::ofp_header const header)
+        auto is_valid_hello(net::ofp::ofp_header const header)
             -> bool
         {
-            if (header.type != openflow::hello::message_type) {
+            if (header.type != net::ofp::hello::message_type) {
                 std::cout << "not hello message: " << std::uint32_t{header.type} << std::endl;
                 return false;
             }
 
-            if (header.length < sizeof(openflow::ofp_header)) {
+            if (header.length < sizeof(net::ofp::ofp_header)) {
                 std::cout << "invalid message length: " << header.length << std::endl;
                 return false;
             }
@@ -155,14 +156,14 @@ namespace detail {
 
         template <class SupportedVersions>
         auto make_version_bitmap()
-            -> std::vector<std::uint32_t>
+            -> net::ofp::hello_elements::versionbitmap
         {
             auto creator = version_bitmap_creator{};
             boost::fusion::for_each(SupportedVersions{}, std::ref(creator));
             auto bitmap
                 = std::vector<std::uint32_t>(creator.bitmap.num_blocks());
             boost::to_block_range(creator.bitmap, bitmap.begin());
-            return bitmap;
+            return net::ofp::hello_elements::versionbitmap{bitmap};
         }
 
     } // namespace setup_connection_detail
@@ -223,7 +224,7 @@ namespace detail {
 
         void async_send_hello(std::shared_ptr<setup_connection> const& self)
         {
-            auto hello = openflow::hello{
+            auto hello = net::ofp::hello{
                 setup_connection_detail::make_version_bitmap<supported_versions>()
             };
             boost::asio::async_write(
@@ -245,7 +246,7 @@ namespace detail {
         {
             boost::asio::async_read(
                     socket_, boost::asio::buffer(buffer_)
-                  , boost::asio::transfer_exactly(sizeof(openflow::ofp_header))
+                  , boost::asio::transfer_exactly(sizeof(net::ofp::ofp_header))
                   , strand_.wrap([this, self](
                           boost::system::error_code const& ec, std::size_t) {
                 cancel_connection_timeout();
@@ -255,13 +256,13 @@ namespace detail {
                 }
 
                 auto const header
-                    = detail::read_ofp_header(boost::asio::buffer(buffer_));
+                    = net::ofp::detail::read_ofp_header(boost::asio::buffer(buffer_));
                 if (!setup_connection_detail::is_valid_hello(header)) {
                     close("received invalid hello message");
                     return;
                 }
 
-                auto const header_length = sizeof(openflow::ofp_header);
+                auto const header_length = sizeof(net::ofp::ofp_header);
                 if (header.length == header_length) {
                     buffer_.resize(header_length);
                     handle_hello(self);
@@ -278,7 +279,7 @@ namespace detail {
                 std::shared_ptr<setup_connection> const& self
               , std::size_t const elements_length)
         {
-            auto const header_length = sizeof(openflow::ofp_header);
+            auto const header_length = sizeof(net::ofp::ofp_header);
 
             buffer_.resize(header_length + elements_length);
             boost::asio::async_read(
@@ -315,14 +316,14 @@ namespace detail {
             }
 
             setup_connection& connection;
-            openflow::hello& hello;
+            net::ofp::hello& hello;
             bool has_supported_version;
         };
 
         void handle_hello(std::shared_ptr<setup_connection> const& self)
         {
             auto it = buffer_.begin();
-            auto hello = openflow::hello::decode(it, buffer_.end());
+            auto hello = net::ofp::hello::decode(it, buffer_.end());
 
             auto starter = channel_starter{*this, hello, false};
             boost::fusion::for_each(supported_versions{}, std::ref(starter));
@@ -335,9 +336,9 @@ namespace detail {
                 std::shared_ptr<setup_connection> const& self
               , std::uint32_t const xid)
         {
-            auto error = openflow::error{
-                  openflow::OFPET_HELLO_FAILED, openflow::OFPHFC_INCOMPATIBLE
-                , openflow::binary_data{"incompatible openflow version"}, xid
+            auto error = net::ofp::error{
+                  net::ofp::OFPET_HELLO_FAILED, net::ofp::OFPHFC_INCOMPATIBLE
+                , net::ofp::binary_data{"incompatible openflow version"}, xid
             };
             boost::asio::async_write(
                     socket_

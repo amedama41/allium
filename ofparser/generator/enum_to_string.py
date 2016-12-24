@@ -14,20 +14,22 @@ def _default_string(enum_name):
         return 'group_id'
     return 'unkonw_' + enum_name
 
-def _generate_to_string_funcs(enum_decls, ignore_to_string_enums):
+def _generate_to_string_funcs(version, enum_decls, ignore_to_string_enums):
     return '\n\n'.join(map(
         lambda (name, enum): (
 """\
-    inline auto to_string(protocol::{name} const value)
+    inline auto to_string(net::ofp::v{version}::protocol::{name} const value)
         -> std::string
     {{
+        using protocol = net::ofp::v{version}::protocol;
         switch (value) {{
 {case}
         default: return boost::str(boost::format{{"{default}(%1%)"}} % value);
         }}
     }}\
 """.format(
-    name=name, case=_case_for_each_member(enum.get_children(), ignore_to_string_enums),
+    version=version, name=name,
+    case=_case_for_each_member(enum.get_children(), ignore_to_string_enums),
     default=_default_string(name))),
         enum_decls.items()))
 
@@ -40,7 +42,7 @@ def generate(collector, ignore_to_string_enums):
 
 #include <string>
 #include <boost/format.hpp>
-#include <canard/network/protocol/openflow/v{version}/openflow.hpp>
+#include <canard/network/openflow/v{version}/openflow.hpp>
 
 namespace canard {{
 namespace network {{
@@ -55,5 +57,8 @@ namespace v{version} {{
 }} // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_V{version}_ENUM_TO_STRING_HPP\
-""".format(version=collector.version, to_string_funcs=_generate_to_string_funcs(collector.enum_decls, ignore_to_string_enums)))
+""".format(
+    version=collector.version,
+    to_string_funcs=_generate_to_string_funcs(
+        collector.version, collector.enum_decls, ignore_to_string_enums)))
 

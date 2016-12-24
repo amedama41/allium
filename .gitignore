@@ -8,16 +8,10 @@ examples/v13/learning_switch/learning_switch
 examples/v13/repeater_hub/repeater_hub
 examples/v13/topology/topology
 examples/v13/transaction_controller/transaction_controller
-include/canard/network/protocol/openflow/v10/detail/byteorder.hpp
-include/canard/network/protocol/openflow/v10/detail/fusion_adaptor.hpp
 include/canard/network/protocol/openflow/v10/error.hpp
 include/canard/network/protocol/openflow/v10/io/enum_to_string.hpp
-include/canard/network/protocol/openflow/v10/openflow.hpp
-include/canard/network/protocol/openflow/v13/detail/byteorder.hpp
-include/canard/network/protocol/openflow/v13/detail/fusion_adaptor.hpp
 include/canard/network/protocol/openflow/v13/error.hpp
 include/canard/network/protocol/openflow/v13/io/enum_to_string.hpp
-include/canard/network/protocol/openflow/v13/openflow.hpp
 ofparser/ofparser
 ofparser/of10/ofparser
 ofparser/**/*.pyc

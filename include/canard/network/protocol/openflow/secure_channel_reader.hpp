@@ -15,9 +15,9 @@
 #include <boost/endian/conversion.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/asio/detail/bind_handler.hpp>
+#include <canard/network/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/goodbye.hpp>
-#include <canard/network/protocol/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/secure_channel.hpp>
 
 #include <iostream>
@@ -70,7 +70,7 @@ namespace openflow {
             std::cout << __func__ << std::endl;
         }
 
-        void run(openflow::hello&& hello)
+        void run(net::ofp::hello&& hello)
         {
             auto base_channel = base_type::shared_from_this();
             handle(base_channel, std::move(hello));

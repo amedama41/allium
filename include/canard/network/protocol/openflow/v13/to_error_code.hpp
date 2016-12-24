@@ -4,13 +4,13 @@
 #include <tuple>
 #include <type_traits>
 #include <boost/system/error_code.hpp>
-#include <canard/network/protocol/openflow/v13/error.hpp>
-#include <canard/network/protocol/openflow/v13/message/error.hpp>
-#include <canard/network/protocol/openflow/v13/openflow.hpp>
+#include <canard/network/openflow/v13/error.hpp>
+#include <canard/network/openflow/v13/message/error.hpp>
+#include <canard/network/openflow/v13/openflow.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
 namespace v13 {
 
     auto to_error_code(protocol::ofp_error_type const type, std::uint16_t const value)
@@ -53,8 +53,8 @@ namespace v13 {
     }
 
 } // namespace v13
-} // namespace openflow
-} // namespace network
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_V13_TO_ERROR_CODE_HPP

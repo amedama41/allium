@@ -11,7 +11,8 @@ def _generate_error_category_classes(version, error_type_enum, ignore_types):
             : public boost::system::error_category
         {{
         public:
-            static protocol::ofp_error_type const error_type = protocol::{value};
+            static net::ofp::v{version}::protocol::ofp_error_type const error_type
+                = net::ofp::v{version}::protocol::{value};
 
             auto name() const noexcept
                 -> char const*
@@ -36,7 +37,8 @@ def _generate_error_category_classes(version, error_type_enum, ignore_types):
             auto message(int const ev) const
                 -> std::string
             {{
-                return v{version}::to_string(protocol::ofp_{name}_code(ev - 1));
+                return v{version}::to_string(
+                    net::ofp::v{version}::protocol::ofp_{name}_code(ev - 1));
             }}
         }};\
 """.format(version=version, name=_strip_OFPET(error.displayname), value=error.displayname)),
@@ -62,7 +64,7 @@ def _generate_make_error_code_funcs(version, error_type_enum, ignore_types):
     inline auto make_error_code(protocol::ofp_{name}_code const e)
         -> boost::system::error_code
     {{
-        return {{e + 1, v{version}::{name}_category()}};
+        return {{e + 1, network::openflow::v{version}::{name}_category()}};
     }}\
 """.format(version=version, name=_strip_OFPET(error.displayname))),
         filter(lambda enum: enum.displayname not in ignore_types, error_type_enum.get_children())))
@@ -73,7 +75,7 @@ def _generate_is_error_code_enum_specialization(version, error_type_enum, ignore
 """\
     template <>
     struct is_error_code_enum<
-        canard::network::openflow::v{version}::protocol::ofp_{name}_code
+        canard::net::ofp::v{version}::protocol::ofp_{name}_code
     >
     {{
         static bool const value = true;
@@ -92,10 +94,11 @@ def generate(collector, ignore_types):
 
 #include <string>
 #include <boost/system/error_code.hpp>
+#include <canard/network/openflow/v{version}/openflow.hpp>
 #include <canard/network/protocol/openflow/v{version}/io/enum_to_string.hpp>
-#include <canard/network/protocol/openflow/v{version}/openflow.hpp>
 
 namespace canard {{
+
 namespace network {{
 namespace openflow {{
 namespace v{version} {{
@@ -108,11 +111,20 @@ namespace v{version} {{
 
 {error_category_funcs}
 
-{make_error_code_funcs}
-
 }} // namespace v{version}
 }} // namespace openflow
 }} // namespace network
+
+namespace net {{
+namespace ofp {{
+namespace v{version} {{
+
+{make_error_code_funcs}
+
+}} // namespace v{version}
+}} // namespace ofp
+}} // namespace net
+
 }} // namespace canard
 
 namespace boost {{
