@@ -1,14 +1,14 @@
 #include <cstdint>
 #include <type_traits>
-#include <vector>
+#include <utility>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <canard/mac_address.hpp>
 #include <canard/packet_parser.hpp>
-#include <canard/network/protocol/openflow/v13/oxm_match.hpp>
-#include <canard/network/protocol/openflow/v13/oxm_match_field.hpp>
-#include <canard/network/protocol/openflow/v13/openflow.hpp>
+#include <canard/network/openflow/v13/common/oxm_match.hpp>
+#include <canard/network/openflow/v13/common/oxm_match_field.hpp>
+#include <canard/network/openflow/v13/openflow.hpp>
 
 struct oxm_match_creator
 {
@@ -30,43 +30,47 @@ struct oxm_match_creator
         return canard::mac_address{array};
     }
 
-    bool operator()(canard::ether_header const& ether) const
+    bool operator()(canard::ether_header const& ether)
     {
-        match.add(canard::network::openflow::v13::oxm_eth_dst{ether.destination()});
-        match.add(canard::network::openflow::v13::oxm_eth_src{ether.source()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::eth_dst{ether.destination()});
+        oxm_fields.push_back(fields::eth_src{ether.source()});
         if (ether.ether_type() != ETHERTYPE_VLAN) {
-            match.add(canard::network::openflow::v13::oxm_eth_type{ether.ether_type()});
+            oxm_fields.push_back(fields::eth_type{ether.ether_type()});
         }
         return true;
     }
 
-    bool operator()(canard::vlan_tag const& vlan) const
+    bool operator()(canard::vlan_tag const& vlan)
     {
-        match.add(canard::network::openflow::v13::oxm_vlan_vid(vlan.vid()));
-        match.add(canard::network::openflow::v13::oxm_vlan_pcp{vlan.pcp()});
-        match.add(canard::network::openflow::v13::oxm_eth_type{vlan.ether_type()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::vlan_vid(vlan.vid()));
+        oxm_fields.push_back(fields::vlan_pcp{vlan.pcp()});
+        oxm_fields.push_back(fields::eth_type{vlan.ether_type()});
         return true;
     }
 
-    bool operator()(canard::arp const& arp) const
+    bool operator()(canard::arp const& arp)
     {
-        match.add(canard::network::openflow::v13::oxm_arp_op{arp.operation()});
-        match.add(canard::network::openflow::v13::oxm_arp_spa(to_address_v4(arp.sender_protocol_address()).to_ulong()));
-        match.add(canard::network::openflow::v13::oxm_arp_tpa(to_address_v4(arp.target_protocol_address()).to_ulong()));
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::arp_op{arp.operation()});
+        oxm_fields.push_back(fields::arp_spa(to_address_v4(arp.sender_protocol_address())));
+        oxm_fields.push_back(fields::arp_tpa(to_address_v4(arp.target_protocol_address())));
         if (arp.hardware_type() == 1) {
-            match.add(canard::network::openflow::v13::oxm_arp_sha{to_mac_address(arp.sender_hardware_address())});
-            match.add(canard::network::openflow::v13::oxm_arp_tha{to_mac_address(arp.target_hardware_address())});
+            oxm_fields.push_back(fields::arp_sha{to_mac_address(arp.sender_hardware_address())});
+            oxm_fields.push_back(fields::arp_tha{to_mac_address(arp.target_hardware_address())});
         }
         return true;
     }
 
-    bool operator()(canard::ipv4_header const& ipv4) const
+    bool operator()(canard::ipv4_header const& ipv4)
     {
-        match.add(canard::network::openflow::v13::oxm_ip_dscp{ipv4.dscp()});
-        match.add(canard::network::openflow::v13::oxm_ip_ecn{ipv4.ecn()});
-        match.add(canard::network::openflow::v13::oxm_ip_proto{ipv4.protocol()});
-        match.add(canard::network::openflow::v13::oxm_ipv4_src(ipv4.source().to_ulong()));
-        match.add(canard::network::openflow::v13::oxm_ipv4_dst(ipv4.destination().to_ulong()));
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::ip_dscp{ipv4.dscp()});
+        oxm_fields.push_back(fields::ip_ecn{ipv4.ecn()});
+        oxm_fields.push_back(fields::ip_proto{ipv4.protocol()});
+        oxm_fields.push_back(fields::ipv4_src(ipv4.source()));
+        oxm_fields.push_back(fields::ipv4_dst(ipv4.destination()));
         return true;
     }
 
@@ -79,82 +83,91 @@ struct oxm_match_creator
         return false;
     }
 
-    bool operator()(canard::ipv6_header const& ipv6) const
+    bool operator()(canard::ipv6_header const& ipv6)
     {
-        match.add(canard::network::openflow::v13::oxm_ip_dscp{ipv6.dscp()});
-        match.add(canard::network::openflow::v13::oxm_ip_ecn{ipv6.ecn()});
-        match.add(canard::network::openflow::v13::oxm_ipv6_flabel{ipv6.flow_label()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::ip_dscp{ipv6.dscp()});
+        oxm_fields.push_back(fields::ip_ecn{ipv6.ecn()});
+        oxm_fields.push_back(fields::ipv6_flabel{ipv6.flow_label()});
         if (not is_extension_header(ipv6.next_header())) {
-            match.add(canard::network::openflow::v13::oxm_ip_proto{ipv6.next_header()});
+            oxm_fields.push_back(fields::ip_proto{ipv6.next_header()});
         }
-        match.add(canard::network::openflow::v13::oxm_ipv6_src(ipv6.source()));
-        match.add(canard::network::openflow::v13::oxm_ipv6_dst(ipv6.destination()));
+        oxm_fields.push_back(fields::ipv6_src(ipv6.source()));
+        oxm_fields.push_back(fields::ipv6_dst(ipv6.destination()));
         return true;
     }
 
-    bool operator()(canard::ipv6_extension_header const& exthdr) const
+    bool operator()(canard::ipv6_extension_header const& exthdr)
     {
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
         if (not is_extension_header(exthdr.next_header())) {
-            match.add(canard::network::openflow::v13::oxm_ip_proto{exthdr.next_header()});
+            oxm_fields.push_back(fields::ip_proto{exthdr.next_header()});
         }
         return true;
     }
 
-    bool operator()(canard::ipv6_fragment_header const& exthdr) const
+    bool operator()(canard::ipv6_fragment_header const& exthdr)
     {
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
         if (not is_extension_header(exthdr.next_header())) {
-            match.add(canard::network::openflow::v13::oxm_ip_proto{exthdr.next_header()});
+            oxm_fields.push_back(fields::ip_proto{exthdr.next_header()});
         }
         return true;
     }
 
-    bool operator()(canard::icmpv4 const& icmpv4) const
+    bool operator()(canard::icmpv4 const& icmpv4)
     {
-        match.add(canard::network::openflow::v13::oxm_icmpv4_type{icmpv4.type()});
-        match.add(canard::network::openflow::v13::oxm_icmpv4_code{icmpv4.code()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::icmpv4_type{icmpv4.type()});
+        oxm_fields.push_back(fields::icmpv4_code{icmpv4.code()});
         return true;
     }
 
-    bool operator()(canard::icmpv6 const& icmpv6) const
+    bool operator()(canard::icmpv6 const& icmpv6)
     {
-        match.add(canard::network::openflow::v13::oxm_icmpv6_type{icmpv6.type()});
-        match.add(canard::network::openflow::v13::oxm_icmpv6_code{icmpv6.code()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::icmpv6_type{icmpv6.type()});
+        oxm_fields.push_back(fields::icmpv6_code{icmpv6.code()});
         return true;
     }
 
-    bool operator()(canard::icmpv6_neighbor_solicitation const& icmpv6) const
+    bool operator()(canard::icmpv6_neighbor_solicitation const& icmpv6)
     {
-        match.add(canard::network::openflow::v13::oxm_icmpv6_type{icmpv6.type()});
-        match.add(canard::network::openflow::v13::oxm_icmpv6_code{icmpv6.code()});
-        match.add(canard::network::openflow::v13::oxm_ipv6_nd_target{icmpv6.target_address()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::icmpv6_type{icmpv6.type()});
+        oxm_fields.push_back(fields::icmpv6_code{icmpv6.code()});
+        oxm_fields.push_back(fields::ipv6_nd_target{icmpv6.target_address()});
         if (boost::distance(icmpv6.source_link_layer_address()) == 6) {
-            match.add(canard::network::openflow::v13::oxm_ipv6_nd_sll{to_mac_address(icmpv6.source_link_layer_address())});
+            oxm_fields.push_back(fields::ipv6_nd_sll{to_mac_address(icmpv6.source_link_layer_address())});
         }
         return true;
     }
 
-    bool operator()(canard::icmpv6_neighbor_advertisement const& icmpv6) const
+    bool operator()(canard::icmpv6_neighbor_advertisement const& icmpv6)
     {
-        match.add(canard::network::openflow::v13::oxm_icmpv6_type{icmpv6.type()});
-        match.add(canard::network::openflow::v13::oxm_icmpv6_code{icmpv6.code()});
-        match.add(canard::network::openflow::v13::oxm_ipv6_nd_target{icmpv6.target_address()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::icmpv6_type{icmpv6.type()});
+        oxm_fields.push_back(fields::icmpv6_code{icmpv6.code()});
+        oxm_fields.push_back(fields::ipv6_nd_target{icmpv6.target_address()});
         if (boost::distance(icmpv6.target_link_layer_address()) == 6) {
-            match.add(canard::network::openflow::v13::oxm_ipv6_nd_tll{to_mac_address(icmpv6.target_link_layer_address())});
+            oxm_fields.push_back(fields::ipv6_nd_tll{to_mac_address(icmpv6.target_link_layer_address())});
         }
         return true;
     }
 
-    bool operator()(canard::udp_header const& udp) const
+    bool operator()(canard::udp_header const& udp)
     {
-        match.add(canard::network::openflow::v13::oxm_udp_src{udp.source()});
-        match.add(canard::network::openflow::v13::oxm_udp_dst{udp.destination()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::udp_src{udp.source()});
+        oxm_fields.push_back(fields::udp_dst{udp.destination()});
         return true;
     }
 
-    bool operator()(canard::tcp_header const& tcp) const
+    bool operator()(canard::tcp_header const& tcp)
     {
-        match.add(canard::network::openflow::v13::oxm_tcp_src{tcp.source()});
-        match.add(canard::network::openflow::v13::oxm_tcp_dst{tcp.destination()});
+        namespace fields = canard::net::ofp::v13::oxm_match_fields;
+        oxm_fields.push_back(fields::tcp_src{tcp.source()});
+        oxm_fields.push_back(fields::tcp_dst{tcp.destination()});
         return true;
     }
 
@@ -164,14 +177,20 @@ struct oxm_match_creator
         return true;
     }
 
-    canard::network::openflow::v13::oxm_match& match;
+    auto match()
+        -> canard::net::ofp::v13::oxm_match
+    {
+        return canard::net::ofp::v13::oxm_match{std::move(oxm_fields)};
+    }
+
+    canard::net::ofp::v13::oxm_match::oxm_fields_type oxm_fields;
 };
 
 auto oxm_match_from_packet(boost::iterator_range<unsigned char const*> packet)
-    -> canard::network::openflow::v13::oxm_match
+    -> canard::net::ofp::v13::oxm_match
 {
-    auto match = canard::network::openflow::v13::oxm_match{};
-    canard::for_each_header(packet, oxm_match_creator{match});
-    return match;
+    auto creator = oxm_match_creator{};
+    canard::for_each_header(packet, creator);
+    return creator.match();
 }
 
