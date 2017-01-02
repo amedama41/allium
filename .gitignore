@@ -1,6 +1,10 @@
 *.o
 *.depends
 *.dylib
+examples/v10/cbench_switch/cbench_switch
+examples/v10/learning_switch/learning_switch
+examples/v10/repeater_hub/repeater_hub
+examples/v10/switch_description/switch_description
 examples/v13/coroutine/coroutine
 examples/v13/decorator_controller/decorator_controller
 examples/v13/dump_table_features/dump_table_features
