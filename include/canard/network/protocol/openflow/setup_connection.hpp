@@ -336,10 +336,9 @@ namespace detail {
                 std::shared_ptr<setup_connection> const& self
               , std::uint32_t const xid)
         {
-            auto error = net::ofp::error{
-                  net::ofp::OFPET_HELLO_FAILED, net::ofp::OFPHFC_INCOMPATIBLE
-                , net::ofp::binary_data{"incompatible openflow version"}, xid
-            };
+            auto error = net::ofp::error::hello_failed(
+                  net::ofp::hello_failed_code::incompatible
+                , "incompatible openflow version", xid);
             boost::asio::async_write(
                     socket_
                   , openflow::with_buffer(std::move(error), buffer_).encode()

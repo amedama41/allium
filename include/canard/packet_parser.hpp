@@ -1293,9 +1293,9 @@ namespace canard {
     }
 
     template <class Range, class Function>
-    inline void for_each_header(Range& frame, Function f)
+    inline void for_each_header(Range const& frame, Function f)
     {
-        parse_ether_frame(std::begin(frame), std::end(frame), f);
+        parse_ether_frame(frame.data(), frame.data() + frame.size(), f);
     }
 
     template <class Function, class T>
@@ -1327,8 +1327,8 @@ namespace canard {
         }
 
         template <class Range>
-        explicit packet(Range const& frame)
-            : first_{std::begin(frame)}, last_{std::end(frame)}
+        explicit packet(Range const& frame) noexcept
+            : first_(frame.data()), last_(frame.data() + frame.size())
         {
         }
 
