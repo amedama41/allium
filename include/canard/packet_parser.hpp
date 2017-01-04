@@ -13,8 +13,8 @@
 #include <boost/asio/ip/address_v6.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/range/iterator_range.hpp>
-#include "canard/as_byte_range.hpp"
-#include "canard/mac_address.hpp"
+#include <canard/as_byte_range.hpp>
+#include <canard/mac_address.hpp>
 
 namespace canard {
 
