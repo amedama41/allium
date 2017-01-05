@@ -26,7 +26,6 @@
 #include <boost/utility/string_ref.hpp>
 #include <canard/asio/asio_handler_hook_propagation.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
-#include <canard/network/openflow/binary_data.hpp>
 #include <canard/network/openflow/error.hpp>
 #include <canard/network/openflow/hello.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
