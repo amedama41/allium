@@ -1,3 +1,6 @@
 [submodule "bulb"]
 	path = bulb
 	url = https://github.com/amedama41/bulb.git
+[submodule "write_queue_stream"]
+	path = write_queue_stream
+	url = https://github.com/amedama41/write_queue_stream.git
