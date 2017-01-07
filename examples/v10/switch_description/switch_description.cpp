@@ -2,8 +2,8 @@
 #include <sstream>
 #include <type_traits>
 #include <boost/format.hpp>
+#include <canard/network/openflow/v10/io/openflow.hpp>
 #include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v10/io/enum_to_string.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel.hpp>
 
 namespace allium = canard::network::openflow;
@@ -244,7 +244,7 @@ struct switch_description
       << boost::format{
         "======= Port Status ======\n"
         "Reason: %|1$|\n"
-      } % allium::v10::to_string(port_status.reason())
+      } % v10::protocol::port_reason(port_status.reason())
       << detail::port_data(port_status)
       << "=========================="
       << std::endl;
