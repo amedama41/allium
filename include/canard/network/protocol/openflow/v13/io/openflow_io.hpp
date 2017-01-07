@@ -5,8 +5,8 @@
 #include <array>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
+#include <canard/network/openflow/v13/io/openflow.hpp>
 #include <canard/network/openflow/v13/messages.hpp>
-#include <canard/network/protocol/openflow/v13/io/enum_to_string.hpp>
 
 namespace canard {
 namespace net {
@@ -80,7 +80,7 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format("%s: version=%#x, xid=%#x")
-            % network::openflow::v13::to_string(protocol::ofp_type(hello.type()))
+            % protocol::ofp_type(hello.type())
             % std::uint32_t{hello.version()}
             % hello.xid()
             ;
@@ -91,9 +91,9 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format("%s: xid=%#x type=%u, failed_request.type=%u")
-            % network::openflow::v13::to_string(protocol::ofp_type(error.type()))
+            % protocol::ofp_type(error.type())
             % error.xid()
-            % network::openflow::v13::to_string(protocol::ofp_error_type(error.error_type()))
+            % protocol::ofp_error_type(error.error_type())
             % std::uint32_t{error.failed_request_header().type}
             ;
     }
@@ -102,14 +102,14 @@ namespace messages {
     auto operator<<(OStream& os, echo_request const& echo_req)
         -> OStream&
     {
-        return os << boost::format("%s: xid=%#x") % network::openflow::v13::to_string(protocol::ofp_type(echo_req.type())) % echo_req.xid();
+        return os << boost::format("%s: xid=%#x") % protocol::ofp_type(echo_req.type()) % echo_req.xid();
     }
 
     template <class OStream>
     auto operator<<(OStream& os, echo_reply const& echo_rep)
         -> OStream&
     {
-        return os << boost::format("%s: xid=%#x") % network::openflow::v13::to_string(protocol::ofp_type(echo_rep.type())) % echo_rep.xid();
+        return os << boost::format("%s: xid=%#x") % protocol::ofp_type(echo_rep.type()) % echo_rep.xid();
     }
 
     template <class OStream>
@@ -117,7 +117,7 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format("%s: xid=%#x, n_buffers=%u, n_tables=%u, auxiliary_id=%u")
-            % network::openflow::v13::to_string(protocol::ofp_type(features_rep.type()))
+            % protocol::ofp_type(features_rep.type())
             % features_rep.xid()
             % features_rep.num_buffers()
             % std::uint32_t{features_rep.num_tables()}
@@ -130,7 +130,7 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format{"%s: xid=%#x, flags=%#x, miss_send_length=%u"}
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.type()))
+            % protocol::ofp_type(reply.type())
             % reply.xid()
             % reply.flags()
             % reply.miss_send_length()
@@ -142,7 +142,7 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format("%s: xid=%#x")
-            % network::openflow::v13::to_string(protocol::ofp_type(rep.type()))
+            % protocol::ofp_type(rep.type())
             % rep.xid()
             ;
     }
@@ -152,7 +152,7 @@ namespace messages {
         -> OStream&
     {
         os << boost::format("%s: xid=%#x, port=%u, ")
-            % network::openflow::v13::to_string(protocol::ofp_type(rep.type()))
+            % protocol::ofp_type(rep.type())
             % rep.xid()
             % rep.port_no()
             ;
@@ -167,9 +167,9 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format("%s: xid=%#x, reason=%#x, table_id=%u, buffer_id=%#x, total_len=%u, cookie=%#x")
-            % network::openflow::v13::to_string(protocol::ofp_type(pkt_in.type()))
+            % protocol::ofp_type(pkt_in.type())
             % pkt_in.xid()
-            % network::openflow::v13::to_string(protocol::ofp_packet_in_reason(pkt_in.reason()))
+            % protocol::ofp_packet_in_reason(pkt_in.reason())
             % std::uint32_t{pkt_in.table_id()}
             % pkt_in.buffer_id()
             % pkt_in.total_length()
@@ -182,9 +182,9 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format{"%s: xid=%#x, reason=%s, match=##, priority=%u, table_id=%u, duration_sec=%u, duration_nsec=%u"}
-            % network::openflow::v13::to_string(protocol::ofp_type(removed.type()))
+            % protocol::ofp_type(removed.type())
             % removed.xid()
-            % network::openflow::v13::to_string(protocol::ofp_flow_removed_reason(removed.reason()))
+            % protocol::ofp_flow_removed_reason(removed.reason())
             % removed.priority()
             % std::uint16_t{removed.table_id()}
             % removed.duration_sec()
@@ -197,9 +197,9 @@ namespace messages {
         -> OStream&
     {
         return os << boost::format("%s: xid=%#x, reason=%#x, %s")
-            % network::openflow::v13::to_string(protocol::ofp_type(port_status.type()))
+            % protocol::ofp_type(port_status.type())
             % port_status.xid()
-            % network::openflow::v13::to_string(protocol::ofp_port_reason(port_status.reason()))
+            % protocol::ofp_port_reason(port_status.reason())
             % port_status.port()
             ;
     }
@@ -296,7 +296,7 @@ namespace multipart {
         -> OStream&
     {
         return os << boost::format{"%s: xid=%#x, flags=%#x, mfr_desc=%s, hw_desc=%s, sw_desc=%s, serial_num=%s, dp_desc=%s"}
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags()
             % reply.manufacture_desc()
@@ -312,7 +312,7 @@ namespace multipart {
         -> OStream&
     {
         os << boost::format{"%s: xid=%#x, flags=%#x, "}
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags();
             ;
@@ -327,7 +327,7 @@ namespace multipart {
         -> OStream&
     {
         return os << boost::format{"%s: xid=%#x, flags=%#x, packet_count=%llu, byte_count=%#x, flow_count=%lu"}
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags()
             % reply.packet_count()
@@ -341,7 +341,7 @@ namespace multipart {
         -> OStream&
     {
         os << boost::format{"%s: xid=%#x, flags=%#x, "}
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags();
             ;
@@ -356,7 +356,7 @@ namespace multipart {
         -> OStream&
     {
         os << boost::format{"%s: xid=%#x, flags=%#x, "}
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags();
             ;
@@ -371,7 +371,7 @@ namespace multipart {
         -> OStream&
     {
         os << boost::format("%s: xid=%#x, flags=%#x, ")
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags()
             ;
@@ -386,7 +386,7 @@ namespace multipart {
         -> OStream&
     {
         os << boost::format("%s: xid=%#x, flags=%#x, ")
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags()
             ;
@@ -401,7 +401,7 @@ namespace multipart {
         -> OStream&
     {
         os << boost::format("%s: xid=%#x, flags=%#x, ")
-            % network::openflow::v13::to_string(protocol::ofp_type(reply.multipart_type()))
+            % protocol::ofp_type(reply.multipart_type())
             % reply.xid()
             % reply.flags()
             ;

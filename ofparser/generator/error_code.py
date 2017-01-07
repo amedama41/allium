@@ -37,8 +37,9 @@ def _generate_error_category_classes(version, error_type_enum, ignore_types):
             auto message(int const ev) const
                 -> std::string
             {{
-                return v{version}::to_string(
-                    net::ofp::v{version}::protocol::ofp_{name}_code(ev - 1));
+                std::ostringstream oss;
+                oss << net::ofp::v{version}::protocol::ofp_{name}_code(ev - 1);
+                return oss.str();
             }}
         }};\
 """.format(version=version, name=_strip_OFPET(error.displayname), value=error.displayname)),
@@ -92,10 +93,10 @@ def generate(collector, ignore_types):
 #ifndef CANARD_NETWORK_OPENFLOW_V{version}_ERROR_HPP
 #define CANARD_NETWORK_OPENFLOW_V{version}_ERROR_HPP
 
+#include <sstream>
 #include <string>
 #include <boost/system/error_code.hpp>
-#include <canard/network/openflow/v{version}/openflow.hpp>
-#include <canard/network/protocol/openflow/v{version}/io/enum_to_string.hpp>
+#include <canard/network/openflow/v{version}/io/openflow.hpp>
 
 namespace canard {{
 
