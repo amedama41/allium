@@ -58,7 +58,8 @@ namespace openflow {
     template <class T>
     struct get_all_decorators
     {
-      using type = decltype(get_all_decorators_impl<T>(std::declval<T>()));
+      using type = decltype(
+          decorator_detail::get_all_decorators_impl<T>(std::declval<T>()));
       static_assert(
             std::is_same<typename std::tuple_element<0, type>::type, T>::value
           , "Wrong use of decorate: "
