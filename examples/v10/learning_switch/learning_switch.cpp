@@ -12,22 +12,23 @@ namespace allium = canard::network::openflow;
 namespace ofp = canard::net::ofp;
 namespace v10 = ofp::v10;
 
-struct auto_negotiate
+template <class Base>
+struct auto_negotiate : public Base
 {
-  template <class Forwarder, class Channel>
-  void handle(Forwarder forward, Channel&& channel, ofp::hello&& hello)
+  template <class Channel>
+  void handle(Channel&& channel, ofp::hello&& hello)
   {
     channel->async_send(v10::messages::features_request{});
     channel->async_send(v10::messages::set_config{
         0xffff, v10::protocol::OFPC_FRAG_NORMAL
     });
-    forward(this, std::forward<Channel>(channel), std::move(hello));
+    this->forward(std::forward<Channel>(channel), std::move(hello));
   }
 
-  template <class Forwarder, class... Args>
-  void handle(Forwarder forward, Args&&... args)
+  template <class... Args>
+  void handle(Args&&... args)
   {
-    forward(this, std::forward<Args>(args)...);
+    this->forward(std::forward<Args>(args)...);
   }
 };
 
@@ -41,7 +42,7 @@ namespace canard { namespace network { namespace openflow {
 } } }
 
 struct learning_switch
-  : public allium::decorate<auto_negotiate>
+  : public allium::decorate<learning_switch, auto_negotiate>
 {
   using versions = std::tuple<allium::v10::version>;
 
