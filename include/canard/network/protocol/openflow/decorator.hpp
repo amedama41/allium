@@ -14,7 +14,6 @@
 #include <boost/fusion/support/pair.hpp>
 #include <boost/mpl/bool.hpp>
 #include <canard/integer_sequence.hpp>
-#include <canard/network/protocol/openflow/data_per_channel.hpp>
 
 namespace canard {
 namespace network {
@@ -144,26 +143,55 @@ namespace openflow {
     };
 
 
+    struct null_channel_data {};
+
     template <class Decorator>
-    using get_channel_data_t = typename data_per_channel<Decorator>::type;
+    auto channel_data_impl(Decorator const&)
+      -> typename Decorator::channel_data;
+    auto channel_data_impl(...)
+      -> null_channel_data;
+
+    template <class Decorator>
+    struct channel_data
+    {
+      using type = decltype(
+          decorator_detail::channel_data_impl(std::declval<Decorator>()));
+    };
+
+    template <class Decorator>
+    using channel_data_t = typename channel_data<Decorator>::type;
 
     template <class Tuple>
-    struct to_pair_sequence;
+    struct to_channel_data_pair_sequence;
 
     template <class... Decorators>
-    struct to_pair_sequence<std::tuple<Decorators...>>
+    struct to_channel_data_pair_sequence<std::tuple<Decorators...>>
     {
       using type = boost::fusion::vector<
-        boost::fusion::pair<Decorators, get_channel_data_t<Decorators>>...
+        boost::fusion::pair<Decorators, channel_data_t<Decorators>>...
       >;
     };
 
-    struct is_not_null
+    struct is_not_null_channel_data
     {
       template <class T>
       struct apply
-        : boost::mpl::bool_<!std::is_same<detail::null_data, T>::value>
+        : boost::mpl::bool_<!std::is_same<
+            null_channel_data, typename T::second_type
+          >::value>
       {};
+    };
+
+    template <class Handler>
+    struct handler_type
+    {
+      using type = Handler;
+    };
+
+    template <template <class> class Decorator, class Handler, std::size_t N>
+    struct handler_type<Decorator<decorator_detail::forwarder<Handler, N>>>
+    {
+      using type = Handler;
     };
 
   } // namespace decorator_detail
@@ -171,20 +199,37 @@ namespace openflow {
   namespace detail {
 
     template <class Handler>
-    struct channel_data
+    struct channel_data_map_from_handler
     {
       using type = typename boost::fusion::result_of::as_map<
         typename boost::fusion::result_of::filter_if<
-            typename decorator_detail::to_pair_sequence<
+            typename decorator_detail::to_channel_data_pair_sequence<
               typename decorator_detail::get_all_decorators<Handler>::type
             >::type
-          , decorator_detail::is_not_null
+          , decorator_detail::is_not_null_channel_data
         >::type
       >::type;
     };
 
     template <class Handler>
-    using channel_data_t = typename channel_data<Handler>::type;
+    using channel_data_map_from_handler_t
+      = typename channel_data_map_from_handler<Handler>::type;
+
+    template <class T, class ChannelDataMap>
+    using channel_data_t
+      = typename boost::fusion::result_of::at_key<ChannelDataMap, T>::type;
+
+    template <class T, class ChannelDataMap>
+    auto get_channel_data(ChannelDataMap&& data_map)
+      -> channel_data_t<T, typename std::remove_reference<ChannelDataMap>::type>
+    {
+      return boost::fusion::at_key<T>(data_map);
+    }
+
+    template <class T>
+    using channel_data_map_t = channel_data_map_from_handler_t<
+      typename decorator_detail::handler_type<T>::type
+    >;
 
     template <class Handler, class... Args>
     void handle(Handler& handler, Args&&... args)

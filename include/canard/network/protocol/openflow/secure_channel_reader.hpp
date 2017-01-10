@@ -40,19 +40,50 @@ namespace openflow {
 
     } // namespace secure_channel_detail
 
+    namespace detail {
+
+        template <class ChannelDataMap, class Socket>
+        class secure_channel_with_data
+            : public secure_channel<Socket>
+        {
+        public:
+            using secure_channel<Socket>::secure_channel;
+            using channel_data_map = ChannelDataMap;
+
+            template <class T>
+            auto get_channel_data() noexcept
+                -> detail::channel_data_t<T, channel_data_map>
+            {
+                return detail::get_channel_data<T>(data_);
+            }
+
+            template <class T>
+            auto get_channel_data() const noexcept
+                -> detail::channel_data_t<T, channel_data_map const>
+            {
+                return detail::get_channel_data<T>(data_);
+            }
+
+        private:
+            channel_data_map data_;
+        };
+
+    } // namespace detail
+
     template <
           class MessageHandler
         , class ControllerHandler
         , class Socket
     >
     class secure_channel_reader
-        : public secure_channel<
-              detail::channel_data_t<ControllerHandler>, Socket
+        : public detail::secure_channel_with_data<
+              detail::channel_data_map_from_handler_t<ControllerHandler>, Socket
           >
     {
-        using base_type = secure_channel<
-            detail::channel_data_t<ControllerHandler>, Socket
+        using base_type = detail::secure_channel_with_data<
+            detail::channel_data_map_from_handler_t<ControllerHandler>, Socket
         >;
+        using channel_ptr = std::shared_ptr<secure_channel<Socket>>;
         using header_type = typename MessageHandler::header_type;
 
     public:
@@ -72,7 +103,7 @@ namespace openflow {
 
         void run(net::ofp::hello&& hello)
         {
-            auto base_channel = base_type::shared_from_this();
+            auto base_channel = this->shared_from_this();
             handle(base_channel, std::move(hello));
             auto loop = message_loop{this, std::move(base_channel)};
             loop.run();
@@ -82,7 +113,7 @@ namespace openflow {
         friend MessageHandler;
 
         template <class Message>
-        void handle(std::shared_ptr<base_type> const& channel, Message&& msg)
+        void handle(channel_ptr const& channel, Message&& msg)
         {
             detail::handle(
                     controller_handler_, channel, std::forward<Message>(msg));
@@ -167,7 +198,7 @@ namespace openflow {
             }
 
             secure_channel_reader* reader_;
-            std::shared_ptr<base_type> base_channel_;
+            channel_ptr base_channel_;
         };
 
     private:
