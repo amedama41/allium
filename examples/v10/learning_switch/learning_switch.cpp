@@ -32,19 +32,11 @@ struct auto_negotiate : public Base
   }
 };
 
-struct learning_switch;
-namespace canard { namespace network { namespace openflow {
-  template <>
-  struct data_per_channel<::learning_switch>
-  {
-    using type = std::map<canard::mac_address, std::uint32_t>;
-  };
-} } }
-
 struct learning_switch
   : public allium::decorate<learning_switch, auto_negotiate>
 {
   using versions = std::tuple<allium::v10::version>;
+  using channel_data = std::map<canard::mac_address, std::uint32_t>;
 
   template <class Channel>
   void handle(Channel const& channel, v10::messages::packet_in&& pkt_in)
