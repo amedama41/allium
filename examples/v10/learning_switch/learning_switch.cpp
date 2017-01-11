@@ -20,7 +20,7 @@ struct auto_negotiate : public Base
   {
     channel->async_send(v10::messages::features_request{});
     channel->async_send(v10::messages::set_config{
-        0xffff, v10::protocol::OFPC_FRAG_NORMAL
+        v10::protocol::config_flags::normal, 0xffff
     });
     this->forward(std::forward<Channel>(channel), std::move(hello));
   }
