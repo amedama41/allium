@@ -6,12 +6,12 @@
 #include <utility>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
-#include <boost/fusion/sequence/intrinsic/at_key.hpp>
 #include <boost/system/error_code.hpp>
 #include <canard/asio/asio_handler_hook_propagation.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/suppress_asio_async_result_propagation.hpp>
 #include <canard/asio/write_queue_stream.hpp>
+#include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/detail/null_handler.hpp>
 #include <canard/network/protocol/openflow/shared_buffer_generator.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
@@ -21,12 +21,16 @@ namespace canard {
 namespace network {
 namespace openflow {
 
-    template <class ChannelData, class Socket>
+    namespace detail {
+
+        template <class ChannelDataMap, class Socket>
+        class secure_channel_with_data;
+
+    } // namespace detail
+
+    template <class Socket>
     class secure_channel
-        : private ChannelData
-        , public std::enable_shared_from_this<
-              secure_channel<ChannelData, Socket>
-          >
+        : public std::enable_shared_from_this<secure_channel<Socket>>
     {
         template <class WriteHandler>
         using async_write_result_init = canard::async_result_init<
@@ -57,9 +61,20 @@ namespace openflow {
 
         template <class T>
         auto get_data()
-            -> typename boost::fusion::result_of::at_key<ChannelData, T>::type
+            -> detail::channel_data_t<T, detail::channel_data_map_t<T>>
         {
-            return boost::fusion::at_key<T>(static_cast<ChannelData&>(*this));
+            return static_cast<detail::secure_channel_with_data<
+                detail::channel_data_map_t<T>, Socket
+            >*>(this)->template get_channel_data<T>();
+        }
+
+        template <class T>
+        auto get_data() const
+            -> detail::channel_data_t<T, detail::channel_data_map_t<T> const>
+        {
+            return static_cast<detail::secure_channel_with_data<
+                detail::channel_data_map_t<T>, Socket
+            > const*>(this)->template get_channel_data<T>();
         }
 
         void close()
