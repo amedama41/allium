@@ -126,7 +126,7 @@ namespace openflow {
             {
                 auto const least_size = sizeof(header_type);
                 reader_->strand_.dispatch(
-                        canard::detail::bind(std::move(*this), least_size));
+                        canard::detail::bind(*this, least_size));
             }
 
             void operator()(std::size_t const least_size)
@@ -134,7 +134,7 @@ namespace openflow {
                 boost::asio::async_read(
                           reader_->stream_, reader_->streambuf_
                         , boost::asio::transfer_at_least(least_size)
-                        , reader_->strand_.wrap(std::move(*this)));
+                        , reader_->strand_.wrap(*this));
             }
 
             void operator()(boost::system::error_code const& ec, std::size_t)
@@ -152,7 +152,7 @@ namespace openflow {
             }
 
             auto handle_read(boost::asio::streambuf& streambuf)
-            -> std::size_t
+                -> std::size_t
             {
                 while (streambuf.size() >= sizeof(header_type)) {
                     auto first = boost::asio::buffer_cast<
