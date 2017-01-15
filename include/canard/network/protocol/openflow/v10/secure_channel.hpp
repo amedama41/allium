@@ -29,7 +29,8 @@ namespace v10 {
 #           define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
             using msg ## N \
                 = std::tuple_element<N, net::ofp::v10::default_switch_message_list>::type; \
-            case msg ## N::message_type: \
+            case msg ## N::type(): \
+                msg ## N::validate_header(header); \
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
@@ -62,7 +63,8 @@ namespace v10 {
 #           define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
             using msg ## N \
                 = std::tuple_element<N, net::ofp::v10::default_stats_reply_list>::type; \
-            case msg ## N::stats_type_value: \
+            case msg ## N::stats_type(): \
+                msg ## N::validate_stats(stats_reply); \
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
