@@ -2,6 +2,7 @@
 #define CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_HPP
 
 #include <cstdint>
+#include <stdexcept>
 #include <tuple>
 #include <boost/preprocessor/repeat.hpp>
 #include <canard/network/openflow/v10/detail/byteorder.hpp>
@@ -16,7 +17,7 @@ namespace v10 {
 
     struct handle_message
     {
-        using header_type = net::ofp::v10::v10_detail::ofp_header;
+        using header_type = net::ofp::v10::protocol::ofp_header;
 
         template <class Reader, class BaseChannel>
         void operator()(
@@ -25,12 +26,17 @@ namespace v10 {
               , unsigned char const* first
               , unsigned char const* const last) const
         {
+            if (header.version != net::ofp::v10::protocol::OFP_VERSION) {
+                throw std::runtime_error{"invalid version"};
+            }
             switch (header.type) {
 #           define CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE(z, N, _) \
             using msg ## N \
                 = std::tuple_element<N, net::ofp::v10::default_switch_message_list>::type; \
             case msg ## N::type(): \
-                msg ## N::validate_header(header); \
+                if (!msg ## N::is_valid_message_length(header)) { \
+                    throw std::runtime_error{"invalid message length"}; \
+                } \
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
@@ -39,9 +45,8 @@ namespace v10 {
             BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V10_MESSAGES_CASE
             case net::ofp::v10::protocol::OFPT_STATS_REPLY:
-                if (header.length < sizeof(net::ofp::v10::v10_detail::ofp_stats_reply)) {
-                    // TODO needs error handling
-                    break;
+                if (header.length < sizeof(net::ofp::v10::protocol::ofp_stats_reply)) {
+                    throw std::runtime_error{"invalid message length"};
                 }
                 handle_stats_reply(reader, base_channel, first, last);
                 break;
@@ -57,14 +62,16 @@ namespace v10 {
               , unsigned char const* const last) const
         {
             auto const stats_reply = secure_channel_detail::read<
-                net::ofp::v10::v10_detail::ofp_stats_reply
+                net::ofp::v10::protocol::ofp_stats_reply
             >(first);
             switch (stats_reply.type) {
 #           define CANARD_NETWORK_OPENFLOW_V10_STATS_REPLY_CASE(z, N, _) \
             using msg ## N \
                 = std::tuple_element<N, net::ofp::v10::default_stats_reply_list>::type; \
             case msg ## N::stats_type(): \
-                msg ## N::validate_stats(stats_reply); \
+                if (!msg ## N::is_valid_stats_length(stats_reply)) { \
+                    throw std::runtime_error{"invalid stats length"}; \
+                } \
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(

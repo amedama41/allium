@@ -16,7 +16,7 @@ namespace v13 {
 
     struct handle_message
     {
-        using header_type = net::ofp::v13::v13_detail::ofp_header;
+        using header_type = net::ofp::v13::protocol::ofp_header;
 
         template <class Reader, class BaseChannel>
         void operator()(
@@ -38,7 +38,7 @@ namespace v13 {
             BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V13_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V13_MESSAGES_CASE
             case net::ofp::v13::protocol::OFPT_MULTIPART_REPLY:
-                if (header.length < sizeof(net::ofp::v13::v13_detail::ofp_multipart_reply)) {
+                if (header.length < sizeof(net::ofp::v13::protocol::ofp_multipart_reply)) {
                     // TODO needs error handling
                     break;
                 }
@@ -56,7 +56,7 @@ namespace v13 {
                 , unsigned char const* const last) const
         {
             auto const multipart_reply = secure_channel_detail::read<
-                net::ofp::v13::v13_detail::ofp_multipart_reply
+                net::ofp::v13::protocol::ofp_multipart_reply
             >(first);
             switch (multipart_reply.type) {
 #           define CANARD_NETWORK_OPENFLOW_V13_MULTIPART_REPLY_CASE(z, N, _) \
