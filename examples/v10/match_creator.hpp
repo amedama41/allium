@@ -135,7 +135,7 @@ auto match_from_packet(Range const& packet, std::uint16_t const in_port = 0)
     namespace v10 = canard::net::ofp::v10;
     auto match = v10::match{};
     if (in_port != 0) {
-        match.set(v10::match_fields::in_port{0});
+        match.set(v10::match_fields::in_port{in_port});
     }
     canard::for_each_header(packet, match_creator{match});
     return match;
