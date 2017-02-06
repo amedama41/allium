@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(allium_example LANGUAGES CXX)
 
-find_package(Boost 1.59 REQUIRED COMPONENTS system)
+find_package(Boost 1.59 REQUIRED COMPONENTS system coroutine)
 
 add_library(allium_example INTERFACE)
 target_compile_options(allium_example INTERFACE "-Wall" "-pedantic" "-std=c++11")
@@ -18,7 +18,8 @@ if(UNIX AND NOT APPLE)
 endif()
 
 set(allium_v10_examples
-    repeater_hub learning_switch switch_description decorator_switch cbench_switch)
+    repeater_hub learning_switch switch_description decorator_switch cbench_switch
+    transaction_switch)
 set(allium_ofp_versions 10)
 
 foreach(version IN LISTS allium_ofp_versions)
@@ -30,4 +31,6 @@ foreach(version IN LISTS allium_ofp_versions)
         target_link_libraries(${example}${version} PRIVATE allium_example)
     endforeach()
 endforeach()
+
+target_link_libraries(transaction_switch10 PRIVATE Boost::coroutine)
 
