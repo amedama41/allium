@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <chrono>
 #include <functional>
 #include <iostream>
@@ -19,6 +20,7 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <boost/endian/conversion.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/sort.hpp>
@@ -136,6 +138,9 @@ namespace detail {
 
         struct version_bitmap_creator
         {
+            using bitmaps_type
+                = net::ofp::hello_elements::versionbitmap::bitmaps_type;
+
             version_bitmap_creator()
                 : bitmap{}
             {
@@ -150,7 +155,15 @@ namespace detail {
                 bitmap.set(Version::value);
             }
 
-            boost::dynamic_bitset<std::uint32_t> bitmap;
+            auto bitmaps() const
+                -> bitmaps_type
+            {
+                auto bitmaps = bitmaps_type(bitmap.num_blocks());
+                boost::to_block_range(bitmap, bitmaps.begin());
+                return bitmaps;
+            }
+
+            boost::dynamic_bitset<bitmaps_type::value_type> bitmap;
         };
 
         template <class SupportedVersions>
@@ -159,10 +172,16 @@ namespace detail {
         {
             auto creator = version_bitmap_creator{};
             boost::fusion::for_each(SupportedVersions{}, std::ref(creator));
-            auto bitmap
-                = std::vector<std::uint32_t>(creator.bitmap.num_blocks());
-            boost::to_block_range(creator.bitmap, bitmap.begin());
-            return net::ofp::hello_elements::versionbitmap{bitmap};
+            return net::ofp::hello_elements::versionbitmap{creator.bitmaps()};
+        }
+
+        inline auto read_ofp_header(std::vector<unsigned char> const& buffer)
+            -> net::ofp::ofp_header
+        {
+            auto header = net::ofp::ofp_header{};
+            std::memcpy(&header, buffer.data(), sizeof(header));
+            boost::endian::big_to_native_inplace(header);
+            return header;
         }
 
     } // namespace setup_connection_detail
@@ -255,7 +274,7 @@ namespace detail {
                 }
 
                 auto const header
-                    = net::ofp::detail::read_ofp_header(boost::asio::buffer(buffer_));
+                    = setup_connection_detail::read_ofp_header(buffer_);
                 if (!setup_connection_detail::is_valid_hello(header)) {
                     close("received invalid hello message");
                     return;

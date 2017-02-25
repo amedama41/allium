@@ -33,7 +33,7 @@ namespace v13 {
                 reader->handle(base_channel, msg ## N::decode(first, last)); \
                 break;
             static_assert(
-                      std::tuple_size<net::ofp::v13::default_switch_message_list>::value == 10
+                      std::tuple_size<net::ofp::v13::default_switch_message_list>::value == 12
                     , "not match to the number of message types");
             BOOST_PP_REPEAT(10, CANARD_NETWORK_OPENFLOW_V13_MESSAGES_CASE, _)
 #           undef  CANARD_NETWORK_OPENFLOW_V13_MESSAGES_CASE
