@@ -1,12 +1,11 @@
 INCLUDES = -I../../include -I..
-LDFLAGS = -lboost_unit_test_framework-mt -lboost_system-mt -lboost_thread-mt
+LDFLAGS = -lboost_unit_test_framework-mt
 CXX = clang++
 # CXX = g++-4.9
 CXXFLAGS = -std=c++11 -stdlib=libc++ -Wall -pedantic $(INCLUDES)
 # CXXFLAGS = -std=c++11 -Wall -pedantic $(INCLUDES)
 
-SRCS = integer_sequence_test.cpp \
-	   queueing_write_stream_test.cpp
+SRCS = integer_sequence_test.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TARGET = all_test
