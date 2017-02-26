@@ -186,7 +186,8 @@ struct oxm_match_creator
     canard::net::ofp::v13::oxm_match::oxm_fields_type oxm_fields;
 };
 
-auto oxm_match_from_packet(boost::iterator_range<unsigned char const*> packet)
+template <class Range>
+auto oxm_match_from_packet(Range const& packet)
     -> canard::net::ofp::v13::oxm_match
 {
     auto creator = oxm_match_creator{};

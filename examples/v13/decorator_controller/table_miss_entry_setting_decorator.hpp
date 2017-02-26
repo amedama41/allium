@@ -3,28 +3,30 @@
 
 #include <utility>
 #include <canard/network/protocol/openflow/decorator.hpp>
-#include <canard/network/protocol/openflow/v13/messages.hpp>
+#include <canard/network/openflow/v13/messages.hpp>
 
-struct table_miss_entry_setting_decorator
+template <class Base>
+struct table_miss_entry_setting_decorator : public Base
 {
-    template <class Forwarder, class Channel>
-    void handle(Forwarder forward
-              , Channel const& channel, canard::network::openflow::hello hello)
+    template <class Channel>
+    void handle(Channel const& channel, canard::net::ofp::hello hello)
     {
-        namespace v13 = canard::network::openflow::v13;
+        namespace v13 = canard::net::ofp::v13;
 
         channel->async_send(v13::messages::flow_add{{
                   v13::flow_entry_id::table_miss()
                 , 0x00000000
-                , v13::instructions::write_actions{v13::actions::output::to_controller()}
+                , v13::flow_entry::instructions_type{
+                    v13::instructions::write_actions{v13::actions::output::to_controller()}
+                  }
         }, 0, v13::protocol::OFPFF_SEND_FLOW_REM});
-        forward(this, channel, std::move(hello));
+        this->forward(channel, std::move(hello));
     }
 
-    template <class Forwarder, class Channel, class Message>
-    void handle(Forwarder forward, Channel const& channel, Message&& message)
+    template <class Channel, class Message>
+    void handle(Channel const& channel, Message&& message)
     {
-        forward(this, channel, std::forward<Message>(message));
+        this->forward(channel, std::forward<Message>(message));
     }
 };
 

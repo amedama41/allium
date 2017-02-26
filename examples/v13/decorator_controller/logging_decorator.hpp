@@ -5,35 +5,33 @@
 #include <canard/network/protocol/openflow/decorator.hpp>
 #include <canard/network/protocol/openflow/v13/io/openflow_io.hpp>
 
-template <class Logger>
-struct logging_decorator
+template <class Logger, class Base>
+struct logging_decorator : public Base
 {
     logging_decorator(Logger&& logger)
         : logger(std::forward<Logger>(logger))
     {
     }
 
-    template <class Forwarder, class Channel>
-    void handle(Forwarder forward
-              , Channel const& channel, canard::network::openflow::hello hello)
+    template <class Channel>
+    void handle(Channel const& channel, canard::net::ofp::hello hello)
     {
         logger << "connected " << channel.get() << ": " << hello << std::endl;
-        forward(this, channel, std::move(hello));
+        this->forward(channel, std::move(hello));
     }
 
-    template <class Forwarder, class Channel>
-    void handle(Forwarder forward
-              , Channel const& channel, canard::network::openflow::goodbye bye)
+    template <class Channel>
+    void handle(Channel const& channel, canard::network::openflow::goodbye bye)
     {
         logger << "disconnected " << channel.get() << ": " << bye.reason().message() << std::endl;
-        forward(this, channel, std::move(bye));
+        this->forward(channel, std::move(bye));
     }
 
-    template <class Forwarder, class Channel, class Message>
-    void handle(Forwarder forward, Channel const& channel, Message&& message)
+    template <class Channel, class Message>
+    void handle(Channel const& channel, Message&& message)
     {
         logger << message << std::endl;
-        forward(this, channel, std::forward<Message>(message));
+        this->forward(channel, std::forward<Message>(message));
     }
 
     Logger logger;

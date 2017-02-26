@@ -1,24 +1,26 @@
 #include <iostream>
 #include <tuple>
 #include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v13.hpp>
+#include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
+#include <canard/network/protocol/openflow/v13/io/openflow_io.hpp>
 
-namespace of = canard::network::openflow;
-namespace v13 = of::v13;
-namespace msg = v13::messages;
+namespace allium = canard::network::openflow;
+namespace ofp = canard::net::ofp;
+namespace v13 = ofp::v13;
 
 struct dump_table_features
 {
-    using versions = std::tuple<v13::version>;
+    using versions = std::tuple<allium::v13::version>;
 
     template <class Channel>
-    void handle(Channel const& channel, of::hello const&)
+    void handle(Channel const& channel, ofp::hello const&)
     {
-        channel->async_send(msg::multipart::table_features_request{});
+        channel->async_send(v13::messages::multipart::table_features_request{});
     }
 
     template <class Channel>
-    void handle(Channel const& channel, msg::multipart::table_features_reply const& reply)
+    void handle(Channel const& channel
+              , v13::messages::multipart::table_features_reply const& reply)
     {
         std::cout << reply << std::endl;
     }
@@ -30,7 +32,7 @@ struct dump_table_features
 int main()
 {
     auto handler = dump_table_features{};
-    using controller = of::controller<dump_table_features>;
+    using controller = allium::controller<dump_table_features>;
     try {
         controller cont{
             controller::options{handler}.address("0.0.0.0")

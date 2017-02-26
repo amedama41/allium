@@ -3,25 +3,29 @@
 #include <tuple>
 #include <utility>
 #include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v13.hpp>
+#include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
 #include "table_miss_entry_setting_decorator.hpp"
 #include "logging_decorator.hpp"
 
-namespace of = canard::network::openflow;
-namespace v13 = of::v13;
+namespace allium = canard::network::openflow;
+namespace ofp = canard::net::ofp;
+namespace v13 = ofp::v13;
 namespace msg = v13::messages;
 
+template <class Base>
+using cout_logging_decorator = logging_decorator<std::ostream&, Base>;
+
 struct flooding_handler
-    : of::decorate<
-          table_miss_entry_setting_decorator
-        , logging_decorator<std::ostream&>
+    : allium::decorate<
+            flooding_handler
+          , table_miss_entry_setting_decorator, cout_logging_decorator
       >
 {
-    using versions = std::tuple<v13::version>;
+    using versions = std::tuple<allium::v13::version>;
 
     flooding_handler()
         : decorate{
-            of::make_args<logging_decorator>(std::cout)
+            allium::make_args<cout_logging_decorator>(std::cout)
           }
     {
     }
@@ -30,7 +34,7 @@ struct flooding_handler
     void handle(Channel const& channel, msg::packet_in const& pkt_in)
     {
         channel->async_send(msg::packet_out{
-                  of::binary_data{pkt_in.frame()}
+                  pkt_in.frame()
                 , v13::protocol::OFPP_CONTROLLER
                 , v13::actions::output{v13::protocol::OFPP_ALL}});
     }
@@ -48,7 +52,7 @@ int main(int argc, char* argv[])
 
     flooding_handler handler{};
 
-    using controller = of::controller<flooding_handler>;
+    using controller = allium::controller<flooding_handler>;
     try {
         controller cont{
             controller::options{handler}.address(argv[1]).port("6653")
