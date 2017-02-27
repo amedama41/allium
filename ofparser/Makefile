@@ -21,12 +21,5 @@ run_cppparser: cppparser
 	./$(TARGET) ./of13/openflow.h
 
 clean:
-	-rm *.pyc ./generator/*.pyc
 	-rm $(OBJS) $(TARGET)
-
-run:
-	python ./generator.py ./of10/openflow.h
-	mv ./of10/error.hpp ../include/canard/network/protocol/openflow/v10/
-	python ./generator.py ./of13/openflow.h
-	mv ./of13/error.hpp ../include/canard/network/protocol/openflow/v13/
 
