@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <boost/endian/conversion.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
@@ -14,7 +15,6 @@
 #include <canard/constant_range.hpp>
 #include <canard/mpl/adapted/std_tuple.hpp>
 #include <canard/nabe/ether_header.hpp>
-#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace nabe {
@@ -226,7 +226,7 @@ namespace nabe {
             , lldptlv::port_id port_id
             , lldptlv::time_to_live time_to_live
             , LLDPTLVs&&... lldp_tlvs)
-        -> lldpdu<typename canard::remove_cv_and_reference<LLDPTLVs>::type...>
+        -> lldpdu<typename std::decay<LLDPTLVs>::type...>
     {
         return {
               std::move(chassis_id), std::move(port_id), std::move(time_to_live)

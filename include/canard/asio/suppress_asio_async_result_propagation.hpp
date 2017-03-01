@@ -2,10 +2,10 @@
 #define CANARD_ASIO_SUPPRESS_ASIO_ASYNC_RESULT_PROPAGATION_HPP
 
 #include <utility>
+#include <type_traits>
 #include <boost/asio/handler_alloc_hook.hpp>
 #include <boost/asio/handler_continuation_hook.hpp>
 #include <boost/asio/handler_invoke_hook.hpp>
-#include <canard/type_traits.hpp>
 
 namespace canard {
 
@@ -95,9 +95,7 @@ namespace canard {
 
     } // namespace detail
 
-    template <
-        class Handler, class T = canard::remove_cv_and_reference_t<Handler>
-    >
+    template <class Handler, class T = typename std::decay<Handler>::type>
     auto suppress_asio_async_result_propagation(Handler&& handler)
         -> detail::no_asio_async_result_propagation<T>
     {

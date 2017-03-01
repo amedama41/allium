@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
@@ -15,7 +16,6 @@
 #include <canard/network/protocol/openflow/detail/null_handler.hpp>
 #include <canard/network/protocol/openflow/shared_buffer_generator.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
-#include <canard/type_traits.hpp>
 
 namespace canard {
 namespace network {
@@ -34,7 +34,7 @@ namespace openflow {
     {
         template <class WriteHandler>
         using async_write_result_init = canard::async_result_init<
-              canard::remove_cv_and_reference_t<WriteHandler>
+              typename std::decay<WriteHandler>::type
             , void(boost::system::error_code, std::size_t)
         >;
 
@@ -176,13 +176,13 @@ namespace openflow {
                 , WriteHandler&& h
                 , ConstBufferSequence&& cb)
             -> async_write_functor<
-                      canard::remove_cv_and_reference_t<WriteHandler>
-                    , canard::remove_cv_and_reference_t<ConstBufferSequence>
+                      typename std::decay<WriteHandler>::type
+                    , typename std::decay<ConstBufferSequence>::type
                >
         {
             return async_write_functor<
-                  canard::remove_cv_and_reference_t<WriteHandler>
-                , canard::remove_cv_and_reference_t<ConstBufferSequence>
+                  typename std::decay<WriteHandler>::type
+                , typename std::decay<ConstBufferSequence>::type
             >{
                   std::move(c), std::forward<WriteHandler>(h)
                 , std::forward<ConstBufferSequence>(cb)
