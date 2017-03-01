@@ -1,24 +1,7 @@
 *.o
 *.depends
 *.dylib
-examples/v10/cbench_switch/cbench_switch
-examples/v10/learning_switch/learning_switch
-examples/v10/repeater_hub/repeater_hub
-examples/v10/switch_description/switch_description
-examples/v13/coroutine/coroutine
-examples/v13/decorator_controller/decorator_controller
-examples/v13/dump_table_features/dump_table_features
-examples/v13/learning_switch/learning_switch
-examples/v13/repeater_hub/repeater_hub
-examples/v13/topology/topology
-examples/v13/transaction_controller/transaction_controller
 ofparser/ofparser
 ofparser/of10/ofparser
 test/**/all_test
-test/utility_test
-test/**/message_test
-test/**/multipart_test
-test/**/queue_property_test
-test/oxm_match_field_test
-test/action_test
 
