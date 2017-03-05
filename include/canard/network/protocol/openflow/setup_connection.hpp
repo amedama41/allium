@@ -27,9 +27,9 @@
 #include <boost/system/error_code.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <canard/asio/asio_handler_hook_propagation.hpp>
-#include <canard/mpl/adapted/std_tuple.hpp>
 #include <canard/network/openflow/error.hpp>
 #include <canard/network/openflow/hello.hpp>
+#include <canard/network/openflow/type_traits/type_list.hpp>
 #include <canard/network/protocol/openflow/with_buffer.hpp>
 
 namespace canard {
@@ -50,8 +50,9 @@ namespace detail {
 
         template <class SupportedVersions>
         using sort_t = typename boost::mpl::sort<
-            SupportedVersions, greater_version
-        >::type;
+              canard::net::ofp::type_traits::to_type_list_t<SupportedVersions>
+            , greater_version
+        >::type::tuple;
 
         auto is_valid_hello(net::ofp::ofp_header const header)
             -> bool
