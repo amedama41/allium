@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <algorithm>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -11,9 +12,9 @@
 #include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <boost/range/size.hpp>
 #include <canard/as_byte_range.hpp>
-#include <canard/constant_range.hpp>
 #include <canard/nabe/ether_header.hpp>
 
 namespace canard {
@@ -247,7 +248,11 @@ namespace nabe {
         -> Container&
     {
         boost::fusion::for_each(packet, detail::make_encoder(container));
-        return boost::push_back(container, canard::make_constant_range(64 - std::min<std::size_t>(boost::size(container), 64), 0));
+        constexpr std::uint8_t padding[64] = {0};
+        auto const padding_size
+            = std::min<std::size_t>(boost::size(container), 64);
+        return boost::push_back(
+                container, boost::make_iterator_range_n(padding, padding_size));
     }
 
 } // namespace nabe
