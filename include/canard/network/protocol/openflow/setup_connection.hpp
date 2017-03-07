@@ -21,6 +21,7 @@
 #include <boost/asio/write.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/endian/conversion.hpp>
+#include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/sort.hpp>
