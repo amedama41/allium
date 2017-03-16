@@ -7,8 +7,9 @@
 #include <canard/network/utils/io_service_pool.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 
     template <class ControllerHandler>
     class controller_options
@@ -87,8 +88,9 @@ namespace openflow {
         std::shared_ptr<utils::io_service_pool> io_service_pool_;
     };
 
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_OPTIONS_HPP

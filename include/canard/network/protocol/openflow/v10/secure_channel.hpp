@@ -11,8 +11,9 @@
 #include <canard/network/protocol/openflow/secure_channel_reader.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 namespace v10 {
 
     struct handle_message
@@ -99,8 +100,9 @@ namespace v10 {
     };
 
 } // namespace v10
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_V10_SECURE_CHANNEL_HPP

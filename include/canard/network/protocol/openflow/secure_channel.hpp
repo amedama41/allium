@@ -18,8 +18,9 @@
 #include <canard/network/protocol/openflow/with_buffer.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 
     namespace detail {
 
@@ -196,8 +197,9 @@ namespace openflow {
         boost::asio::io_service::strand strand_;
     };
 
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_SECURE_CHANNEL_HPP

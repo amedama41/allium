@@ -16,8 +16,9 @@
 #include <canard/integer_sequence.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 
   namespace decorator_detail {
 
@@ -267,8 +268,9 @@ namespace openflow {
     >::decorate_impl;
   };
 
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_DECORATOR_HPP

@@ -10,8 +10,9 @@
 #include <canard/network/openflow/v13/openflow.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 namespace v13 {
 
     struct handle_message
@@ -90,8 +91,9 @@ namespace v13 {
     };
 
 } // namespace v13
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_V13_CHANNLE_HPP

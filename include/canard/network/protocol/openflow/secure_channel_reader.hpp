@@ -23,8 +23,9 @@
 #include <iostream>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 
     namespace secure_channel_detail {
 
@@ -141,7 +142,7 @@ namespace openflow {
             {
                 if (ec) {
                     handle_read(reader_->streambuf_);
-                    reader_->handle(base_channel_, openflow::goodbye{ec});
+                    reader_->handle(base_channel_, goodbye{ec});
                     std::cout
                         << "connection closed: " << ec.message()
                         << " " << base_channel_.use_count() << std::endl;
@@ -211,8 +212,9 @@ namespace openflow {
         } storage_;
     };
 
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_SECURE_CHANNEL_READER_HPP

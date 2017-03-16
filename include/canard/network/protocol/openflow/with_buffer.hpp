@@ -7,8 +7,9 @@
 #include <boost/asio/buffer.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 
     template <class Buffer>
     auto to_const_buffers(Buffer const& buffer)
@@ -76,8 +77,9 @@ namespace openflow {
         };
     }
 
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_WITH_BUFFER_HPP

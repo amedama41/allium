@@ -4,8 +4,9 @@
 #include <boost/system/error_code.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 
     class goodbye
     {
@@ -25,8 +26,9 @@ namespace openflow {
         boost::system::error_code ec_;
     };
 
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_GOODBYE_HPP

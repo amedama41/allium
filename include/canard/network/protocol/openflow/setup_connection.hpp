@@ -34,8 +34,9 @@
 #include <canard/network/protocol/openflow/with_buffer.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 namespace detail {
 
     namespace setup_connection_detail {
@@ -51,7 +52,7 @@ namespace detail {
 
         template <class SupportedVersions>
         using sort_t = typename boost::mpl::sort<
-              canard::net::ofp::type_traits::to_type_list_t<SupportedVersions>
+              net::ofp::type_traits::to_type_list_t<SupportedVersions>
             , greater_version
         >::type::tuple;
 
@@ -249,7 +250,7 @@ namespace detail {
             };
             boost::asio::async_write(
                     socket_
-                  , openflow::with_buffer(std::move(hello), buffer_).encode()
+                  , ofp::controller::with_buffer(std::move(hello), buffer_).encode()
                   , strand_.wrap([this, self](
                           boost::system::error_code const& ec, std::size_t) {
                 cancel_connection_timeout();
@@ -361,7 +362,7 @@ namespace detail {
                 , "incompatible openflow version", xid);
             boost::asio::async_write(
                     socket_
-                  , openflow::with_buffer(std::move(error), buffer_).encode()
+                  , ofp::controller::with_buffer(std::move(error), buffer_).encode()
                   , strand_.wrap([this, self](
                           boost::system::error_code const& ec, std::size_t) {
                 close("incompatible openflow version");
@@ -396,8 +397,9 @@ namespace detail {
     };
 
 } // namespace detail
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_SETUP_CONNECTION_HPP

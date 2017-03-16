@@ -7,8 +7,9 @@
 #include <canard/asio/shared_buffer.hpp>
 
 namespace canard {
-namespace network {
-namespace openflow {
+namespace net {
+namespace ofp {
+namespace controller {
 
     namespace shared_buffer_generator_detail {
 
@@ -92,8 +93,9 @@ namespace openflow {
 
     using shared_buffer_generator_detail::shared_buffer_generator;
 
-} // namespace openflow
-} // namespace network
+} // namespace controller
+} // namespace ofp
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_OPENFLOW_SHARED_BUFFER_GENERATOR_HPP

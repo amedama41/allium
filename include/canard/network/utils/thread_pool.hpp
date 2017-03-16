@@ -9,7 +9,7 @@
 #include <boost/range/algorithm/for_each.hpp>
 
 namespace canard {
-namespace network {
+namespace net {
 namespace utils {
 
     class thread_pool
@@ -64,7 +64,7 @@ namespace utils {
     };
 
 } // namespace utils
-} // namespace network
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_UTILS_THREAD_POOL_HPP

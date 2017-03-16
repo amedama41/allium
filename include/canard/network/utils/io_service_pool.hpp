@@ -12,7 +12,7 @@
 #include <boost/asio/io_service.hpp>
 
 namespace canard {
-namespace network {
+namespace net {
 namespace utils {
 
     class io_service_pool
@@ -153,7 +153,7 @@ namespace utils {
     };
 
 } // namespace utils
-} // namespace network
+} // namespace net
 } // namespace canard
 
 #endif // CANARD_NETWORK_UTILS_IO_SERVICE_POOL_HPP
