@@ -7,7 +7,7 @@
 #include "./transaction_decorator.hpp"
 #include "../match_creator.hpp"
 
-namespace allium = canard::network::openflow;
+namespace allium = canard::net::ofp::controller;
 namespace msg = ofp::v10::messages;
 
 using boost::format;

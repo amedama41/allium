@@ -6,7 +6,7 @@
 #include <canard/network/protocol/openflow/controller.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel.hpp>
 
-namespace allium = canard::network::openflow;
+namespace allium = canard::net::ofp::controller;
 namespace ofp = canard::net::ofp;
 namespace v10 = ofp::v10;
 

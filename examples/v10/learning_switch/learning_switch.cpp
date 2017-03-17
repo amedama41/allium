@@ -8,8 +8,8 @@
 #include <canard/network/utils/io_service_pool.hpp>
 #include "../match_creator.hpp"
 
-namespace allium = canard::network::openflow;
 namespace ofp = canard::net::ofp;
+namespace allium = ofp::controller;
 namespace v10 = ofp::v10;
 
 template <class Base>
@@ -104,8 +104,7 @@ int main(int argc, char* argv[])
   auto const num_io_service = std::stoul(argv[1]);
   auto const num_thread_per_iosrv = std::stoul(argv[2]);
 
-  using canard::network::utils::io_service_pool;
-  auto pool = std::make_shared<io_service_pool>(
+  auto pool = std::make_shared<canard::net::utils::io_service_pool>(
       num_io_service, num_thread_per_iosrv);
   learning_switch handler{};
 

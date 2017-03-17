@@ -14,8 +14,8 @@
 #include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
 #include "../oxm_match_creator.hpp"
 
-namespace allium = canard::network::openflow;
 namespace ofp = canard::net::ofp;
+namespace allium = ofp::controller;
 namespace v13 = ofp::v13;
 
 class forwarding_db
@@ -165,7 +165,6 @@ int main(int argc, char* argv[])
 
     using controller = allium::controller<learning_switch>;
 
-    auto io_service = std::make_shared<boost::asio::io_service>();
     learning_switch handler{};
     auto options = controller::options{handler};
 

@@ -8,7 +8,7 @@
 #include "../oxm_match_creator.hpp"
 #include "../transaction_controller/transaction_decorator.hpp"
 
-namespace allium = canard::network::openflow;
+namespace allium = canard::net::ofp::controller;
 namespace ofp = canard::net::ofp;
 namespace v13 = ofp::v13;
 namespace msg = v13::messages;

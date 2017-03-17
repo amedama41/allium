@@ -4,8 +4,8 @@
 #include <canard/network/protocol/openflow/v10/secure_channel.hpp>
 #include "../match_creator.hpp"
 
-namespace allium = canard::network::openflow;
 namespace ofp = canard::net::ofp;
+namespace allium = ofp::controller;
 namespace v10 = ofp::v10;
 
 struct repeater_hub

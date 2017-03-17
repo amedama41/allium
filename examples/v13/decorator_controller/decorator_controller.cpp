@@ -7,7 +7,7 @@
 #include "table_miss_entry_setting_decorator.hpp"
 #include "logging_decorator.hpp"
 
-namespace allium = canard::network::openflow;
+namespace allium = canard::net::ofp::controller;
 namespace ofp = canard::net::ofp;
 namespace v13 = ofp::v13;
 namespace msg = v13::messages;

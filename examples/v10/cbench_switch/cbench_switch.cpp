@@ -6,7 +6,7 @@
 #include <canard/network/utils/io_service_pool.hpp>
 #include "../match_creator.hpp"
 
-namespace allium = canard::network::openflow;
+namespace allium = canard::net::ofp::controller;
 namespace ofp = canard::net::ofp;
 namespace v10 = ofp::v10;
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   cbench_switch handler{};
 
-  using canard::network::utils::io_service_pool;
+  using canard::net::utils::io_service_pool;
   auto pool = std::make_shared<io_service_pool>(
       num_io_service, num_thread_per_iosrv);
 

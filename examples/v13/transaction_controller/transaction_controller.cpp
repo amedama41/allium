@@ -7,13 +7,12 @@
 #include "./transaction_decorator.hpp"
 #include "../oxm_match_creator.hpp"
 
-namespace allium = canard::network::openflow;
+namespace allium = canard::net::ofp::controller;
 
 struct transaction_controller;
 
 using controller = allium::controller<transaction_controller>;
 
-namespace allium = canard::network::openflow;
 namespace msg = ofp::v13::messages;
 
 using boost::format;

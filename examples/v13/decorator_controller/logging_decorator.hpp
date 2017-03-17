@@ -21,7 +21,7 @@ struct logging_decorator : public Base
     }
 
     template <class Channel>
-    void handle(Channel const& channel, canard::network::openflow::goodbye bye)
+    void handle(Channel const& channel, canard::net::ofp::controller::goodbye bye)
     {
         logger << "disconnected " << channel.get() << ": " << bye.reason().message() << std::endl;
         this->forward(channel, std::move(bye));

@@ -4,7 +4,7 @@
 #include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
 #include <canard/network/protocol/openflow/v13/io/openflow_io.hpp>
 
-namespace allium = canard::network::openflow;
+namespace allium = canard::net::ofp::controller;
 namespace ofp = canard::net::ofp;
 namespace v13 = ofp::v13;
 
