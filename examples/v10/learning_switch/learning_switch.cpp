@@ -3,9 +3,9 @@
 #include <map>
 #include <string>
 #include <tuple>
-#include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
-#include <canard/network/utils/io_service_pool.hpp>
+#include <canard/net/ofp/controller/controller.hpp>
+#include <canard/net/ofp/controller/v10/secure_channel.hpp>
+#include <canard/net/utils/io_service_pool.hpp>
 #include "../match_creator.hpp"
 
 namespace ofp = canard::net::ofp;

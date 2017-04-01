@@ -10,8 +10,8 @@
 #include <boost/optional/optional.hpp>
 #include <canard/packet_parser.hpp>
 #include <canard/mac_address.hpp>
-#include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
+#include <canard/net/ofp/controller/controller.hpp>
+#include <canard/net/ofp/controller/v13/openflow_channel.hpp>
 #include "../oxm_match_creator.hpp"
 
 namespace ofp = canard::net::ofp;

@@ -17,7 +17,7 @@
 #include <canard/asio/asio_handler_hook_propagation.hpp>
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/detail/bind_handler.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
+#include <canard/net/ofp/controller/v10/secure_channel.hpp>
 #include "./message.hpp"
 
 namespace ofp = canard::net::ofp;

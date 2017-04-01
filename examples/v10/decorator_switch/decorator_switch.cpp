@@ -3,8 +3,8 @@
 #include <utility>
 #include <boost/format.hpp>
 #include <canard/net/ofp/v10/io/openflow.hpp>
-#include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
+#include <canard/net/ofp/controller/controller.hpp>
+#include <canard/net/ofp/controller/v10/secure_channel.hpp>
 
 namespace allium = canard::net::ofp::controller;
 namespace ofp = canard::net::ofp;

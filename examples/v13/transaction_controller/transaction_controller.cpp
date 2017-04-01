@@ -2,8 +2,8 @@
 #include <iostream>
 #include <boost/asio/spawn.hpp>
 #include <boost/format.hpp>
-#include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
+#include <canard/net/ofp/controller/controller.hpp>
+#include <canard/net/ofp/controller/v13/openflow_channel.hpp>
 #include "./transaction_decorator.hpp"
 #include "../oxm_match_creator.hpp"
 

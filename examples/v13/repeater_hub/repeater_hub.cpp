@@ -1,8 +1,8 @@
 #include <iostream>
 #include <tuple>
 #include <type_traits>
-#include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
+#include <canard/net/ofp/controller/controller.hpp>
+#include <canard/net/ofp/controller/v13/openflow_channel.hpp>
 #include "../oxm_match_creator.hpp"
 
 namespace allium = canard::net::ofp::controller;

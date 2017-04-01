@@ -1,8 +1,8 @@
 #define BOOST_LOG_DYN_LINK
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
-#include <canard/network/utils/thread_pool.hpp>
-#include <canard/network/protocol/openflow/v13/decorator/topology/topology_decorator.hpp>
+#include <canard/net/utils/thread_pool.hpp>
+#include <canard/net/ofp/controller/v13/decorator/topology/topology_decorator.hpp>
 
 namespace of = canard::network::openflow::v13;
 

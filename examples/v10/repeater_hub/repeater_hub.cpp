@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
-#include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v10/secure_channel.hpp>
+#include <canard/net/ofp/controller/controller.hpp>
+#include <canard/net/ofp/controller/v10/secure_channel.hpp>
 #include "../match_creator.hpp"
 
 namespace ofp = canard::net::ofp;

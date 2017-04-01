@@ -2,7 +2,7 @@
 #define TABLE_MISS_ENTRY_SETTING_DECORATOR_HPP
 
 #include <utility>
-#include <canard/network/protocol/openflow/decorator.hpp>
+#include <canard/net/ofp/controller/decorator.hpp>
 #include <canard/net/ofp/v13/messages.hpp>
 
 template <class Base>

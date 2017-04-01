@@ -2,8 +2,8 @@
 #include <memory>
 #include <tuple>
 #include <utility>
-#include <canard/network/protocol/openflow/controller.hpp>
-#include <canard/network/protocol/openflow/v13/openflow_channel.hpp>
+#include <canard/net/ofp/controller/controller.hpp>
+#include <canard/net/ofp/controller/v13/openflow_channel.hpp>
 #include "table_miss_entry_setting_decorator.hpp"
 #include "logging_decorator.hpp"
 

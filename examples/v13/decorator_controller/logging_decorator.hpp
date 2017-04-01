@@ -2,8 +2,8 @@
 #define LOGGING_DECORATOR_HPP
 
 #include <utility>
-#include <canard/network/protocol/openflow/decorator.hpp>
-#include <canard/network/protocol/openflow/v13/io/openflow_io.hpp>
+#include <canard/net/ofp/controller/decorator.hpp>
+#include <canard/net/ofp/controller/v13/io/openflow_io.hpp>
 
 template <class Logger, class Base>
 struct logging_decorator : public Base
