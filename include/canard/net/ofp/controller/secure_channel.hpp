@@ -12,10 +12,10 @@
 #include <canard/asio/async_result_init.hpp>
 #include <canard/asio/suppress_asio_async_result_propagation.hpp>
 #include <canard/asio/write_queue_stream.hpp>
-#include <canard/network/protocol/openflow/decorator.hpp>
-#include <canard/network/protocol/openflow/detail/null_handler.hpp>
-#include <canard/network/protocol/openflow/shared_buffer_generator.hpp>
-#include <canard/network/protocol/openflow/with_buffer.hpp>
+#include <canard/net/ofp/controller/decorator.hpp>
+#include <canard/net/ofp/controller/detail/null_handler.hpp>
+#include <canard/net/ofp/controller/shared_buffer_generator.hpp>
+#include <canard/net/ofp/controller/with_buffer.hpp>
 
 namespace canard {
 namespace net {

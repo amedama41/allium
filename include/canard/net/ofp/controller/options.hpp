@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 #include <boost/asio/io_service.hpp>
-#include <canard/network/utils/io_service_pool.hpp>
+#include <canard/net/utils/io_service_pool.hpp>
 
 namespace canard {
 namespace net {

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <tuple>
 #include <boost/preprocessor/repeat.hpp>
-#include <canard/network/protocol/openflow/secure_channel_reader.hpp>
+#include <canard/net/ofp/controller/secure_channel_reader.hpp>
 #include <canard/net/ofp/v13/detail/byteorder.hpp>
 #include <canard/net/ofp/v13/messages.hpp>
 #include <canard/net/ofp/v13/openflow.hpp>

@@ -8,7 +8,7 @@
 #include <canard/net/ofp/v10/detail/byteorder.hpp>
 #include <canard/net/ofp/v10/messages.hpp>
 #include <canard/net/ofp/v10/openflow.hpp>
-#include <canard/network/protocol/openflow/secure_channel_reader.hpp>
+#include <canard/net/ofp/controller/secure_channel_reader.hpp>
 
 namespace canard {
 namespace net {

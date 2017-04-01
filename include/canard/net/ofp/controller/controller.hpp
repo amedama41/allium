@@ -8,10 +8,10 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/system/error_code.hpp>
-#include <canard/network/protocol/openflow/decorator.hpp>
-#include <canard/network/protocol/openflow/options.hpp>
-#include <canard/network/protocol/openflow/setup_connection.hpp>
-#include <canard/network/utils/io_service_pool.hpp>
+#include <canard/net/ofp/controller/decorator.hpp>
+#include <canard/net/ofp/controller/options.hpp>
+#include <canard/net/ofp/controller/setup_connection.hpp>
+#include <canard/net/utils/io_service_pool.hpp>
 
 #include <iostream>
 

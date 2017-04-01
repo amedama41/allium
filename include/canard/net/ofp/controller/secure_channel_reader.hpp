@@ -16,9 +16,9 @@
 #include <boost/system/error_code.hpp>
 #include <canard/asio/detail/bind_handler.hpp>
 #include <canard/net/ofp/hello.hpp>
-#include <canard/network/protocol/openflow/decorator.hpp>
-#include <canard/network/protocol/openflow/goodbye.hpp>
-#include <canard/network/protocol/openflow/secure_channel.hpp>
+#include <canard/net/ofp/controller/decorator.hpp>
+#include <canard/net/ofp/controller/goodbye.hpp>
+#include <canard/net/ofp/controller/secure_channel.hpp>
 
 #include <iostream>
 

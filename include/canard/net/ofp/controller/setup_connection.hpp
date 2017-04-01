@@ -31,7 +31,7 @@
 #include <canard/net/ofp/error.hpp>
 #include <canard/net/ofp/hello.hpp>
 #include <canard/net/ofp/type_traits/type_list.hpp>
-#include <canard/network/protocol/openflow/with_buffer.hpp>
+#include <canard/net/ofp/controller/with_buffer.hpp>
 
 namespace canard {
 namespace net {
