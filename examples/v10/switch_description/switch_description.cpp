@@ -2,7 +2,7 @@
 #include <sstream>
 #include <type_traits>
 #include <boost/format.hpp>
-#include <canard/network/openflow/v10/io/openflow.hpp>
+#include <canard/net/ofp/v10/io/openflow.hpp>
 #include <canard/network/protocol/openflow/controller.hpp>
 #include <canard/network/protocol/openflow/v10/secure_channel.hpp>
 

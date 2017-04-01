@@ -5,7 +5,7 @@
 #include <memory>
 #include <new>
 #include <type_traits>
-#include <canard/network/openflow/v10/message/error.hpp>
+#include <canard/net/ofp/v10/message/error.hpp>
 
 namespace canard {
 namespace allium {

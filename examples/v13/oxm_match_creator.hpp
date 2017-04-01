@@ -6,9 +6,9 @@
 #include <boost/range/iterator_range.hpp>
 #include <canard/mac_address.hpp>
 #include <canard/packet_parser.hpp>
-#include <canard/network/openflow/v13/common/oxm_match.hpp>
-#include <canard/network/openflow/v13/common/oxm_match_field.hpp>
-#include <canard/network/openflow/v13/openflow.hpp>
+#include <canard/net/ofp/v13/common/oxm_match.hpp>
+#include <canard/net/ofp/v13/common/oxm_match_field.hpp>
+#include <canard/net/ofp/v13/openflow.hpp>
 
 struct oxm_match_creator
 {

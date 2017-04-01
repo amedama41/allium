@@ -5,9 +5,9 @@
 #include <boost/range/algorithm/copy.hpp>
 #include <canard/mac_address.hpp>
 #include <canard/packet_parser.hpp>
-#include <canard/network/openflow/v10/common/match.hpp>
-#include <canard/network/openflow/v10/common/match_fields.hpp>
-#include <canard/network/openflow/v10/openflow.hpp>
+#include <canard/net/ofp/v10/common/match.hpp>
+#include <canard/net/ofp/v10/common/match_fields.hpp>
+#include <canard/net/ofp/v10/openflow.hpp>
 
 struct match_creator
 {

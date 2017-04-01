@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <canard/network/protocol/openflow/decorator.hpp>
-#include <canard/network/openflow/v13/messages.hpp>
+#include <canard/net/ofp/v13/messages.hpp>
 
 template <class Base>
 struct table_miss_entry_setting_decorator : public Base
