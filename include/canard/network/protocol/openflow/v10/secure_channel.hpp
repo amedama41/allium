@@ -5,9 +5,9 @@
 #include <stdexcept>
 #include <tuple>
 #include <boost/preprocessor/repeat.hpp>
-#include <canard/network/openflow/v10/detail/byteorder.hpp>
-#include <canard/network/openflow/v10/messages.hpp>
-#include <canard/network/openflow/v10/openflow.hpp>
+#include <canard/net/ofp/v10/detail/byteorder.hpp>
+#include <canard/net/ofp/v10/messages.hpp>
+#include <canard/net/ofp/v10/openflow.hpp>
 #include <canard/network/protocol/openflow/secure_channel_reader.hpp>
 
 namespace canard {

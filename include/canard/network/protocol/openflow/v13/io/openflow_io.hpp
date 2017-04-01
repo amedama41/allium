@@ -5,8 +5,8 @@
 #include <array>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
-#include <canard/network/openflow/v13/io/openflow.hpp>
-#include <canard/network/openflow/v13/messages.hpp>
+#include <canard/net/ofp/v13/io/openflow.hpp>
+#include <canard/net/ofp/v13/messages.hpp>
 
 namespace canard {
 namespace net {
