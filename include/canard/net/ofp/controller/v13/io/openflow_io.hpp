@@ -316,7 +316,7 @@ namespace multipart {
             % reply.xid()
             % reply.flags();
             ;
-        boost::for_each(reply, [&](flow_stats const& stats) {
+        boost::for_each(reply.body(), [&](flow_stats const& stats) {
             os << "\n\t" << stats;
         });
         return os;
@@ -345,7 +345,7 @@ namespace multipart {
             % reply.xid()
             % reply.flags();
             ;
-        boost::for_each(reply, [&](table_stats const& stats) {
+        boost::for_each(reply.body(), [&](table_stats const& stats) {
             os << "\n\t" << stats;
         });
         return os;
@@ -360,7 +360,7 @@ namespace multipart {
             % reply.xid()
             % reply.flags();
             ;
-        boost::for_each(reply, [&](port_stats const& stats) {
+        boost::for_each(reply.body(), [&](port_stats const& stats) {
             os << "\n\t" << stats;
         });
         return os;
@@ -375,7 +375,7 @@ namespace multipart {
             % reply.xid()
             % reply.flags()
             ;
-        boost::for_each(reply, [&](table_features const& features) {
+        boost::for_each(reply.body(), [&](table_features const& features) {
             os << "\n\t" << features;
         });
         return os;
@@ -390,7 +390,7 @@ namespace multipart {
             % reply.xid()
             % reply.flags()
             ;
-        boost::for_each(reply, [&](port const& port) {
+        boost::for_each(reply.body(), [&](port const& port) {
             os << "\n\t" << port;
         });
         return os;
@@ -405,7 +405,7 @@ namespace multipart {
             % reply.xid()
             % reply.flags()
             ;
-        boost::for_each(reply, [&](queue_stats const& stats) {
+        boost::for_each(reply.body(), [&](queue_stats const& stats) {
             os << "\n\t" << stats;
         });
         return os;
