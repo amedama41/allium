@@ -411,6 +411,48 @@ namespace multipart {
         return os;
     }
 
+    template <class OStream>
+    auto operator<<(OStream& os, group_description_reply const&)
+        -> OStream&
+    {
+      return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, group_features_reply const&)
+        -> OStream&
+    {
+      return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, group_stats_reply const&)
+        -> OStream&
+    {
+      return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, meter_config_reply const&)
+        -> OStream&
+    {
+      return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, meter_features_reply const&)
+        -> OStream&
+    {
+      return os;
+    }
+
+    template <class OStream>
+    auto operator<<(OStream& os, meter_stats_reply const&)
+        -> OStream&
+    {
+      return os;
+    }
+
 } // namespace multipart
 
 } // namespace messages
