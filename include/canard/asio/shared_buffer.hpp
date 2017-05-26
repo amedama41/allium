@@ -30,7 +30,12 @@ namespace canard {
             auto operator--() noexcept
                 -> std::size_t
             {
-                return counter_.fetch_sub(1, std::memory_order_relaxed) - 1;
+                auto const counter
+                  = counter_.fetch_sub(1, std::memory_order_release) - 1;
+                if (counter == 0) {
+                  std::atomic_thread_fence(std::memory_order_acquire);
+                }
+                return counter;
             }
         };
 
