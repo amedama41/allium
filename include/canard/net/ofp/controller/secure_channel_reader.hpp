@@ -121,6 +121,12 @@ namespace controller {
         }
 
     private:
+        struct read_handler_storage
+        {
+            typename std::aligned_storage<256>::type memory;
+            bool used = false;
+        };
+
         struct message_loop
         {
             void run()
@@ -175,11 +181,17 @@ namespace controller {
                 return sizeof(header_type) - streambuf.size();
             }
 
+            auto storage() const noexcept
+                -> read_handler_storage&
+            {
+                return reader_->storage_;
+            }
+
             friend auto asio_handler_allocate(
                     std::size_t const size, message_loop* const loop)
                 -> void*
             {
-                auto& storage = loop->reader_->storage_;
+                auto& storage = loop->storage();
                 if (!storage.used && size <= sizeof(storage.memory)) {
                     storage.used = true;
                     return std::addressof(storage.memory);
@@ -190,7 +202,7 @@ namespace controller {
             friend void asio_handler_deallocate(
                     void* const pointer, std::size_t, message_loop* const loop)
             {
-                auto& storage = loop->reader_->storage_;
+                auto& storage = loop->storage();
                 if (pointer == std::addressof(storage.memory)) {
                     storage.used = false;
                     return;
@@ -205,11 +217,7 @@ namespace controller {
     private:
         ControllerHandler& controller_handler_;
         boost::asio::streambuf streambuf_;
-        struct read_handler_storage
-        {
-            typename std::aligned_storage<256>::type memory;
-            bool used = false;
-        } storage_;
+        read_handler_storage storage_;
     };
 
 } // namespace controller
