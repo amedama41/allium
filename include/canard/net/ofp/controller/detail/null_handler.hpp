@@ -7,14 +7,14 @@ namespace ofp {
 namespace controller {
 namespace detail {
 
-    class null_handler
+  class null_handler
+  {
+  public:
+    template <class... Args>
+    void operator()(Args&&...) const
     {
-    public:
-        template <class... Args>
-        void operator()(Args&&...) const
-        {
-        }
-    };
+    }
+  };
 
 } // namespace detail
 } // namespace controller
