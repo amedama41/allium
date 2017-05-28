@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <algorithm>
 #include <array>
 #include <iterator>
@@ -12,7 +13,6 @@
 #include <boost/asio/ip/address_v6.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/range/iterator_range.hpp>
-#include <canard/as_byte_range.hpp>
 #include <canard/mac_address.hpp>
 
 namespace canard {
@@ -20,12 +20,12 @@ namespace canard {
   namespace detail {
 
     template <class T>
-    auto decode(std::uint8_t const* const data)
+    auto decode(std::uint8_t const* const data) noexcept
       -> T
     {
       auto value = T{};
-      std::copy_n(data, sizeof(value), canard::as_byte_range(value).begin());
-      return value;
+      std::memcpy(&value, data, sizeof(value));
+      return boost::endian::big_to_native(value);
     }
 
   } // namespace detail
@@ -74,8 +74,7 @@ namespace canard {
     auto ether_type() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::ETHER_TYPE));
+      return detail::decode<std::uint16_t>(data_ + offset::ETHER_TYPE);
     }
 
     auto next() const noexcept
@@ -132,22 +131,19 @@ namespace canard {
     auto vid() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::TCI)) & 0x0fff;
+      return detail::decode<std::uint16_t>(data_ + offset::TCI) & 0x0fff;
     }
 
     auto pcp() const
       -> std::uint8_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::TCI)) >> 5;
+      return detail::decode<std::uint16_t>(data_ + offset::TCI) >> 5;
     }
 
     auto ether_type() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::ETHER_TYPE));
+      return detail::decode<std::uint16_t>(data_ + offset::ETHER_TYPE);
     }
 
     auto next() const noexcept
@@ -204,15 +200,13 @@ namespace canard {
     auto hardware_type() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::HARDWARE_TYPE));
+      return detail::decode<std::uint16_t>(data_ + offset::HARDWARE_TYPE);
     }
 
     auto protocol_type() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::PROTOCOL_TYPE));
+      return detail::decode<std::uint16_t>(data_ + offset::PROTOCOL_TYPE);
     }
 
     auto hardware_length() const
@@ -230,8 +224,7 @@ namespace canard {
     auto operation() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::OPERATION));
+      return detail::decode<std::uint16_t>(data_ + offset::OPERATION);
     }
 
     auto sender_hardware_address() const
@@ -297,8 +290,7 @@ namespace canard {
     auto chassis_id() const
       -> std::string
     {
-      auto const tlv_header
-        = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
+      auto const tlv_header = detail::decode<std::uint16_t>(data_);
       return std::string{
           data_ + sizeof(std::uint16_t) + sizeof(std::uint8_t)
         , data_ + sizeof(std::uint16_t) + tlv_length(tlv_header)
@@ -314,12 +306,10 @@ namespace canard {
     auto port_id() const
       -> std::string
     {
-      auto const chassis_id_tlv_header
-        = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
+      auto const chassis_id_tlv_header = detail::decode<std::uint16_t>(data_);
       auto const first
         = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
-      auto const tlv_header
-        = boost::endian::big_to_native(detail::decode<std::uint16_t>(first));
+      auto const tlv_header = detail::decode<std::uint16_t>(first);
       return std::string{
           first + sizeof(std::uint16_t) + sizeof(std::uint8_t)
         , first + sizeof(std::uint16_t) + tlv_length(tlv_header)
@@ -329,8 +319,7 @@ namespace canard {
     auto port_id_subtype() const
       -> std::uint8_t
     {
-      auto const chassis_id_tlv_header
-        = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
+      auto const chassis_id_tlv_header = detail::decode<std::uint16_t>(data_);
       auto const first
         = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
       return *(first + sizeof(std::uint16_t));
@@ -339,15 +328,12 @@ namespace canard {
     auto time_to_live() const
       -> std::uint16_t
     {
-      auto const chassis_id_tlv_header
-        = boost::endian::big_to_native(detail::decode<std::uint16_t>(data_));
+      auto const chassis_id_tlv_header = detail::decode<std::uint16_t>(data_);
       auto first
         = data_ + sizeof(std::uint16_t) + tlv_length(chassis_id_tlv_header);
-      auto const port_id_tlv_header
-        = boost::endian::big_to_native(detail::decode<std::uint16_t>(first));
+      auto const port_id_tlv_header = detail::decode<std::uint16_t>(first);
       first += sizeof(std::uint16_t) + tlv_length(port_id_tlv_header);
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(first + sizeof(std::uint16_t)));
+      return detail::decode<std::uint16_t>(first + sizeof(std::uint16_t));
     }
 
     template <class Function>
@@ -440,15 +426,13 @@ namespace canard {
     auto total_length() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::TOTAL_LENGTH));
+      return detail::decode<std::uint16_t>(data_ + offset::TOTAL_LENGTH);
     }
 
     auto identification() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::IDENTIFICATION));
+      return detail::decode<std::uint16_t>(data_ + offset::IDENTIFICATION);
     }
 
     auto flags() const
@@ -461,9 +445,8 @@ namespace canard {
     auto fragment_offset() const
       -> std::uint16_t
     {
-      auto const flags_and_fragment_offset = boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(
-              data_ + offset::FLAGS_AND_FRAGMENT_OFFSET));
+      auto const flags_and_fragment_offset = detail::decode<std::uint16_t>(
+          data_ + offset::FLAGS_AND_FRAGMENT_OFFSET);
       return flags_and_fragment_offset & 0x1fff;
     }
 
@@ -482,23 +465,23 @@ namespace canard {
     auto checksum() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
+      return detail::decode<std::uint16_t>(data_ + offset::CHECKSUM);
     }
 
     auto source_address() const
       -> boost::asio::ip::address_v4
     {
-      auto addr = detail::decode<std::uint32_t>(data_ + offset::SOURCE_ADDRESS);
-      return boost::asio::ip::address_v4{boost::endian::big_to_native(addr)};
+      return boost::asio::ip::address_v4{
+        detail::decode<std::uint32_t>(data_ + offset::SOURCE_ADDRESS)
+      };
     }
 
     auto destination_address() const
       -> boost::asio::ip::address_v4
     {
-      auto addr = detail::decode<std::uint32_t>(
-          data_ + offset::DESTINATION_ADDRESS);
-      return boost::asio::ip::address_v4{boost::endian::big_to_native(addr)};
+      return boost::asio::ip::address_v4{
+        detail::decode<std::uint32_t>(data_ + offset::DESTINATION_ADDRESS)
+      };
     }
 
     auto next() const
@@ -587,8 +570,7 @@ namespace canard {
     auto checksum() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
+      return detail::decode<std::uint16_t>(data_ + offset::CHECKSUM);
     }
 
     auto payload() const
@@ -624,15 +606,13 @@ namespace canard {
     auto identifier() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER));
+      return detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER);
     }
 
     auto sequence_number() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER));
+      return detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER);
     }
   };
 
@@ -657,8 +637,7 @@ namespace canard {
       -> boost::asio::ip::address_v4
     {
       return boost::asio::ip::address_v4{
-        boost::endian::big_to_native(
-            detail::decode<std::uint32_t>(data_ + offset::GATEWAY_ADDRESS))
+        detail::decode<std::uint32_t>(data_ + offset::GATEWAY_ADDRESS)
       };
     }
   };
@@ -688,36 +667,31 @@ namespace canard {
     auto identifier() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER));
+      return detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER);
     }
 
     auto sequence_number() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER));
+      return detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER);
     }
 
     auto originate_timestamp() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::ORIGINATE_TIMESTAMP));
+      return detail::decode<std::uint32_t>(data_ + offset::ORIGINATE_TIMESTAMP);
     }
 
     auto receive_timestamp() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::RECEIVE_TIMESTAMP));
+      return detail::decode<std::uint32_t>(data_ + offset::RECEIVE_TIMESTAMP);
     }
 
     auto transmit_timestamp() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::TRANSMIT_TIMESTAMP));
+      return detail::decode<std::uint32_t>(data_ + offset::TRANSMIT_TIMESTAMP);
     }
   };
 
@@ -744,23 +718,20 @@ namespace canard {
     auto identifier() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER));
+      return detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER);
     }
 
     auto sequence_number() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER));
+      return detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER);
     }
 
     auto address_mask() const
       -> boost::asio::ip::address_v4
     {
       return boost::asio::ip::address_v4{
-        boost::endian::big_to_native(
-            detail::decode<std::uint32_t>(data_ + offset::ADDRESS_MASK))
+        detail::decode<std::uint32_t>(data_ + offset::ADDRESS_MASK)
       };
     };
   };
@@ -791,16 +762,15 @@ namespace canard {
     auto version() const
       -> std::uint8_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint8_t>(data_ + offset::VERSION)) >> 4;
+      return detail::decode<std::uint8_t>(data_ + offset::VERSION) >> 4;
     }
 
     auto traffic_class() const
       -> std::uint8_t
     {
       auto const version_and_traffic_class_and_flow_label
-        = boost::endian::big_to_native(detail::decode<std::uint32_t>(
-              data_ + offset::VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL));
+        = detail::decode<std::uint32_t>(
+            data_ + offset::VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL);
       return (version_and_traffic_class_and_flow_label >> 20) & 0x0ff;
     }
 
@@ -820,16 +790,15 @@ namespace canard {
       -> std::uint32_t
     {
       auto const version_and_traffic_class_and_flow_label
-        = boost::endian::big_to_native(detail::decode<std::uint32_t>(
-              data_ + offset::VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL));
+        = detail::decode<std::uint32_t>(
+            data_ + offset::VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL);
       return version_and_traffic_class_and_flow_label & 0x0fffff;
     }
 
     auto payload_length() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::PAYLOAD_LENGTH));
+      return detail::decode<std::uint16_t>(data_ + offset::PAYLOAD_LENGTH);
     }
 
     auto next_header() const
@@ -988,26 +957,23 @@ namespace canard {
     auto fragment_offset() const
       -> std::uint16_t
     {
-      auto const fragment_offset_and_flags = boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(
-            data_ + offset::FRAGMENT_OFFSET_AND_FLAGS));
+      auto const fragment_offset_and_flags = detail::decode<std::uint16_t>(
+          data_ + offset::FRAGMENT_OFFSET_AND_FLAGS);
       return fragment_offset_and_flags >> 3;
     }
 
     auto flags() const
       -> std::uint8_t
     {
-      auto const fragment_offset_and_flags = boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(
-            data_ + offset::FRAGMENT_OFFSET_AND_FLAGS));
+      auto const fragment_offset_and_flags = detail::decode<std::uint16_t>(
+            data_ + offset::FRAGMENT_OFFSET_AND_FLAGS);
       return fragment_offset_and_flags & 0x01;
     }
 
     auto identification() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::IDENTIFICATION));
+      return detail::decode<std::uint32_t>(data_ + offset::IDENTIFICATION);
     }
 
     auto length() const noexcept
@@ -1089,15 +1055,13 @@ namespace canard {
     auto spi() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::SPI));
+      return detail::decode<std::uint32_t>(data_ + offset::SPI);
     }
 
     auto sequence_number() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::SEQUENCE_NUMBER));
+      return detail::decode<std::uint32_t>(data_ + offset::SEQUENCE_NUMBER);
     }
 
     auto authentication_data() const
@@ -1178,8 +1142,7 @@ namespace canard {
     auto checksum() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
+      return detail::decode<std::uint16_t>(data_ + offset::CHECKSUM);
     }
 
     auto data_length() const noexcept
@@ -1289,29 +1252,26 @@ namespace canard {
     auto source_port() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::SOURCE_PORT));
+      return detail::decode<std::uint16_t>(data_ + offset::SOURCE_PORT);
     }
 
     auto destination_port() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::DESTINATION_PORT));
+      return detail::decode<std::uint16_t>(data_ + offset::DESTINATION_PORT);
     }
 
     auto sequence_number() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::SEQUENCE_NUMBER));
+      return detail::decode<std::uint32_t>(data_ + offset::SEQUENCE_NUMBER);
     }
 
     auto acknowledgement_number() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + offset::ACKNOWLEDGEMENT_NUMBER));
+      return detail::decode<std::uint32_t>(
+          data_ + offset::ACKNOWLEDGEMENT_NUMBER);
     }
 
     auto data_offset() const
@@ -1329,30 +1289,27 @@ namespace canard {
     auto flags() const
       -> std::uint16_t
     {
-      auto const data_offset_and_flags = boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::DATA_OFFSET_AND_FLAGS));
+      auto const data_offset_and_flags
+        = detail::decode<std::uint16_t>(data_ + offset::DATA_OFFSET_AND_FLAGS);
       return data_offset_and_flags & 0x0fff;
     }
 
     auto window() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::WINDOW));
+      return detail::decode<std::uint16_t>(data_ + offset::WINDOW);
     }
 
     auto checksum() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
+      return detail::decode<std::uint16_t>(data_ + offset::CHECKSUM);
     }
 
     auto urgent_pointer() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::URGENT_POINTER));
+      return detail::decode<std::uint16_t>(data_ + offset::URGENT_POINTER);
     }
 
     auto next() const
@@ -1421,29 +1378,25 @@ namespace canard {
     auto source_port() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::SOURCE_PORT));
+      return detail::decode<std::uint16_t>(data_ + offset::SOURCE_PORT);
     }
 
     auto destination_port() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::DESTINATION_PORT));
+      return detail::decode<std::uint16_t>(data_ + offset::DESTINATION_PORT);
     }
 
     auto length() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::LENGTH));
+      return detail::decode<std::uint16_t>(data_ + offset::LENGTH);
     }
 
     auto checksum() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
+      return detail::decode<std::uint16_t>(data_ + offset::CHECKSUM);
     }
 
     auto next() const
