@@ -6,9 +6,8 @@
 #include <algorithm>
 #include <array>
 #include <iterator>
-#include <net/ethernet.h>
-#include <net/if_arp.h>
-#include <netinet/ip.h>
+#include <string>
+#include <utility>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio/ip/address_v6.hpp>
 #include <boost/endian/conversion.hpp>
@@ -31,10 +30,27 @@ namespace canard {
 
   } // namespace detail
 
+  template <class Function>
+  inline void ether_next_header(
+        std::uint16_t const type
+      , std::uint8_t const* const first, std::uint8_t const* const last
+      , Function& f);
+
   class ether_header
   {
   public:
-    explicit ether_header(std::uint8_t const* data)
+    static constexpr std::uint16_t min_header_length = 14;
+    static constexpr std::uint16_t min_ether_type = 0x0600;
+    static constexpr std::uint16_t min_frame_length = 1500;
+    enum offset
+    {
+      DESTINATION = 0,
+      SOURCE = DESTINATION + 6,
+      ETHER_TYPE = SOURCE + 6,
+      END = ETHER_TYPE + 2,
+    };
+
+    explicit ether_header(std::uint8_t const* data) noexcept
       : data_{data}
     {
     }
@@ -43,9 +59,7 @@ namespace canard {
       -> canard::mac_address
     {
       auto dst = std::array<std::uint8_t, 6>{};
-      std::copy_n(
-            data_ + offsetof(::ether_header, ether_dhost)
-          , sizeof(dst), dst.data());
+      std::copy_n(data_ + offset::DESTINATION, sizeof(dst), dst.data());
       return canard::mac_address{dst};
     }
 
@@ -53,9 +67,7 @@ namespace canard {
       -> canard::mac_address
     {
       auto src = std::array<std::uint8_t, 6>{};
-      std::copy_n(
-            data_ + offsetof(::ether_header, ether_shost)
-          , sizeof(src), src.data());
+      std::copy_n(data_ + offset::SOURCE, sizeof(src), src.data());
       return canard::mac_address{src};
     }
 
@@ -63,14 +75,37 @@ namespace canard {
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(
-            data_ + offsetof(::ether_header, ether_type)));
+          detail::decode<std::uint16_t>(data_ + offset::ETHER_TYPE));
     }
 
-    auto next() const
+    auto next() const noexcept
       -> std::uint8_t const*
     {
-      return data_ + sizeof(::ether_header);
+      return data_ + min_header_length;
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& f)
+    {
+      if (std::distance(first, last) < min_header_length) {
+        return;
+      }
+
+      auto const header = ether_header{first};
+      auto const type_of_length = header.ether_type();
+      if (type_of_length >= min_ether_type) {
+        if (f(header)) {
+          ether_next_header(type_of_length, header.next(), last, f);
+        }
+      }
+      else if (type_of_length <= min_frame_length) {
+        // TODO
+      }
+      else {
+        // TODO
+      }
     }
 
   private:
@@ -80,7 +115,16 @@ namespace canard {
   class vlan_tag
   {
   public:
-    vlan_tag(std::uint8_t const* const data)
+    static constexpr std::uint16_t type = 0x8100;
+    static constexpr std::uint16_t vlan_tag_length = 4;
+    enum offset
+    {
+      TCI = 0,
+      ETHER_TYPE = TCI + 2,
+      END = ETHER_TYPE + 2,
+    };
+
+    explicit vlan_tag(std::uint8_t const* const data) noexcept
       : data_{data}
     {
     }
@@ -89,27 +133,42 @@ namespace canard {
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_)) & 0x0FFF;
+          detail::decode<std::uint16_t>(data_ + offset::TCI)) & 0x0fff;
     }
 
     auto pcp() const
       -> std::uint8_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_)) >> 5;
+          detail::decode<std::uint16_t>(data_ + offset::TCI)) >> 5;
     }
 
     auto ether_type() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+          detail::decode<std::uint16_t>(data_ + offset::ETHER_TYPE));
     }
 
-    auto next() const
+    auto next() const noexcept
       -> std::uint8_t const*
     {
-      return data_ + sizeof(std::uint32_t);
+      return data_ + vlan_tag_length;
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& f)
+    {
+      if (std::distance(first, last) < vlan_tag_length) {
+        return;
+      }
+
+      auto const header = vlan_tag{first};
+      if (f(header)) {
+        ether_next_header(header.ether_type(), header.next(), last, f);
+      }
     }
 
   private:
@@ -119,62 +178,73 @@ namespace canard {
   class arp
   {
   public:
-    arp(std::uint8_t const* const data)
+    static constexpr std::uint16_t type = 0x0806;
+    static constexpr std::uint16_t min_length = 8;
+    enum offset
+    {
+      HARDWARE_TYPE = 0,
+      PROTOCOL_TYPE = HARDWARE_TYPE + 2,
+      HARDWARE_LENGTH = PROTOCOL_TYPE + 2,
+      PROTOCOL_LENGTH = HARDWARE_LENGTH + 1,
+      OPERATION = PROTOCOL_TYPE + 1,
+      SENDER_HARDWARE_ADDRESS = OPERATION + 2,
+    };
+
+    explicit arp(std::uint8_t const* const data) noexcept
       : data_{data}
     {
     }
 
     auto length() const
-      -> std::uint64_t
+      -> std::uint16_t
     {
-      return sizeof(::arphdr) + hardware_length() * 2 + protocol_length() * 2;
+      return min_length + hardware_length() * 2 + protocol_length() * 2;
     }
 
     auto hardware_type() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_hrd)));
+          detail::decode<std::uint16_t>(data_ + offset::HARDWARE_TYPE));
     }
 
     auto protocol_type() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_pro)));
+          detail::decode<std::uint16_t>(data_ + offset::PROTOCOL_TYPE));
     }
 
     auto hardware_length() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + offsetof(::arphdr, ar_hln));
+      return detail::decode<std::uint8_t>(data_ + offset::HARDWARE_LENGTH);
     }
 
     auto protocol_length() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + offsetof(::arphdr, ar_pln));
+      return detail::decode<std::uint8_t>(data_ + offset::PROTOCOL_LENGTH);
     }
 
     auto operation() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::arphdr, ar_op)));
+          detail::decode<std::uint16_t>(data_ + offset::OPERATION));
     }
 
     auto sender_hardware_address() const
       -> boost::iterator_range<std::uint8_t const*>
     {
-      return {
-        data_ + sizeof(::arphdr), data_ + sizeof(::arphdr) + hardware_length()
-      };
+      auto const begin = data_ + min_length;
+      return {begin, begin + hardware_length()};
     }
 
     auto sender_protocol_address() const
       -> boost::iterator_range<std::uint8_t const*>
     {
-      auto const begin = data_ + sizeof(::arphdr) + hardware_length();
+      auto const begin = data_ + min_length + hardware_length();
       return {begin, begin + protocol_length()};
     }
 
@@ -182,7 +252,7 @@ namespace canard {
       -> boost::iterator_range<std::uint8_t const*>
     {
       auto const begin
-        = data_ + sizeof(::arphdr) + hardware_length() + protocol_length();
+        = data_ + min_length + hardware_length() + protocol_length();
       return {begin, begin + hardware_length()};
     }
 
@@ -190,8 +260,23 @@ namespace canard {
       -> boost::iterator_range<std::uint8_t const*>
     {
       auto const begin
-        = data_ + sizeof(::arphdr) + hardware_length() * 2 + protocol_length();
+        = data_ + min_length + hardware_length() * 2 + protocol_length();
       return {begin, begin + protocol_length()};
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& f)
+    {
+      if (std::distance(first, last) < min_length) {
+        return;
+      }
+      auto const header = arp{first};
+      if (std::distance(first, last) < header.length()) {
+        return;
+      }
+      f(header);
     }
 
   private:
@@ -201,6 +286,8 @@ namespace canard {
   class lldpdu
   {
   public:
+    static constexpr std::uint16_t type = 0x88CC;
+
     lldpdu(std::uint8_t const* const first, std::uint8_t const* const last)
       : data_(first)
       , last_(last)
@@ -263,11 +350,20 @@ namespace canard {
           detail::decode<std::uint16_t>(first + sizeof(std::uint16_t)));
     }
 
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function&& f)
+    {
+      auto const header = lldpdu{first, last};
+      f(header);
+    }
+
   private:
     static auto tlv_length(std::uint16_t const tlv_header)
       -> std::uint16_t
     {
-      return tlv_header & 0x1FF;
+      return tlv_header & 0x1ff;
     }
 
   private:
@@ -275,10 +371,34 @@ namespace canard {
     std::uint8_t const* last_;
   };
 
+  template <class Function>
+  inline void ip_next_header(
+        std::uint8_t const protocol, std::uint8_t const* const first
+      , std::uint8_t const* const last, Function& f);
+
   class ipv4_header
   {
   public:
-    ipv4_header(std::uint8_t const* const data, std::uint8_t const* last)
+    static constexpr std::uint16_t type = 0x0800;
+    static constexpr std::uint16_t min_header_length = 20;
+    enum offset
+    {
+      VERSION_AND_LENGTH = 0,
+      TYPE_OF_SERVICE = VERSION_AND_LENGTH + 1,
+      TOTAL_LENGTH = TYPE_OF_SERVICE + 1,
+      IDENTIFICATION = TOTAL_LENGTH + 2,
+      FLAGS = IDENTIFICATION + 2,
+      FLAGS_AND_FRAGMENT_OFFSET = FLAGS,
+      TIME_TO_LIVE = FLAGS_AND_FRAGMENT_OFFSET + 2,
+      PROTOCOL = TIME_TO_LIVE + 1,
+      CHECKSUM = PROTOCOL + 1,
+      SOURCE_ADDRESS = CHECKSUM + 2,
+      DESTINATION_ADDRESS = SOURCE_ADDRESS + 4,
+      OPTIONS_OR_DATA = DESTINATION_ADDRESS + 4,
+    };
+
+    ipv4_header(
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
@@ -286,19 +406,23 @@ namespace canard {
     auto version() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_) >> 4;
+      auto const version_and_length
+        = detail::decode<std::uint8_t>(data_ + offset::VERSION_AND_LENGTH);
+      return version_and_length >> 4;
     }
 
     auto length() const
       -> std::uint8_t
     {
-      return (detail::decode<std::uint8_t>(data_) & 0x0F) << 2;
+      auto const version_and_length
+        = detail::decode<std::uint8_t>(data_ + offset::VERSION_AND_LENGTH);
+      return (version_and_length & 0x0f) * sizeof(std::uint32_t);
     }
 
     auto type_of_service() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + offsetof(::ip, ip_tos));
+      return detail::decode<std::uint8_t>(data_ + offset::TYPE_OF_SERVICE);
     }
 
     auto dscp() const
@@ -317,86 +441,112 @@ namespace canard {
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_len)));
+          detail::decode<std::uint16_t>(data_ + offset::TOTAL_LENGTH));
     }
 
     auto identification() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_id)));
+          detail::decode<std::uint16_t>(data_ + offset::IDENTIFICATION));
     }
 
     auto flags() const
       -> std::uint8_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_off))) >> 13;
+      auto const flags = detail::decode<std::uint8_t>(data_ + offset::FLAGS);
+      return flags >> 5;
     }
 
     auto fragment_offset() const
       -> std::uint16_t
     {
-      return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_off))) & 0x1FFF;
+      auto const flags_and_fragment_offset = boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(
+              data_ + offset::FLAGS_AND_FRAGMENT_OFFSET));
+      return flags_and_fragment_offset & 0x1fff;
     }
 
     auto time_to_live() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + offsetof(::ip, ip_ttl));
+      return detail::decode<std::uint8_t>(data_ + offset::TIME_TO_LIVE);
     }
 
     auto protocol() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + offsetof(::ip, ip_p));
+      return detail::decode<std::uint8_t>(data_ + offset::PROTOCOL);
     }
 
     auto checksum() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + offsetof(::ip, ip_sum)));
+          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
     }
 
-    auto source() const
+    auto source_address() const
       -> boost::asio::ip::address_v4
     {
-      auto addr = detail::decode<std::uint32_t>(data_ + offsetof(::ip, ip_src));
-      return boost::asio::ip::address_v4{
-        boost::endian::big_to_native(addr)
-      };
+      auto addr = detail::decode<std::uint32_t>(data_ + offset::SOURCE_ADDRESS);
+      return boost::asio::ip::address_v4{boost::endian::big_to_native(addr)};
     }
 
-    auto destination() const
+    auto destination_address() const
       -> boost::asio::ip::address_v4
     {
-      auto addr = detail::decode<std::uint32_t>(data_ + offsetof(::ip, ip_dst));
-      return boost::asio::ip::address_v4{
-        boost::endian::big_to_native(addr)
-      };
+      auto addr = detail::decode<std::uint32_t>(
+          data_ + offset::DESTINATION_ADDRESS);
+      return boost::asio::ip::address_v4{boost::endian::big_to_native(addr)};
     }
 
     auto next() const
       -> std::uint8_t const*
     {
-      return std::next(
-          data_, std::min<std::size_t>(length(), std::distance(data_, last_)));
+      return std::next(data_, length());
     }
 
     auto end() const
       -> std::uint8_t const*
     {
-      return std::next(
-            data_
-          , std::min<std::size_t>(total_length(), std::distance(data_, last_)));
+      auto const total_length = std::size_t{this->total_length()};
+      return data_length() < total_length
+        ? last_
+        : std::next(data_, total_length);
     }
 
     auto payload() const
       -> boost::iterator_range<std::uint8_t const*>
     {
       return boost::iterator_range<std::uint8_t const*>{next(), end()};
+    }
+
+    auto data_length() const noexcept
+      -> std::size_t
+    {
+      return std::distance(data_, last_);
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& f)
+    {
+      if (std::distance(first, last) < min_header_length) {
+        return;
+      }
+      auto const header = ipv4_header{first, last};
+      if (!f(header) || std::distance(first, last) < header.length()) {
+        return;
+      }
+
+      if (header.fragment_offset() == 0) {
+        ip_next_header(header.protocol(), header.next(), header.end(), f);
+      }
+      else {
+        f(header.payload());
+      }
     }
 
   private:
@@ -407,7 +557,15 @@ namespace canard {
   class icmpv4
   {
   public:
-    static std::uint64_t const min_length = 8;
+    static constexpr std::uint8_t protocol = 1;
+    static constexpr std::uint16_t header_length = 4;
+    enum offset
+    {
+      TYPE = 0,
+      CODE = TYPE + 1,
+      CHECKSUM = CODE + 1,
+      DATA = CHECKSUM + 2,
+    };
 
     icmpv4(std::uint8_t const* data, std::uint8_t const* last)
       : data_{data}, last_{last}
@@ -417,26 +575,26 @@ namespace canard {
     auto type() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_);
+      return detail::decode<std::uint8_t>(data_ + offset::TYPE);
     }
 
     auto code() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + sizeof(std::uint8_t));
+      return detail::decode<std::uint8_t>(data_ + offset::CODE);
     }
 
     auto checksum() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
     }
 
     auto payload() const
       -> boost::iterator_range<std::uint8_t const*>
     {
-      return {data_ + sizeof(std::uint64_t), last_};
+      return {data_ + header_length, last_};
     }
 
   protected:
@@ -448,9 +606,17 @@ namespace canard {
     : public icmpv4
   {
   public:
-    static std::uint64_t const min_length = 8;
+    static constexpr std::uint8_t request_type = 0;
+    static constexpr std::uint8_t reply_type = 8;
+    static constexpr std::uint16_t min_length = 8;
+    enum offset
+    {
+      IDENTIFIER = icmpv4::header_length + 0,
+      SEQUENCE_NUMBER = IDENTIFIER + 2,
+      DATA = SEQUENCE_NUMBER + 2,
+    };
 
-    explicit icmpv4_echo(icmpv4 const& header)
+    explicit icmpv4_echo(icmpv4 const& header) noexcept
       : icmpv4{header}
     {
     }
@@ -458,14 +624,15 @@ namespace canard {
     auto identifier() const
       -> std::uint16_t
     {
-      return detail::decode<std::uint16_t>(data_ + sizeof(std::uint32_t));
+      return boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER));
     }
 
     auto sequence_number() const
       -> std::uint16_t
     {
-      return detail::decode<std::uint16_t>(
-          data_ + sizeof(std::uint32_t) + sizeof(std::uint16_t));
+      return boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER));
     }
   };
 
@@ -473,9 +640,15 @@ namespace canard {
     : public icmpv4
   {
   public:
-    static std::uint64_t const min_length = 8;
+    static constexpr std::uint8_t icmp_type = 5;
+    static constexpr std::uint16_t min_length = 8;
+    enum offset
+    {
+      GATEWAY_ADDRESS = icmpv4::header_length + 0,
+      ORIGINAL_MESSAGE = GATEWAY_ADDRESS + 4,
+    };
 
-    explicit icmpv4_redirect(icmpv4 const& header)
+    explicit icmpv4_redirect(icmpv4 const& header) noexcept
       : icmpv4{header}
     {
     }
@@ -485,7 +658,7 @@ namespace canard {
     {
       return boost::asio::ip::address_v4{
         boost::endian::big_to_native(
-            detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)))
+            detail::decode<std::uint32_t>(data_ + offset::GATEWAY_ADDRESS))
       };
     }
   };
@@ -494,9 +667,20 @@ namespace canard {
     : public icmpv4
   {
   public:
-    static std::uint64_t const min_length = 20;
+    static constexpr std::uint8_t request_type = 13;
+    static constexpr std::uint8_t reply_type = 14;
+    static constexpr std::uint16_t min_length = 20;
+    enum offset
+    {
+      IDENTIFIER = icmpv4::header_length + 0,
+      SEQUENCE_NUMBER = IDENTIFIER + 2,
+      ORIGINATE_TIMESTAMP = SEQUENCE_NUMBER + 2,
+      RECEIVE_TIMESTAMP = ORIGINATE_TIMESTAMP + 4,
+      TRANSMIT_TIMESTAMP = RECEIVE_TIMESTAMP + 4,
+      END = TRANSMIT_TIMESTAMP + 4,
+    };
 
-    explicit icmpv4_timestamp(icmpv4 const& header)
+    explicit icmpv4_timestamp(icmpv4 const& header) noexcept
       : icmpv4{header}
     {
     }
@@ -504,36 +688,36 @@ namespace canard {
     auto identifier() const
       -> std::uint16_t
     {
-      return detail::decode<std::uint16_t>(data_ + sizeof(std::uint32_t));
+      return boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER));
     }
 
     auto sequence_number() const
       -> std::uint16_t
     {
-      return detail::decode<std::uint16_t>(
-          data_ + sizeof(std::uint32_t) + sizeof(std::uint16_t));
+      return boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER));
     }
 
     auto originate_timestamp() const
       -> std::uint32_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)));
+          detail::decode<std::uint32_t>(data_ + offset::ORIGINATE_TIMESTAMP));
     }
 
     auto receive_timestamp() const
       -> std::uint32_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t)));
+          detail::decode<std::uint32_t>(data_ + offset::RECEIVE_TIMESTAMP));
     }
 
     auto transmit_timestamp() const
       -> std::uint32_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(
-            data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t)));
+          detail::decode<std::uint32_t>(data_ + offset::TRANSMIT_TIMESTAMP));
     }
   };
 
@@ -541,9 +725,18 @@ namespace canard {
     : public icmpv4
   {
   public:
-    static std::uint64_t const min_length = 12;
+    static constexpr std::uint8_t request_type = 17;
+    static constexpr std::uint8_t reply_type = 18;
+    static constexpr std::uint16_t min_length = 12;
+    enum offset
+    {
+      IDENTIFIER = icmpv4::header_length + 0,
+      SEQUENCE_NUMBER = IDENTIFIER + 2,
+      ADDRESS_MASK = SEQUENCE_NUMBER + 2,
+      END = ADDRESS_MASK + 4,
+    };
 
-    explicit icmpv4_address_mask(icmpv4 const& header)
+    explicit icmpv4_address_mask(icmpv4 const& header) noexcept
       : icmpv4{header}
     {
     }
@@ -551,14 +744,15 @@ namespace canard {
     auto identifier() const
       -> std::uint16_t
     {
-      return detail::decode<std::uint16_t>(data_ + sizeof(std::uint32_t));
+      return boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(data_ + offset::IDENTIFIER));
     }
 
     auto sequence_number() const
       -> std::uint16_t
     {
-      return detail::decode<std::uint16_t>(
-          data_ + sizeof(std::uint32_t) + sizeof(std::uint16_t));
+      return boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(data_ + offset::SEQUENCE_NUMBER));
     }
 
     auto address_mask() const
@@ -566,7 +760,7 @@ namespace canard {
     {
       return boost::asio::ip::address_v4{
         boost::endian::big_to_native(
-            detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)))
+            detail::decode<std::uint32_t>(data_ + offset::ADDRESS_MASK))
       };
     };
   };
@@ -574,7 +768,22 @@ namespace canard {
   class ipv6_header
   {
   public:
-    ipv6_header(std::uint8_t const* const data, std::uint8_t const* const last)
+    static constexpr std::uint16_t type = 0x86dd;
+    static constexpr std::uint16_t header_length = 40;
+    enum offset
+    {
+      VERSION = 0,
+      VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL = VERSION,
+      PAYLOAD_LENGTH = VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL + 4,
+      NEXT_HEADER = PAYLOAD_LENGTH + 2,
+      HOP_LIMIT = NEXT_HEADER + 1,
+      SOURCE_ADDRESS = HOP_LIMIT + 1,
+      DESTINATION_ADDRESS = SOURCE_ADDRESS + 16,
+      DATA = DESTINATION_ADDRESS + 16,
+    };
+
+    ipv6_header(
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
@@ -583,15 +792,16 @@ namespace canard {
       -> std::uint8_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_))
-        >> 28;
+          detail::decode<std::uint8_t>(data_ + offset::VERSION)) >> 4;
     }
 
     auto traffic_class() const
       -> std::uint8_t
     {
-      return (boost::endian::big_to_native(detail::decode<std::uint32_t>(data_))
-          >> 20) & 0x0FF;
+      auto const version_and_traffic_class_and_flow_label
+        = boost::endian::big_to_native(detail::decode<std::uint32_t>(
+              data_ + offset::VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL));
+      return (version_and_traffic_class_and_flow_label >> 20) & 0x0ff;
     }
 
     auto dscp() const
@@ -609,67 +819,87 @@ namespace canard {
     auto flow_label() const
       -> std::uint32_t
     {
-      return boost::endian::big_to_native(detail::decode<std::uint32_t>(data_))
-        & 0x0FFFFF;
+      auto const version_and_traffic_class_and_flow_label
+        = boost::endian::big_to_native(detail::decode<std::uint32_t>(
+              data_ + offset::VERSION_AND_TRAFFIC_CLASS_AND_FLOW_LABEL));
+      return version_and_traffic_class_and_flow_label & 0x0fffff;
     }
 
     auto payload_length() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint32_t)));
+          detail::decode<std::uint16_t>(data_ + offset::PAYLOAD_LENGTH));
     }
 
     auto next_header() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(
-          data_ + sizeof(std::uint32_t) + sizeof(std::uint16_t));
+      return detail::decode<std::uint8_t>(data_ + offset::NEXT_HEADER);
     }
 
     auto hop_limit() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(
-          data_ + sizeof(std::uint32_t) + sizeof(std::uint16_t) + sizeof(std::uint8_t));
+      return detail::decode<std::uint8_t>(data_ + offset::HOP_LIMIT);
     }
 
-    auto source() const
+    auto source_address() const
       -> boost::asio::ip::address_v6
     {
       auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(data_ + sizeof(std::uint64_t), addr.size(), addr.data());
+      std::copy_n(data_ + offset::SOURCE_ADDRESS, addr.size(), addr.data());
       return boost::asio::ip::address_v6{addr};
     }
 
-    auto destination() const
+    auto destination_address() const
       -> boost::asio::ip::address_v6
     {
       auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(data_ + sizeof(std::uint64_t) * 3, addr.size(), addr.data());
+      std::copy_n(
+          data_ + offset::DESTINATION_ADDRESS, addr.size(), addr.data());
       return boost::asio::ip::address_v6{addr};
     }
 
     auto next() const
       -> std::uint8_t const*
     {
-      return std::next(data_, 40);
+      return std::next(data_, header_length);
     }
 
     auto end() const
       -> std::uint8_t const*
     {
-      auto const length = payload_length();
-      return length == 0
+      auto const payload_length = this->payload_length();
+      return payload_length == 0 || data_length() < payload_length
         ? last_
-        : std::next(
-            next(), std::min<std::size_t>(length, std::distance(next(), last_)));
+        : std::next(data_, header_length + payload_length);
     }
 
     auto payload() const
       -> boost::iterator_range<std::uint8_t const*>
     {
       return {next(), end()};
+    }
+
+    auto data_length() const noexcept
+      -> std::size_t
+    {
+      return std::distance(data_, last_);
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& func)
+    {
+      if (std::distance(first, last) < header_length) {
+        return;
+      }
+      auto const header = ipv6_header{first, last};
+      if (func(header)) {
+        ip_next_header(header.next_header(), header.next(), header.end(), func);
+      }
     }
 
   private:
@@ -680,8 +910,15 @@ namespace canard {
   class ipv6_extension_header
   {
   public:
+    static constexpr std::uint16_t min_header_length = 8;
+    enum offset
+    {
+      NEXT_HEADER = 0,
+      EXTENSION_HEADER_LENGTH = NEXT_HEADER + 1,
+    };
+
     ipv6_extension_header(
-        std::uint8_t const* const data, std::uint8_t const* const last)
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
@@ -689,17 +926,18 @@ namespace canard {
     auto next_header() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_);
+      return detail::decode<std::uint8_t>(data_ + offset::NEXT_HEADER);
     }
 
     auto extension_header_length() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + sizeof(std::uint8_t));
+      return detail::decode<std::uint8_t>(
+          data_ + offset::EXTENSION_HEADER_LENGTH);
     }
 
     auto length() const
-      -> std::uint64_t
+      -> std::uint16_t
     {
       return (extension_header_length() + 1) * sizeof(std::uint64_t);
     }
@@ -707,11 +945,10 @@ namespace canard {
     auto next() const
       -> std::uint8_t const*
     {
-      return std::next(
-          data_, std::min<std::size_t>(length(), std::distance(data_, last_)));
+      return std::next(data_, length());
     }
 
-    auto end() const
+    auto end() const noexcept
       -> std::uint8_t const*
     {
       return last_;
@@ -725,8 +962,19 @@ namespace canard {
   class ipv6_fragment_header
   {
   public:
+    static constexpr std::uint8_t protocol = 44;
+    static constexpr std::uint16_t header_length = 8;
+    enum offset
+    {
+      NEXT_HEADER = 0,
+      RESERVED = NEXT_HEADER + 1,
+      FRAGMENT_OFFSET_AND_FLAGS = RESERVED + 1,
+      IDENTIFICATION = FRAGMENT_OFFSET_AND_FLAGS + 2,
+      END = IDENTIFICATION + 4,
+    };
+
     ipv6_fragment_header(
-        std::uint8_t const* const data, std::uint8_t const* const last)
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
@@ -734,26 +982,64 @@ namespace canard {
     auto next_header() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_);
+      return detail::decode<std::uint8_t>(data_ + offset::NEXT_HEADER);
     }
 
-    auto length() const
-      -> std::uint64_t
+    auto fragment_offset() const
+      -> std::uint16_t
     {
-      return sizeof(std::uint64_t);
+      auto const fragment_offset_and_flags = boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(
+            data_ + offset::FRAGMENT_OFFSET_AND_FLAGS));
+      return fragment_offset_and_flags >> 3;
     }
 
-    auto next() const
+    auto flags() const
+      -> std::uint8_t
+    {
+      auto const fragment_offset_and_flags = boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(
+            data_ + offset::FRAGMENT_OFFSET_AND_FLAGS));
+      return fragment_offset_and_flags & 0x01;
+    }
+
+    auto identification() const
+      -> std::uint32_t
+    {
+      return boost::endian::big_to_native(
+          detail::decode<std::uint32_t>(data_ + offset::IDENTIFICATION));
+    }
+
+    auto length() const noexcept
+      -> std::uint16_t
+    {
+      return header_length;
+    }
+
+    auto next() const noexcept
       -> std::uint8_t const*
     {
-      return std::next(
-          data_, std::min<std::size_t>(length(), std::distance(data_, last_)));
+      return std::next(data_, header_length);
     }
 
     auto end() const
       -> std::uint8_t const*
     {
       return last_;
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& f)
+    {
+      if (std::distance(first, last) < header_length) {
+        return;
+      }
+      auto const header = ipv6_fragment_header{first, last};
+      if (f(header)) {
+        ip_next_header(header.next_header(), header.next(), header.end(), f);
+      }
     }
 
   private:
@@ -764,7 +1050,20 @@ namespace canard {
   class ah_header
   {
   public:
-    ah_header(std::uint8_t const* const data, std::uint8_t const* const last)
+    static constexpr std::uint8_t protocol = 51;
+    static constexpr std::uint16_t min_header_length = 12;
+    enum offset
+    {
+      NEXT_HEADER = 0,
+      PAYLOAD_LENGTH = NEXT_HEADER + 1,
+      RESERVED = PAYLOAD_LENGTH + 1,
+      SPI = RESERVED + 2,
+      SEQUENCE_NUMBER = SPI + 4,
+      AUTHENTICATION_DATA = SEQUENCE_NUMBER + 4,
+    };
+
+    ah_header(
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
@@ -772,32 +1071,72 @@ namespace canard {
     auto next_header() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_);
+      return detail::decode<std::uint8_t>(data_ + offset::NEXT_HEADER);
     }
 
-    auto next_length() const
+    auto payload_length() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + sizeof(std::uint8_t));
+      return detail::decode<std::uint8_t>(data_ + offset::PAYLOAD_LENGTH);
     }
 
     auto length() const
-      -> std::uint64_t
+      -> std::uint16_t
     {
-      return (next_length() + 2) * sizeof(std::uint32_t);
+      return (payload_length() + 2) * sizeof(std::uint32_t);
+    }
+
+    auto spi() const
+      -> std::uint32_t
+    {
+      return boost::endian::big_to_native(
+          detail::decode<std::uint32_t>(data_ + offset::SPI));
+    }
+
+    auto sequence_number() const
+      -> std::uint32_t
+    {
+      return boost::endian::big_to_native(
+          detail::decode<std::uint32_t>(data_ + offset::SEQUENCE_NUMBER));
+    }
+
+    auto authentication_data() const
+      -> boost::iterator_range<std::uint8_t const*>
+    {
+      return {data_ + offset::AUTHENTICATION_DATA, data_ + length()};
     }
 
     auto next() const
       -> std::uint8_t const*
     {
-      return std::next(
-          data_, std::min<std::size_t>(length(), std::distance(data_, last_)));
+      return std::next(data_, length());
     }
 
-    auto end() const
+    auto end() const noexcept
       -> std::uint8_t const*
     {
       return last_;
+    }
+
+    auto data_length() const noexcept
+      -> std::size_t
+    {
+      return std::distance(data_, last_);
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& f)
+    {
+      if (std::distance(first, last) < min_header_length) {
+        return;
+      }
+      auto const header = ah_header{first, last};
+      if (!f(header) || std::distance(first, last) < header.length()) {
+        return;
+      }
+      ip_next_header(header.next_header(), header.next(), header.end(), f);
     }
 
   private:
@@ -808,7 +1147,18 @@ namespace canard {
   class icmpv6
   {
   public:
-    icmpv6(std::uint8_t const* const data, std::uint8_t const* const last)
+    static constexpr std::uint8_t protocol = 58;
+    static constexpr std::uint16_t header_length = 4;
+    enum offset
+    {
+      TYPE = 0,
+      CODE = TYPE + 1,
+      CHECKSUM = CODE + 1,
+      END = CHECKSUM + 2,
+    };
+
+    icmpv6(
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
@@ -816,20 +1166,26 @@ namespace canard {
     auto type() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_);
+      return detail::decode<std::uint8_t>(data_ + offset::TYPE);
     }
 
     auto code() const
       -> std::uint8_t
     {
-      return detail::decode<std::uint8_t>(data_ + sizeof(std::uint8_t));
+      return detail::decode<std::uint8_t>(data_ + offset::CODE);
     }
 
     auto checksum() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint8_t>(data_ + sizeof(std::uint16_t)));
+          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
+    }
+
+    auto data_length() const noexcept
+      -> std::size_t
+    {
+      return std::distance(data_, last_);
     }
 
   protected:
@@ -841,9 +1197,15 @@ namespace canard {
     : public icmpv6
   {
   public:
-    static std::uint64_t const min_length = 24;
+    static constexpr std::uint8_t icmp_type = 135;
+    static constexpr std::uint16_t min_length = 24;
+    enum offset
+    {
+      TARGET_ADDRESS = icmpv6::header_length + 4,
+      SOURCE_LINK_LAYER_ADDRESS = TARGET_ADDRESS + 16,
+    };
 
-    icmpv6_neighbor_solicitation(icmpv6 const& header)
+    explicit icmpv6_neighbor_solicitation(icmpv6 const& header) noexcept
       : icmpv6{header}
     {
     }
@@ -852,7 +1214,7 @@ namespace canard {
       -> boost::asio::ip::address_v6
     {
       auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(data_ + sizeof(std::uint64_t), addr.size(), addr.data());
+      std::copy_n(data_ + offset::TARGET_ADDRESS, addr.size(), addr.data());
       return boost::asio::ip::address_v6{addr};
     }
 
@@ -860,7 +1222,7 @@ namespace canard {
       -> boost::iterator_range<std::uint8_t const*>
     {
       return boost::iterator_range<std::uint8_t const*>{
-        data_ + sizeof(std::uint64_t) * 3, last_
+        data_ + offset::SOURCE_LINK_LAYER_ADDRESS, last_
       };
     }
   };
@@ -869,9 +1231,15 @@ namespace canard {
     : public icmpv6
   {
   public:
-    static std::uint64_t const min_length = 24;
+    static constexpr std::uint8_t icmp_type = 136;
+    static constexpr std::uint16_t min_length = 24;
+    enum offset
+    {
+      TARGET_ADDRESS = icmpv6::header_length + 4,
+      TARGET_LINK_LAYER_ADDRESS = TARGET_ADDRESS + 16,
+    };
 
-    icmpv6_neighbor_advertisement(icmpv6 const& header)
+    explicit icmpv6_neighbor_advertisement(icmpv6 const& header) noexcept
       : icmpv6{header}
     {
     }
@@ -880,7 +1248,7 @@ namespace canard {
       -> boost::asio::ip::address_v6
     {
       auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(data_ + sizeof(std::uint64_t), addr.size(), addr.data());
+      std::copy_n(data_ + offset::TARGET_ADDRESS, addr.size(), addr.data());
       return boost::asio::ip::address_v6{addr};
     }
 
@@ -888,7 +1256,7 @@ namespace canard {
       -> boost::iterator_range<std::uint8_t const*>
     {
       return boost::iterator_range<std::uint8_t const*>{
-        data_ + sizeof(std::uint64_t) * 3, last_
+        data_ + offset::TARGET_LINK_LAYER_ADDRESS, last_
       };
     }
   };
@@ -896,80 +1264,101 @@ namespace canard {
   class tcp_header
   {
   public:
-    tcp_header(std::uint8_t const* const data, std::uint8_t const* const last)
+    static constexpr std::uint8_t protocol = 6;
+    static constexpr std::uint16_t min_header_length = 20;
+    enum offset
+    {
+      SOURCE_PORT = 0,
+      DESTINATION_PORT = SOURCE_PORT + 2,
+      SEQUENCE_NUMBER = DESTINATION_PORT + 2,
+      ACKNOWLEDGEMENT_NUMBER = SEQUENCE_NUMBER + 4,
+      DATA_OFFSET = ACKNOWLEDGEMENT_NUMBER + 4,
+      DATA_OFFSET_AND_FLAGS = ACKNOWLEDGEMENT_NUMBER + 4,
+      WINDOW = DATA_OFFSET_AND_FLAGS + 2,
+      CHECKSUM = WINDOW + 2,
+      URGENT_POINTER = CHECKSUM + 2,
+      END = URGENT_POINTER + 2,
+    };
+
+    tcp_header(
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
 
-    auto source() const
+    auto source_port() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_));
+          detail::decode<std::uint16_t>(data_ + offset::SOURCE_PORT));
     }
 
-    auto destination() const
+    auto destination_port() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+          detail::decode<std::uint16_t>(data_ + offset::DESTINATION_PORT));
     }
 
     auto sequence_number() const
       -> std::uint32_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + sizeof(std::uint32_t)));
+          detail::decode<std::uint32_t>(data_ + offset::SEQUENCE_NUMBER));
     }
 
     auto acknowledgement_number() const
       -> std::uint32_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint32_t>(data_ + sizeof(std::uint64_t)));
+          detail::decode<std::uint32_t>(data_ + offset::ACKNOWLEDGEMENT_NUMBER));
+    }
+
+    auto data_offset() const
+      -> std::uint8_t
+    {
+      return detail::decode<std::uint8_t>(data_ + offset::DATA_OFFSET) >> 4;
     }
 
     auto length() const
-      -> std::uint8_t
+      -> std::uint16_t
     {
-      return detail::decode<std::uint8_t>(data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t)) >> 2;
+      return data_offset() * sizeof(std::uint32_t);
     }
 
     auto flags() const
-      -> std::uint8_t
+      -> std::uint16_t
     {
-      return detail::decode<std::uint8_t>(
-          data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t) + sizeof(std::uint8_t));
+      auto const data_offset_and_flags = boost::endian::big_to_native(
+          detail::decode<std::uint16_t>(data_ + offset::DATA_OFFSET_AND_FLAGS));
+      return data_offset_and_flags & 0x0fff;
     }
 
     auto window() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(
-            data_ + sizeof(std::uint64_t) + sizeof(std::uint32_t) + sizeof(std::uint16_t)));
+          detail::decode<std::uint16_t>(data_ + offset::WINDOW));
     }
 
     auto checksum() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint64_t) * 2));
+          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
     }
 
     auto urgent_pointer() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(
-            data_ + sizeof(std::uint64_t) * 2 + sizeof(std::uint16_t)));
+          detail::decode<std::uint16_t>(data_ + offset::URGENT_POINTER));
     }
 
     auto next() const
       -> std::uint8_t const*
     {
-      return std::next(
-          data_, std::min<std::size_t>(length(), std::distance(data_, last_)));
+      return std::next(data_, length());
     }
 
     auto end() const
@@ -984,6 +1373,27 @@ namespace canard {
       return {next(), end()};
     }
 
+    auto data_length() const noexcept
+      -> std::size_t
+    {
+      return std::distance(data_, last_);
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& function)
+    {
+      if (std::distance(first, last) < min_header_length) {
+        return;
+      }
+      auto const header = tcp_header{first, last};
+      if (function(header)
+          && std::distance(first, last) >= header.length()) {
+        function(header.payload());
+      }
+    }
+
   private:
     std::uint8_t const* data_;
     std::uint8_t const* last_;
@@ -992,49 +1402,63 @@ namespace canard {
   class udp_header
   {
   public:
-    udp_header(std::uint8_t const* const data, std::uint8_t const* const last)
+    static constexpr std::uint8_t protocol = 17;
+    static constexpr std::uint16_t header_length = 8;
+    enum offset
+    {
+      SOURCE_PORT = 0,
+      DESTINATION_PORT = SOURCE_PORT + 2,
+      LENGTH = DESTINATION_PORT + 2,
+      CHECKSUM = LENGTH + 2,
+    };
+
+    udp_header(
+        std::uint8_t const* const data, std::uint8_t const* const last) noexcept
       : data_{data}, last_{last}
     {
     }
 
-    auto source() const
+    auto source_port() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_));
+          detail::decode<std::uint16_t>(data_ + offset::SOURCE_PORT));
     }
 
-    auto destination() const
+    auto destination_port() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t)));
+          detail::decode<std::uint16_t>(data_ + offset::DESTINATION_PORT));
     }
 
-    auto payload_length() const
+    auto length() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t) * 2));
+          detail::decode<std::uint16_t>(data_ + offset::LENGTH));
     }
 
     auto checksum() const
       -> std::uint16_t
     {
       return boost::endian::big_to_native(
-          detail::decode<std::uint16_t>(data_ + sizeof(std::uint16_t) * 3));
+          detail::decode<std::uint16_t>(data_ + offset::CHECKSUM));
     }
 
     auto next() const
       -> std::uint8_t const*
     {
-      return data_ + sizeof(std::uint16_t) * 4;
+      return std::next(data_, header_length);
     }
 
     auto end() const
       -> std::uint8_t const*
     {
-      return last_;
+      auto const length = std::size_t{this->length()};
+      return length == 0 || data_length() < length
+        ? last_
+        : std::next(data_, length);
     }
 
     auto payload() const
@@ -1043,58 +1467,49 @@ namespace canard {
       return boost::make_iterator_range(next(), end());
     }
 
+    auto data_length() const noexcept
+      -> std::size_t
+    {
+      return std::distance(data_, last_);
+    }
+
+    template <class Function>
+    static void parse(
+          std::uint8_t const* const first, std::uint8_t const* const last
+        , Function& function)
+    {
+      if (std::distance(first, last) < header_length) {
+        return;
+      }
+      auto const header = udp_header{first, last};
+      if (function(header)) {
+        function(header.payload());
+      }
+    }
+
   private:
     std::uint8_t const* data_;
     std::uint8_t const* last_;
   };
 
   template <class Function>
-  inline void parse_tcp(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < 20) {
-      return;
-    }
-    auto const header = tcp_header{first, last};
-    if (!f(header) || std::distance(first, last) < header.length()) {
-      return;
-    }
-    f(header.payload());
-  }
-
-  template <class Function>
-  inline void parse_udp(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < 8) {
-      return;
-    }
-    auto const header = udp_header{first, last};
-    if (f(header)) {
-      f(header.payload());
-    }
-  }
-
-  template <class Function>
   inline void parse_icmpv6(
         std::uint8_t const* const first, std::uint8_t const* const last
       , Function& f)
   {
-    if (std::distance(first, last) < 8) {
+    if (std::distance(first, last) < icmpv6::header_length) {
       return;
     }
     auto const header = icmpv6{first, last};
     switch (header.type()) {
-    case 135:
+    case icmpv6_neighbor_solicitation::icmp_type:
       if (std::distance(first, last)
           >= icmpv6_neighbor_solicitation::min_length) {
         f(icmpv6_neighbor_solicitation{header});
         return;
       }
       break;
-    case 136:
+    case icmpv6_neighbor_advertisement::icmp_type:
       if (std::distance(first, last)
           >= icmpv6_neighbor_advertisement::min_length) {
         f(icmpv6_neighbor_advertisement{header});
@@ -1110,18 +1525,25 @@ namespace canard {
         std::uint8_t const* const first, std::uint8_t const* const last
       , Function& f)
   {
-    if (std::distance(first, last) < 8) {
+    if (std::distance(first, last) < icmpv4::header_length) {
       return;
     }
     auto const header = icmpv4{first, last};
     switch (header.type()) {
-    case 0: case 8:
+    case icmpv4_echo::request_type:
+    case icmpv4_echo::reply_type:
       if (std::distance(first, last) >= icmpv4_echo::min_length) {
         f(icmpv4_echo(header));
         return;
       }
       break;
-    case 5:
+    case 3: // destination unreachable
+      // TODO
+      break;
+    case 4: // source quench
+      // TODO
+      break;
+    case icmpv4_redirect::icmp_type:
       if (std::distance(first, last) >= icmpv4_redirect::min_length) {
         f(icmpv4_redirect{header});
         return;
@@ -1130,13 +1552,25 @@ namespace canard {
     case 9: case 10:
       // TODO
       break;
-    case 13: case 14:
+    case 11: // time exceeded
+      // TODO
+      break;
+    case 12: // parameter problem
+      // TODO
+      break;
+    case icmpv4_timestamp::request_type:
+    case icmpv4_timestamp::reply_type:
       if (std::distance(first, last) >= icmpv4_timestamp::min_length) {
         f(icmpv4_timestamp{header});
         return;
       }
       break;
-    case 17: case 18:
+    case 15: // information request
+    case 16: // information reply
+      // TODO
+      break;
+    case icmpv4_address_mask::request_type:
+    case icmpv4_address_mask::reply_type:
       if (std::distance(first, last) >= icmpv4_address_mask::min_length) {
         f(icmpv4_address_mask{header});
         return;
@@ -1147,48 +1581,14 @@ namespace canard {
   }
 
   template <class Function>
-  inline void ip_next_header(
-        std::uint8_t const protocol, std::uint8_t const* const first
-      , std::uint8_t const* const last, Function& f);
-
-  template <class Function>
   inline void parse_ipv6_hop_by_hop(
         std::uint8_t const* const first, std::uint8_t const* const last
       , Function& f)
   {
-    if (std::distance(first, last) < sizeof(std::uint64_t)) {
+    if (std::distance(first, last) < ipv6_extension_header::min_header_length) {
       return;
     }
     auto const header = ipv6_extension_header{first, last};
-    if (!f(header) || std::distance(first, last) < header.length()) {
-      return;
-    }
-    ip_next_header(header.next_header(), header.next(), header.end(), f);
-  }
-
-  template <class Function>
-  inline void parse_ipv6_fragment(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < sizeof(std::uint64_t)) {
-      return;
-    }
-    auto const header = ipv6_fragment_header{first, last};
-    if (f(header)) {
-      ip_next_header(header.next_header(), header.next(), header.end(), f);
-    }
-  }
-
-  template <class Function>
-  inline void parse_ah_header(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < sizeof(std::uint64_t)) {
-      return;
-    }
-    auto const header = ah_header{first, last};
     if (!f(header) || std::distance(first, last) < header.length()) {
       return;
     }
@@ -1205,27 +1605,27 @@ namespace canard {
     case 0:
       parse_ipv6_hop_by_hop(first, last, f);
       return;
-    case 1:
+    case icmpv4::protocol:
       parse_icmpv4(first, last, f);
       return;
-    case 6:
-      parse_tcp(first, last, f);
+    case tcp_header::protocol:
+      tcp_header::parse(first, last, f);
       return;
-    case 17:
-      parse_udp(first, last, f);
+    case udp_header::protocol:
+      udp_header::parse(first, last, f);
       return;
       // case 41: return;
     case 43:
       // parse_ipv6_router(first, last, f);
       parse_ipv6_hop_by_hop(first, last, f);
       return;
-    case 46:
-      parse_ipv6_fragment(first, last, f);
+    case ipv6_fragment_header::protocol:
+      ipv6_fragment_header::parse(first, last, f);
       return;
-    case 51:
-      parse_ah_header(first, last, f);
+    case ah_header::protocol:
+      ah_header::parse(first, last, f);
       return;
-    case 58:
+    case icmpv6::protocol:
       parse_icmpv6(first, last, f);
       return;
     case 59: // no-next
@@ -1243,107 +1643,26 @@ namespace canard {
   }
 
   template <class Function>
-  inline void parse_ipv6(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < 40) {
-      return;
-    }
-    auto const header = ipv6_header{first, last};
-    if (f(header)) {
-      ip_next_header(header.next_header(), header.next(), header.end(), f);
-    }
-  }
-
-  template <class Function>
-  inline void parse_ipv4(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < sizeof(::ip)) {
-      return;
-    }
-    auto const header = ipv4_header{first, last};
-    if (!f(header) || std::distance(first, last) <= header.length()) {
-      return;
-    }
-
-    if (header.fragment_offset() == 0) {
-      ip_next_header(header.protocol(), header.next(), header.end(), f);
-    }
-    else {
-      f(header.payload());
-    }
-  }
-
-  template <class Function>
-  inline void parse_arp(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < sizeof(::arphdr)) {
-      return;
-    }
-    auto const header = arp{first};
-    if (std::distance(first, last) < header.length()) {
-      return;
-    }
-    f(header);
-  }
-
-  template <class Function>
-  inline void parse_lldpdu(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function&& f)
-  {
-    auto const header = lldpdu{first, last};
-    f(header);
-  }
-
-  template <class Function>
-  inline void ether_next_header(
-        std::uint16_t const type
-      , std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f);
-
-  template <class Function>
-  inline void parse_vlan_tag(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    if (std::distance(first, last) < sizeof(std::uint16_t) * 2) {
-      return;
-    }
-
-    auto const header = vlan_tag{first};
-    if (f(header)) {
-      ether_next_header(header.ether_type(), header.next(), last, f);
-    }
-  }
-
-  template <class Function>
   inline void ether_next_header(
         std::uint16_t const type
       , std::uint8_t const* const first, std::uint8_t const* const last
       , Function& f)
   {
-    // TODO if ( type <= ETHERMTU )
     switch (type) {
-    case ETHERTYPE_IP:
-      parse_ipv4(first, last, f);
+    case ipv4_header::type:
+      ipv4_header::parse(first, last, f);
       return;
-    case ETHERTYPE_ARP:
-      parse_arp(first, last, f);
+    case arp::type:
+      arp::parse(first, last, f);
       return;
-    case ETHERTYPE_VLAN:
-      parse_vlan_tag(first, last, f);
+    case vlan_tag::type:
+      vlan_tag::parse(first, last, f);
       return;
-    case ETHERTYPE_IPV6:
-      parse_ipv6(first, last, f);
+    case ipv6_header::type:
+      ipv6_header::parse(first, last, f);
       return;
-    case 0x88CC:
-      parse_lldpdu(first, last, f);
+    case lldpdu::type:
+      lldpdu::parse(first, last, f);
       return;
     default:
       f(boost::make_iterator_range(first, last));
@@ -1351,48 +1670,35 @@ namespace canard {
     }
   }
 
-  template <class Function>
-  inline void parse_ether_frame(
-        std::uint8_t const* const first, std::uint8_t const* const last
-      , Function& f)
-  {
-    static_assert(
-        sizeof(::ether_header) == 14, "ether_header size must be 14 bytes");
-    if (std::distance(first, last) < sizeof(::ether_header)) {
-      return;
-    }
-
-    auto const header = ether_header{first};
-    if (f(header)) {
-      ether_next_header(header.ether_type(), header.next(), last, f);
-    }
-  }
-
   template <class Range, class Function>
   inline void for_each_header(Range const& frame, Function f)
   {
-    parse_ether_frame(frame.data(), frame.data() + frame.size(), f);
+    ether_header::parse(frame.data(), frame.data() + frame.size(), f);
   }
 
-  template <class Function, class T>
-  struct hoge
-  {
-    template <class Header>
-    auto operator()(Header&&) const
-      -> bool
-    {
-      return true;
-    }
+  namespace packet_parser_detail {
 
-    auto operator()(T header) const
-      -> bool
+    template <class Function, class T>
+    struct invoker
     {
-      function(header);
-      return false;
-    }
+      template <class Header>
+      auto operator()(Header&&) const
+        -> bool
+      {
+        return true;
+      }
 
-    Function function;
-  };
+      auto operator()(T header) const
+        -> bool
+      {
+        function(header);
+        return false;
+      }
+
+      Function function;
+    };
+
+  } // namespace packet_parser_detail
 
   class packet
   {
@@ -1412,10 +1718,10 @@ namespace canard {
     auto ether_header(Function&& function) const
       -> packet const&
     {
-      auto func = hoge<Function, canard::ether_header>{
+      auto func = packet_parser_detail::invoker<Function, canard::ether_header>{
         std::forward<Function>(function)
       };
-      parse_ether_frame(first_, last_, func);
+      ether_header::parse(first_, last_, func);
       return *this;
     }
 
@@ -1423,10 +1729,10 @@ namespace canard {
     auto lldpdu(Function&& function) const
       -> packet const&
     {
-      auto func = hoge<Function, canard::lldpdu>{
+      auto func = packet_parser_detail::invoker<Function, canard::lldpdu>{
         std::forward<Function>(function)
       };
-      parse_ether_frame(first_, last_, func);
+      ether_header::parse(first_, last_, func);
       return *this;
     }
 
