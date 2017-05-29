@@ -35,7 +35,7 @@ struct oxm_match_creator
         namespace fields = canard::net::ofp::v13::oxm_match_fields;
         oxm_fields.push_back(fields::eth_dst{ether.destination()});
         oxm_fields.push_back(fields::eth_src{ether.source()});
-        if (ether.ether_type() != ETHERTYPE_VLAN) {
+        if (ether.ether_type() != canard::vlan_tag::type) {
             oxm_fields.push_back(fields::eth_type{ether.ether_type()});
         }
         return true;
@@ -69,8 +69,8 @@ struct oxm_match_creator
         oxm_fields.push_back(fields::ip_dscp{ipv4.dscp()});
         oxm_fields.push_back(fields::ip_ecn{ipv4.ecn()});
         oxm_fields.push_back(fields::ip_proto{ipv4.protocol()});
-        oxm_fields.push_back(fields::ipv4_src(ipv4.source()));
-        oxm_fields.push_back(fields::ipv4_dst(ipv4.destination()));
+        oxm_fields.push_back(fields::ipv4_src(ipv4.source_address()));
+        oxm_fields.push_back(fields::ipv4_dst(ipv4.destination_address()));
         return true;
     }
 
@@ -92,8 +92,8 @@ struct oxm_match_creator
         if (not is_extension_header(ipv6.next_header())) {
             oxm_fields.push_back(fields::ip_proto{ipv6.next_header()});
         }
-        oxm_fields.push_back(fields::ipv6_src(ipv6.source()));
-        oxm_fields.push_back(fields::ipv6_dst(ipv6.destination()));
+        oxm_fields.push_back(fields::ipv6_src(ipv6.source_address()));
+        oxm_fields.push_back(fields::ipv6_dst(ipv6.destination_address()));
         return true;
     }
 
@@ -158,16 +158,16 @@ struct oxm_match_creator
     bool operator()(canard::udp_header const& udp)
     {
         namespace fields = canard::net::ofp::v13::oxm_match_fields;
-        oxm_fields.push_back(fields::udp_src{udp.source()});
-        oxm_fields.push_back(fields::udp_dst{udp.destination()});
+        oxm_fields.push_back(fields::udp_src{udp.source_port()});
+        oxm_fields.push_back(fields::udp_dst{udp.destination_port()});
         return true;
     }
 
     bool operator()(canard::tcp_header const& tcp)
     {
         namespace fields = canard::net::ofp::v13::oxm_match_fields;
-        oxm_fields.push_back(fields::tcp_src{tcp.source()});
-        oxm_fields.push_back(fields::tcp_dst{tcp.destination()});
+        oxm_fields.push_back(fields::tcp_src{tcp.source_port()});
+        oxm_fields.push_back(fields::tcp_dst{tcp.destination_port()});
         return true;
     }
 

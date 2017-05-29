@@ -51,8 +51,8 @@ struct match_creator
         namespace fields = canard::net::ofp::v10::match_fields;
         // match.set(fields::ipv4_tos{ipv4.dscp()});
         match.set(fields::ip_proto{ipv4.protocol()});
-        match.set(fields::ipv4_src(ipv4.source()));
-        match.set(fields::ipv4_dst(ipv4.destination()));
+        match.set(fields::ipv4_src(ipv4.source_address()));
+        match.set(fields::ipv4_dst(ipv4.destination_address()));
         return true;
     }
 
@@ -106,16 +106,16 @@ struct match_creator
     bool operator()(canard::udp_header const& udp) const
     {
         namespace fields = canard::net::ofp::v10::match_fields;
-        match.set(fields::udp_src{udp.source()});
-        match.set(fields::udp_dst{udp.destination()});
+        match.set(fields::udp_src{udp.source_port()});
+        match.set(fields::udp_dst{udp.destination_port()});
         return true;
     }
 
     bool operator()(canard::tcp_header const& tcp) const
     {
         namespace fields = canard::net::ofp::v10::match_fields;
-        match.set(fields::tcp_src{tcp.source()});
-        match.set(fields::tcp_dst{tcp.destination()});
+        match.set(fields::tcp_src{tcp.source_port()});
+        match.set(fields::tcp_dst{tcp.destination_port()});
         return true;
     }
 
