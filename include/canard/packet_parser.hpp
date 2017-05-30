@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <algorithm>
 #include <array>
 #include <iterator>
 #include <string>
@@ -26,6 +25,15 @@ namespace canard {
       auto value = T{};
       std::memcpy(&value, data, sizeof(value));
       return boost::endian::big_to_native(value);
+    }
+
+    template <std::size_t N>
+    auto decode_array(std::uint8_t const* const data) noexcept
+      -> std::array<std::uint8_t, N>
+    {
+      auto array = std::array<std::uint8_t, N>{};
+      std::memcpy(array.data(), data, array.size());
+      return array;
     }
 
   } // namespace detail
@@ -58,17 +66,17 @@ namespace canard {
     auto destination() const
       -> canard::mac_address
     {
-      auto dst = std::array<std::uint8_t, 6>{};
-      std::copy_n(data_ + offset::DESTINATION, sizeof(dst), dst.data());
-      return canard::mac_address{dst};
+      return canard::mac_address{
+        detail::decode_array<6>(data_ + offset::DESTINATION)
+      };
     }
 
     auto source() const
       -> canard::mac_address
     {
-      auto src = std::array<std::uint8_t, 6>{};
-      std::copy_n(data_ + offset::SOURCE, sizeof(src), src.data());
-      return canard::mac_address{src};
+      return canard::mac_address{
+        detail::decode_array<6>(data_ + offset::SOURCE)
+      };
     }
 
     auto ether_type() const
@@ -816,18 +824,17 @@ namespace canard {
     auto source_address() const
       -> boost::asio::ip::address_v6
     {
-      auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(data_ + offset::SOURCE_ADDRESS, addr.size(), addr.data());
-      return boost::asio::ip::address_v6{addr};
+      return boost::asio::ip::address_v6{
+        detail::decode_array<16>(data_ + offset::SOURCE_ADDRESS)
+      };
     }
 
     auto destination_address() const
       -> boost::asio::ip::address_v6
     {
-      auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(
-          data_ + offset::DESTINATION_ADDRESS, addr.size(), addr.data());
-      return boost::asio::ip::address_v6{addr};
+      return boost::asio::ip::address_v6{
+        detail::decode_array<16>(data_ + offset::DESTINATION_ADDRESS)
+      };
     }
 
     auto next() const
@@ -1176,9 +1183,9 @@ namespace canard {
     auto target_address() const
       -> boost::asio::ip::address_v6
     {
-      auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(data_ + offset::TARGET_ADDRESS, addr.size(), addr.data());
-      return boost::asio::ip::address_v6{addr};
+      return boost::asio::ip::address_v6{
+        detail::decode_array<16>(data_ + offset::TARGET_ADDRESS)
+      };
     }
 
     auto source_link_layer_address() const
@@ -1210,9 +1217,9 @@ namespace canard {
     auto target_address() const
       -> boost::asio::ip::address_v6
     {
-      auto addr = boost::asio::ip::address_v6::bytes_type{};
-      std::copy_n(data_ + offset::TARGET_ADDRESS, addr.size(), addr.data());
-      return boost::asio::ip::address_v6{addr};
+      return boost::asio::ip::address_v6{
+        detail::decode_array<16>(data_ + offset::TARGET_ADDRESS)
+      };
     }
 
     auto target_link_layer_address() const
