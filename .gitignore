@@ -1,7 +1,5 @@
 *.o
 *.depends
 *.dylib
-ofparser/ofparser
-ofparser/of10/ofparser
 test/**/all_test
 
